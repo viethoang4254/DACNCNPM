@@ -1,9 +1,11 @@
 import express from "express";
 import { body, param } from "express-validator";
 import {
+  createUserController,
   deleteUserController,
   getUserByIdController,
   getUsersController,
+  updateUserController,
   updatePasswordController,
   updateProfileController,
 } from "../controllers/userController.js";
@@ -39,11 +41,38 @@ router.use(adminMiddleware);
 
 router.get("/", getUsersController);
 
+router.post(
+  "/",
+  [
+    body("ho_ten").trim().notEmpty().withMessage("ho_ten is required"),
+    body("email").trim().isEmail().withMessage("Valid email is required"),
+    body("so_dien_thoai").trim().notEmpty().withMessage("so_dien_thoai is required"),
+    body("mat_khau").isLength({ min: 6 }).withMessage("mat_khau must be at least 6 characters"),
+    body("role").isIn(["admin", "customer"]).withMessage("role must be admin or customer"),
+  ],
+  validationMiddleware,
+  createUserController
+);
+
 router.get(
   "/:id",
   [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
   validationMiddleware,
   getUserByIdController
+);
+
+router.put(
+  "/:id",
+  [
+    param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer"),
+    body("ho_ten").trim().notEmpty().withMessage("ho_ten is required"),
+    body("email").trim().isEmail().withMessage("Valid email is required"),
+    body("so_dien_thoai").trim().notEmpty().withMessage("so_dien_thoai is required"),
+    body("mat_khau").optional({ values: "falsy" }).isLength({ min: 6 }).withMessage("mat_khau must be at least 6 characters"),
+    body("role").isIn(["admin", "customer"]).withMessage("role must be admin or customer"),
+  ],
+  validationMiddleware,
+  updateUserController
 );
 
 router.delete(

@@ -1,8 +1,8 @@
-CREATE DATABASE IF NOT EXISTS booking_tour_vietnam
+CREATE DATABASE IF NOT EXISTS booking_tour
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE booking_tour_vietnam;
+USE booking_tour;
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,

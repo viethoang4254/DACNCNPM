@@ -1,17 +1,67 @@
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import Header from "./components/user/Header";
+import Footer from "./components/user/Footer";
 import "./assets/styles/main.scss";
-import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import Home from "./pages/user/Home";
+import Login from "./pages/user/Login";
+import Registry from "./pages/user/Registry";
+import Tours from "./pages/user/Tours";
+import About from "./pages/user/About";
+import Contact from "./pages/user/Contact";
+import ScrollToTop from "./components/common/ScrollToTop";
+import AdminLayout from "./layouts/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Users from "./pages/admin/Users";
+import AdminTours from "./pages/admin/Tours";
+import Bookings from "./pages/admin/Bookings";
+import Payments from "./pages/admin/Payments";
+import Reviews from "./pages/admin/Reviews";
+
+import { getAuthUser } from "./utils/authStorage";
+
+function AdminRoute({ children }) {
+  const user = getAuthUser();
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 function App() {
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith("/admin");
+
   return (
     <>
-      <Header />
+      {!isAdminPath && <Header />}
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/customer" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registry" element={<Registry />} />
+        <Route path="/tours" element={<Tours />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="users" element={<Users />} />
+          <Route path="tours" element={<AdminTours />} />
+          <Route path="bookings" element={<Bookings />} />
+          <Route path="payments" element={<Payments />} />
+          <Route path="reviews" element={<Reviews />} />
+        </Route>
       </Routes>
-      <Footer />
+      {!isAdminPath && <Footer />}
     </>
   );
 }
