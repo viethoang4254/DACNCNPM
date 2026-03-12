@@ -1,0 +1,308 @@
+@use "../../../assets/styles/variables" as *;
+
+.about-page {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(243, 120, 33, 0.12), transparent 30%),
+    radial-gradient(circle at 88% 88%, rgba(45, 156, 219, 0.15), transparent 34%),
+    #f7f9fc;
+  color: #1d3557;
+  padding-bottom: 64px;
+}
+
+.about-page__container {
+  width: min(1200px, calc(100% - 32px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.about-page__banner {
+  position: relative;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  background-image: url("../../../assets/images/banner-banahill.jpg");
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.about-page__banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(10, 22, 44, 0.84), rgba(10, 22, 44, 0.45));
+}
+
+.about-page__banner-content {
+  position: relative;
+  z-index: 1;
+  padding-top: 48px;
+  padding-bottom: 48px;
+  color: #fff;
+}
+
+.about-page__eyebrow {
+  font-size: 1.35rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 10px;
+}
+
+.about-page__banner-content h1 {
+  font-size: clamp(3rem, 6vw, 5.2rem);
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+
+.about-page__banner-content p {
+  max-width: 720px;
+  font-size: 1.72rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.about-intro {
+  margin-top: 44px;
+  display: grid;
+  grid-template-columns: minmax(280px, 1.05fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.about-intro__media {
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 18px 38px rgba(13, 33, 64, 0.16);
+}
+
+.about-intro__media img {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  object-fit: cover;
+  display: block;
+}
+
+.about-intro__content {
+  background: #fff;
+  border-radius: 22px;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 10px 28px rgba(13, 33, 64, 0.08);
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.about-intro__content h2,
+.about-page__section-head h2 {
+  font-size: clamp(2.4rem, 4vw, 3.4rem);
+  line-height: 1.2;
+  color: var(--color-heading);
+}
+
+.about-intro__content p {
+  font-size: 1.58rem;
+  line-height: 1.72;
+  color: #4b5f79;
+}
+
+.about-mission,
+.about-team {
+  margin-top: 56px;
+}
+
+.about-page__section-head {
+  margin-bottom: 18px;
+}
+
+.about-mission__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.about-mission__card {
+  background: linear-gradient(150deg, #ffffff, #f6f9ff);
+  border: 1px solid #e7edf6;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(13, 33, 64, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.about-mission__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 28px rgba(13, 33, 64, 0.14);
+}
+
+.about-mission__icon-wrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(243, 120, 33, 0.14);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.about-mission__icon {
+  font-size: 2rem;
+  color: var(--color-primary);
+}
+
+.about-mission__card h3 {
+  font-size: 2rem;
+  color: #1b2e4b;
+  margin-bottom: 8px;
+}
+
+.about-mission__card p {
+  font-size: 1.5rem;
+  line-height: 1.65;
+  color: #5c6f88;
+}
+
+.about-stats {
+  margin-top: 52px;
+}
+
+.about-stats__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.about-stats__item {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e7edf6;
+  text-align: center;
+  padding: 20px 14px;
+  box-shadow: 0 10px 22px rgba(13, 33, 64, 0.08);
+}
+
+.about-stats__icon {
+  font-size: 2rem;
+  color: var(--color-primary);
+  margin-bottom: 10px;
+}
+
+.about-stats__item h3 {
+  font-size: 2.7rem;
+  line-height: 1.15;
+  color: #162947;
+  margin-bottom: 6px;
+}
+
+.about-stats__item p {
+  font-size: 1.42rem;
+  color: #60728a;
+}
+
+.about-team__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.about-team__card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e9eef6;
+  box-shadow: 0 10px 24px rgba(13, 33, 64, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.about-team__card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 34px rgba(13, 33, 64, 0.14);
+}
+
+.about-team__card img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  display: block;
+}
+
+.about-team__body {
+  padding: 14px 14px 16px;
+}
+
+.about-team__body h3 {
+  font-size: 1.85rem;
+  color: #182d4a;
+  margin-bottom: 5px;
+}
+
+.about-team__body p {
+  font-size: 1.4rem;
+  color: #687d97;
+}
+
+@media (max-width: 1024px) {
+  .about-intro {
+    grid-template-columns: 1fr;
+  }
+
+  .about-intro__media img {
+    min-height: 300px;
+  }
+
+  .about-mission__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .about-stats__grid,
+  .about-team__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .about-page__container {
+    width: min(1200px, calc(100% - 24px));
+  }
+
+  .about-page__banner {
+    min-height: 300px;
+  }
+
+  .about-page__banner-content {
+    padding-top: 34px;
+    padding-bottom: 34px;
+  }
+
+  .about-page__banner-content p {
+    font-size: 1.5rem;
+  }
+
+  .about-intro {
+    margin-top: 28px;
+    gap: 16px;
+  }
+
+  .about-intro__content {
+    padding: 20px;
+  }
+
+  .about-intro__content p {
+    font-size: 1.45rem;
+  }
+
+  .about-mission,
+  .about-team,
+  .about-stats {
+    margin-top: 36px;
+  }
+
+  .about-mission__grid,
+  .about-stats__grid,
+  .about-team__grid {
+    grid-template-columns: 1fr;
+  }
+}

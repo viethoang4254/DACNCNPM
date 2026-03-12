@@ -2,7 +2,7 @@ USE booking_tour;
 
 INSERT INTO users (ho_ten, email, mat_khau, so_dien_thoai, role)
 VALUES
-  ('System Admin', 'admin@tourvietnam.vn', '$2b$10$S9tUW/59Etw130CmzaZrZO.3TzgW9tZfGdi0wUJ9xmiiNhZlq9Mn6', '0900000001', 'admin'),
+  ('System Admin', 'admin@tourvietnam.vn', '$2b$10$EBh3FYpf1kiV3vGXT/7XV.nTDsH72bf2qft.zR69C9XW.CTHiuVQG', '0900000001', 'admin'),
   ('Nguyen Van A', 'customer1@tourvietnam.vn', '$2b$10$S9tUW/59Etw130CmzaZrZO.3TzgW9tZfGdi0wUJ9xmiiNhZlq9Mn6', '0900000002', 'customer'),
   ('Tran Thi B', 'customer2@tourvietnam.vn', '$2b$10$S9tUW/59Etw130CmzaZrZO.3TzgW9tZfGdi0wUJ9xmiiNhZlq9Mn6', '0900000003', 'customer');
 

@@ -40,6 +40,8 @@ const normalizeTourQuery = (req) => {
     diem_khoi_hanh: req.query.diem_khoi_hanh?.trim(),
     minPrice: req.query.minPrice !== undefined ? Number(req.query.minPrice) : undefined,
     maxPrice: req.query.maxPrice !== undefined ? Number(req.query.maxPrice) : undefined,
+    minDays: req.query.minDays !== undefined ? Number(req.query.minDays) : undefined,
+    maxDays: req.query.maxDays !== undefined ? Number(req.query.maxDays) : undefined,
     sort: req.query.sort?.trim(),
   };
 };
