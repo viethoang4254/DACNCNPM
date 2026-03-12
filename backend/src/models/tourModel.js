@@ -176,6 +176,41 @@ export const deleteTourImageById = async (id) => {
   return result.affectedRows > 0;
 };
 
+export const updateTourImageById = async (id, imageUrl) => {
+  const [result] = await pool.execute("UPDATE tour_images SET image_url = ? WHERE id = ?", [imageUrl, id]);
+  if (result.affectedRows === 0) {
+    return null;
+  }
+
+  return getTourImageById(id);
+};
+
+export const setTourCoverImageById = async (imageId) => {
+  const selectedImage = await getTourImageById(imageId);
+  if (!selectedImage) {
+    return null;
+  }
+
+  const [firstRows] = await pool.execute(
+    "SELECT id, tour_id, image_url FROM tour_images WHERE tour_id = ? ORDER BY id ASC LIMIT 1",
+    [selectedImage.tour_id]
+  );
+  const firstImage = firstRows[0] || null;
+
+  if (!firstImage) {
+    return null;
+  }
+
+  if (firstImage.id === selectedImage.id) {
+    return getTourImageById(firstImage.id);
+  }
+
+  await pool.execute("UPDATE tour_images SET image_url = ? WHERE id = ?", [selectedImage.image_url, firstImage.id]);
+  await pool.execute("UPDATE tour_images SET image_url = ? WHERE id = ?", [firstImage.image_url, selectedImage.id]);
+
+  return getTourImageById(firstImage.id);
+};
+
 export const getTourSchedules = async (tourId) => {
   const [rows] = await pool.execute(
     "SELECT id, tour_id, start_date, available_slots FROM tour_schedules WHERE tour_id = ? ORDER BY start_date ASC",

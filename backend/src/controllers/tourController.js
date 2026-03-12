@@ -17,7 +17,9 @@ import {
   getTourImages,
   getTourSchedules,
   getTours,
+  setTourCoverImageById,
   updateTour,
+  updateTourImageById,
   updateTourSchedule,
 } from "../models/tourModel.js";
 
@@ -49,6 +51,42 @@ const normalizeTourQuery = (req) => {
 const mapUploadedPaths = (files) => {
   const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
   return files.map((file) => `${baseUrl}/uploads/${file.filename}`);
+};
+
+const normalizeImageUrls = (body) => {
+  const imageUrls = [];
+  const pushUrl = (value) => {
+    if (typeof value !== "string") return;
+    const trimmed = value.trim();
+    if (trimmed) {
+      imageUrls.push(trimmed);
+    }
+  };
+
+  if (!body) return imageUrls;
+
+  if (Array.isArray(body.image_urls)) {
+    body.image_urls.forEach(pushUrl);
+  } else if (typeof body.image_urls === "string") {
+    const raw = body.image_urls.trim();
+    if (raw.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(pushUrl);
+        } else {
+          pushUrl(raw);
+        }
+      } catch {
+        pushUrl(raw);
+      }
+    } else {
+      pushUrl(raw);
+    }
+  }
+
+  pushUrl(body.image_url);
+  return imageUrls;
 };
 
 export const getToursController = asyncHandler(async (req, res) => {
@@ -188,7 +226,19 @@ export const addTourImagesController = asyncHandler(async (req, res) => {
   }
 
   const files = req.files || [];
-  const imageUrls = mapUploadedPaths(files);
+  const uploadedImageUrls = mapUploadedPaths(files);
+  const manualImageUrls = normalizeImageUrls(req.body);
+  const imageUrls = [...uploadedImageUrls, ...manualImageUrls];
+
+  if (imageUrls.length === 0) {
+    return sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: "At least one image file or image URL is required",
+      data: {},
+    });
+  }
+
   await addTourImages(tourId, imageUrls);
 
   return sendResponse(res, {
@@ -196,6 +246,50 @@ export const addTourImagesController = asyncHandler(async (req, res) => {
     success: true,
     message: "Tour images uploaded successfully",
     data: await getTourImages(tourId),
+  });
+});
+
+export const updateTourImageController = asyncHandler(async (req, res) => {
+  const imageId = Number(req.params.id);
+  const image = await getTourImageById(imageId);
+
+  if (!image) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Image not found",
+      data: {},
+    });
+  }
+
+  const manualUrl = req.body?.image_url?.trim();
+  const uploadedUrl = req.file ? mapUploadedPaths([req.file])[0] : "";
+  const nextImageUrl = uploadedUrl || manualUrl;
+
+  if (!nextImageUrl) {
+    return sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: "image_url or image file is required",
+      data: {},
+    });
+  }
+
+  const updated = await updateTourImageById(imageId, nextImageUrl);
+
+  if (image.image_url && image.image_url.includes("/uploads/") && image.image_url !== nextImageUrl) {
+    const oldFileName = image.image_url.split("/uploads/")[1];
+    const oldFilePath = path.resolve("uploads", oldFileName);
+    if (fs.existsSync(oldFilePath)) {
+      fs.unlinkSync(oldFilePath);
+    }
+  }
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Image updated successfully",
+    data: updated,
   });
 });
 
@@ -247,6 +341,29 @@ export const deleteTourImageController = asyncHandler(async (req, res) => {
     success: true,
     message: "Image deleted successfully",
     data: {},
+  });
+});
+
+export const setTourCoverImageController = asyncHandler(async (req, res) => {
+  const imageId = Number(req.params.id);
+  const image = await getTourImageById(imageId);
+
+  if (!image) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Image not found",
+      data: {},
+    });
+  }
+
+  await setTourCoverImageById(imageId);
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Cover image updated successfully",
+    data: await getTourImages(image.tour_id),
   });
 });
 
