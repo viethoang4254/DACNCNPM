@@ -546,6 +546,22 @@
   font-size: 0.875rem;
 }
 
+
+.admin-col-description {
+  min-width: 260px;
+}
+
+.admin-description-cell {
+  max-width: 320px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  color: #475569;
+}
+
+
 /* ============================================================
    PAGINATION
    ============================================================ */
@@ -645,6 +661,16 @@
   overflow: hidden;
 }
 
+
+.tour-form-modal {
+  width: min(760px, 100%);
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+}
+
+
 .user-form-modal__header {
   display: flex;
   justify-content: space-between;
@@ -654,7 +680,25 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
+
+.tour-form-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+
 .user-form-modal__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+
+.tour-form-modal__header h3 {
   margin: 0;
   font-size: 1.05rem;
   color: #0f172a;
@@ -666,9 +710,22 @@
   color: #64748b;
 }
 
+
+.tour-form-modal__header p {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+
 .user-form-modal__body {
   padding: 20px 24px 24px;
 }
+
+.tour-form-modal__body {
+  padding: 20px 24px 24px;
+}
+
 
 .user-form-modal__label {
   display: inline-block;
@@ -678,12 +735,31 @@
   color: #334155;
 }
 
+
+.tour-form-modal__label {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+
 .user-form-modal__footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 18px;
 }
+
+
+.tour-form-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 
 .user-form-modal__helper {
   margin: 8px 0 0;
@@ -898,6 +974,12 @@
     grid-template-columns: 1fr;
   }
 
+
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+
   .admin-header {
     padding: 0 16px;
   }
@@ -909,4 +991,16 @@
   .admin-input-search {
     width: 180px;
   }
+
+
+  .tour-form-modal__header,
+  .user-form-modal__header {
+    flex-direction: column;
+  }
+
+  .tour-form-modal__footer,
+  .user-form-modal__footer {
+    flex-direction: column-reverse;
+  }
+
 }
