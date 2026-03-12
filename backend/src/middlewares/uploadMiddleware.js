@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import multer from "multer";
 
+const MAX_IMAGE_SIZE_MB = Number(process.env.MAX_IMAGE_SIZE_MB || 15);
+
 const uploadDir = path.resolve("uploads");
 
 if (!fs.existsSync(uploadDir)) {
@@ -31,7 +33,7 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: MAX_IMAGE_SIZE_MB * 1024 * 1024,
   },
 });
 

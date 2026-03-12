@@ -15,7 +15,9 @@ import {
   getTourSchedulesController,
   getToursController,
   searchToursController,
+  setTourCoverImageController,
   updateTourController,
+  updateTourImageController,
   updateTourScheduleController,
 } from "../controllers/tourController.js";
 import adminMiddleware from "../middlewares/adminMiddleware.js";
@@ -88,6 +90,25 @@ router.delete(
   [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
   validationMiddleware,
   deleteTourImageController
+);
+
+router.put(
+  "/images/:id/cover",
+  authMiddleware,
+  adminMiddleware,
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  setTourCoverImageController
+);
+
+router.put(
+  "/images/:id",
+  authMiddleware,
+  adminMiddleware,
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  upload.single("image"),
+  validationMiddleware,
+  updateTourImageController
 );
 
 router.get(
