@@ -1,13 +1,14 @@
 import pool from "../config/db.js";
 
 const mapSortField = (sort) => {
-  if (sort === "price") return "gia ASC";
-  if (sort === "-price") return "gia DESC";
-  if (sort === "latest") return "created_at DESC";
+  if (sort === "price" || sort === "gia_asc") return "gia ASC";
+  if (sort === "-price" || sort === "gia_desc") return "gia DESC";
+  if (sort === "latest" || sort === "created_at_desc") return "created_at DESC";
+  if (sort === "ten_tour_asc") return "ten_tour ASC";
   return "id DESC";
 };
 
-export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_hanh, minPrice, maxPrice, sort }) => {
+export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_hanh, minPrice, maxPrice, sort, minDays, maxDays }) => {
   const whereParts = [];
   const params = [];
 
@@ -34,6 +35,16 @@ export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_han
   if (maxPrice !== undefined) {
     whereParts.push("gia <= ?");
     params.push(maxPrice);
+  }
+
+  if (minDays !== undefined) {
+    whereParts.push("so_ngay >= ?");
+    params.push(minDays);
+  }
+
+  if (maxDays !== undefined) {
+    whereParts.push("so_ngay <= ?");
+    params.push(maxDays);
   }
 
   const whereSql = whereParts.length > 0 ? `WHERE ${whereParts.join(" AND ")}` : "";

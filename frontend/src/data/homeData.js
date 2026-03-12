@@ -57,16 +57,16 @@ export const mockTours = [
 
 export const featuredDestinations = [
   {
-    name: "Da Nang",
+    name: "Đà Nẵng",
     image:
       "https://static-images.vnncdn.net/files/publish/2022/7/8/loat-nha-hang-ven-bien-da-nang-dong-cua-hu-hong-giua-cao-diem-du-lich-b60950903c254c008fdd156c9dd0fe21.jpg",
   },
   {
-    name: "Phu Quoc",
+    name: "Phú Quốc",
     image: "https://bazantravel.com/cdn/medias/tours/2/2671.jpg",
   },
   {
-    name: "Ha Long",
+    name: "Hạ Long",
     image:
       "https://i.pinimg.com/originals/56/9a/0d/569a0d355cdc1cb9d788c5eeb80f65a7.jpg",
   },
@@ -85,23 +85,23 @@ export const featuredDestinations = [
 export const reasons = [
   {
     icon: "💸",
-    title: "Gia tot nhat",
-    description: "Gia canh tranh va uu dai lien tuc cho moi mua du lich.",
+    title: "Giá tốt nhất",
+    description: "Giá cạnh tranh và ưu đãi liên tục cho mọi mùa du lịch.",
   },
   {
     icon: "🔐",
-    title: "Thanh toan an toan",
-    description: "Bao mat da lop, ho tro nhieu hinh thuc thanh toan linh hoat.",
+    title: "Thanh toán an toàn",
+    description: "Bảo mật đa lớp, hổ trợ nhiều hình thức thanh toán linh hoạt.",
   },
   {
     icon: "🏝️",
-    title: "Tour chat luong",
-    description: "Lich trinh toi uu, doi tac uy tin va trai nghiem thuc te tot nhat.",
+    title: "Tour chất lượng",
+    description: "Lịch trình tối ưu, đối tác uy tín và trải nghiệm thực tê tốt nhất",
   },
   {
     icon: "🎧",
-    title: "Ho tro 24/7",
-    description: "Doi ngu tu van luon san sang dong hanh trong suot hanh trinh.",
+    title: "Hổ trợ 24/7",
+    description: "Đội ngũ tư vấn luôn sẵn sàng đồng hành trong suốt hành trình.",
   },
 ];
 

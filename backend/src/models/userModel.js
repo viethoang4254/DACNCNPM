@@ -50,6 +50,25 @@ export const updateUserPassword = async (id, mat_khau) => {
   return true;
 };
 
+export const updateUserById = async (id, { ho_ten, email, so_dien_thoai, role, mat_khau }) => {
+  const fields = ["ho_ten = ?", "email = ?", "so_dien_thoai = ?", "role = ?"];
+  const params = [ho_ten, email, so_dien_thoai, role];
+
+  if (mat_khau) {
+    fields.push("mat_khau = ?");
+    params.push(mat_khau);
+  }
+
+  params.push(id);
+
+  const [result] = await pool.execute(`UPDATE users SET ${fields.join(", ")} WHERE id = ?`, params);
+  if (result.affectedRows === 0) {
+    return null;
+  }
+
+  return getUserById(id);
+};
+
 export const deleteUserById = async (id) => {
   const [result] = await pool.execute("DELETE FROM users WHERE id = ?", [id]);
   return result.affectedRows > 0;

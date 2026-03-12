@@ -51,7 +51,9 @@ router.get(
     query("diem_khoi_hanh").optional().isString(),
     query("minPrice").optional().isFloat({ min: 0 }).withMessage("minPrice must be >= 0"),
     query("maxPrice").optional().isFloat({ min: 0 }).withMessage("maxPrice must be >= 0"),
-    query("sort").optional().isIn(["price", "-price", "latest"]).withMessage("sort is invalid"),
+    query("sort").optional().isIn(["price", "-price", "latest", "gia_asc", "gia_desc", "created_at_desc", "ten_tour_asc"]).withMessage("sort is invalid"),
+    query("minDays").optional().isInt({ min: 1 }).withMessage("minDays must be >= 1"),
+    query("maxDays").optional().isInt({ min: 1 }).withMessage("maxDays must be >= 1"),
   ],
   validationMiddleware,
   getToursController
