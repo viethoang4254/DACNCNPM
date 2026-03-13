@@ -17,6 +17,7 @@ import {
   getTourImageById,
   getTourImages,
   getTourSchedules,
+  searchToursByCriteria,
   getSimilarToursByTourId,
   setTourCoverImageById,
   updateTour,
@@ -221,6 +222,23 @@ export const deleteTourController = asyncHandler(async (req, res) => {
 });
 
 export const searchToursController = asyncHandler(async (req, res) => {
+  const destination = req.query.destination?.trim() || "";
+  const date = req.query.date?.trim() || "";
+  const guests = req.query.guests !== undefined ? Number(req.query.guests) : undefined;
+
+  if (destination || date || guests !== undefined) {
+    const result = await searchToursByCriteria({ destination, date, guests });
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+      tours: result.tours,
+      total: result.tours.length,
+      data: result.tours,
+      usedNearestDate: result.usedNearestDate,
+    });
+  }
+
   req.query.keyword = req.query.keyword || req.query.q;
   return getToursController(req, res);
 });

@@ -11,7 +11,9 @@ import EditItineraryModal from "../../../components/admin/EditItineraryModal";
 import { getAuthToken } from "../../../utils/authStorage";
 import "./TourItineraries.scss";
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000").replace(/\/+$/, "");
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
+).replace(/\/+$/, "");
 const LIMIT = 10;
 
 async function fetchJson(url, options = {}) {
@@ -70,16 +72,21 @@ function TourItineraries() {
       setLoading(true);
       setError("");
 
-      const toursPayload = await fetchJson(`${API_BASE_URL}/api/tours?page=1&limit=200&sort=latest`);
+      const toursPayload = await fetchJson(
+        `${API_BASE_URL}/api/tours?page=1&limit=200&sort=latest`,
+      );
       const tours = Array.isArray(toursPayload?.data) ? toursPayload.data : [];
 
       const itineraryGroups = await Promise.all(
         tours.map(async (tour) => {
-          const payload = await fetchJson(`${API_BASE_URL}/api/admin/tours/${tour.id}/itineraries`, {
-            headers: {
-              ...authHeaders,
+          const payload = await fetchJson(
+            `${API_BASE_URL}/api/admin/tours/${tour.id}/itineraries`,
+            {
+              headers: {
+                ...authHeaders,
+              },
             },
-          });
+          );
 
           return Array.isArray(payload?.data) ? payload.data : [];
         }),
@@ -87,7 +94,11 @@ function TourItineraries() {
 
       const merged = itineraryGroups
         .flat()
-        .sort((a, b) => (a.tour_id === b.tour_id ? a.ngay_thu - b.ngay_thu : a.tour_id - b.tour_id));
+        .sort((a, b) =>
+          a.tour_id === b.tour_id
+            ? a.ngay_thu - b.ngay_thu
+            : a.tour_id - b.tour_id,
+        );
 
       setItineraries(merged);
     } catch (requestError) {
@@ -118,7 +129,11 @@ function TourItineraries() {
       await fetchItineraries();
       openNotification("Thành công", "Thêm lịch trình thành công.", "primary");
     } catch (requestError) {
-      openNotification("Lỗi", requestError.message || "Thêm lịch trình thất bại.", "danger");
+      openNotification(
+        "Lỗi",
+        requestError.message || "Thêm lịch trình thất bại.",
+        "danger",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -129,21 +144,32 @@ function TourItineraries() {
 
     try {
       setSubmitting(true);
-      await fetchJson(`${API_BASE_URL}/api/admin/itineraries/${selectedItinerary.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeaders,
+      await fetchJson(
+        `${API_BASE_URL}/api/admin/itineraries/${selectedItinerary.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       setShowEditModal(false);
       setSelectedItinerary(null);
       await fetchItineraries();
-      openNotification("Thành công", "Cập nhật lịch trình thành công.", "primary");
+      openNotification(
+        "Thành công",
+        "Cập nhật lịch trình thành công.",
+        "primary",
+      );
     } catch (requestError) {
-      openNotification("Lỗi", requestError.message || "Cập nhật lịch trình thất bại.", "danger");
+      openNotification(
+        "Lỗi",
+        requestError.message || "Cập nhật lịch trình thất bại.",
+        "danger",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -154,12 +180,15 @@ function TourItineraries() {
 
     try {
       setSubmitting(true);
-      await fetchJson(`${API_BASE_URL}/api/admin/itineraries/${selectedItinerary.id}`, {
-        method: "DELETE",
-        headers: {
-          ...authHeaders,
+      await fetchJson(
+        `${API_BASE_URL}/api/admin/itineraries/${selectedItinerary.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            ...authHeaders,
+          },
         },
-      });
+      );
 
       setShowDeleteConfirm(false);
       setSelectedItinerary(null);
@@ -167,7 +196,11 @@ function TourItineraries() {
       openNotification("Thành công", "Xóa lịch trình thành công.", "primary");
     } catch (requestError) {
       setShowDeleteConfirm(false);
-      openNotification("Lỗi", requestError.message || "Xóa lịch trình thất bại.", "danger");
+      openNotification(
+        "Lỗi",
+        requestError.message || "Xóa lịch trình thất bại.",
+        "danger",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -178,14 +211,21 @@ function TourItineraries() {
     if (!keyword) return true;
 
     return (
-      String(item.ten_tour || "").toLowerCase().includes(keyword) ||
-      String(item.tieu_de || "").toLowerCase().includes(keyword) ||
+      String(item.ten_tour || "")
+        .toLowerCase()
+        .includes(keyword) ||
+      String(item.tieu_de || "")
+        .toLowerCase()
+        .includes(keyword) ||
       String(item.ngay_thu || "").includes(keyword)
     );
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredItineraries.length / LIMIT));
-  const paginatedItineraries = filteredItineraries.slice((page - 1) * LIMIT, page * LIMIT);
+  const paginatedItineraries = filteredItineraries.slice(
+    (page - 1) * LIMIT,
+    page * LIMIT,
+  );
 
   useEffect(() => {
     if (page > totalPages) setPage(1);
@@ -197,13 +237,17 @@ function TourItineraries() {
     {
       key: "ngay_thu",
       header: "Ngày",
-      render: (row) => <span className="itinerary-day-badge">Ngày {row.ngay_thu}</span>,
+      render: (row) => (
+        <span className="itinerary-day-badge">Ngày {row.ngay_thu}</span>
+      ),
     },
     {
       key: "tieu_de",
       header: "Tiêu đề",
       className: "admin-col-description",
-      render: (row) => <span className="admin-description-cell">{row.tieu_de || "—"}</span>,
+      render: (row) => (
+        <span className="admin-description-cell">{row.tieu_de || "—"}</span>
+      ),
     },
     {
       key: "image_url",
@@ -212,7 +256,13 @@ function TourItineraries() {
         const src = resolveImageUrl(row.image_url);
         if (!src) return <span className="admin-thumb-placeholder">-</span>;
 
-        return <img src={src} alt={row.tieu_de || "itinerary"} className="admin-thumb" />;
+        return (
+          <img
+            src={src}
+            alt={row.tieu_de || "itinerary"}
+            className="admin-thumb"
+          />
+        );
       },
     },
     {
@@ -256,7 +306,9 @@ function TourItineraries() {
         <h3>Tour Itineraries Management</h3>
 
         <div className="admin-page-itineraries__actions">
-          <span className="admin-toolbar__meta">{filteredItineraries.length} lịch trình</span>
+          <span className="admin-toolbar__meta">
+            {filteredItineraries.length} lịch trình
+          </span>
 
           <button
             className="admin-btn admin-btn--primary"
@@ -286,7 +338,11 @@ function TourItineraries() {
       {loading ? (
         <p className="admin-state">Đang tải lịch trình tour...</p>
       ) : (
-        <DataTable columns={columns} data={paginatedItineraries} emptyText="Không tìm thấy lịch trình" />
+        <DataTable
+          columns={columns}
+          data={paginatedItineraries}
+          emptyText="Không tìm thấy lịch trình"
+        />
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />

@@ -10,7 +10,8 @@ import TourReviews from "./components/TourReviews/index.jsx";
 import SimilarTours from "./components/SimilarTours/index.jsx";
 import "./TourDetail.scss";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 function resolveImageUrl(path) {
   if (!path) return "";
@@ -20,7 +21,10 @@ function resolveImageUrl(path) {
 
 function getAverageRating(reviews = []) {
   if (reviews.length === 0) return 0;
-  const total = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0);
+  const total = reviews.reduce(
+    (sum, review) => sum + Number(review.rating || 0),
+    0,
+  );
   return total / reviews.length;
 }
 
@@ -44,7 +48,14 @@ function TourDetailPage() {
       setError("");
 
       try {
-        const [tourRes, imageRes, scheduleRes, itineraryRes, reviewRes, similarRes] = await Promise.all([
+        const [
+          tourRes,
+          imageRes,
+          scheduleRes,
+          itineraryRes,
+          reviewRes,
+          similarRes,
+        ] = await Promise.all([
           fetch(`${API_BASE_URL}/api/tours/${id}`),
           fetch(`${API_BASE_URL}/api/tours/${id}/images`),
           fetch(`${API_BASE_URL}/api/tours/${id}/schedules`),
@@ -57,7 +68,14 @@ function TourDetailPage() {
           throw new Error(`Không thể tải tour (${tourRes.status})`);
         }
 
-        const [tourJson, imageJson, scheduleJson, itineraryJson, reviewJson, similarJson] = await Promise.all([
+        const [
+          tourJson,
+          imageJson,
+          scheduleJson,
+          itineraryJson,
+          reviewJson,
+          similarJson,
+        ] = await Promise.all([
           tourRes.json(),
           imageRes.ok ? imageRes.json() : Promise.resolve({ data: [] }),
           scheduleRes.ok ? scheduleRes.json() : Promise.resolve({ data: [] }),
@@ -70,11 +88,18 @@ function TourDetailPage() {
 
         const nextTour = tourJson?.data || null;
         const nextImages = Array.isArray(imageJson?.data)
-          ? imageJson.data.map((item) => resolveImageUrl(item.image_url)).filter(Boolean)
+          ? imageJson.data
+              .map((item) => resolveImageUrl(item.image_url))
+              .filter(Boolean)
           : [];
 
         const fallbackCover = resolveImageUrl(nextTour?.hinh_anh);
-        const mergedImages = nextImages.length > 0 ? nextImages : fallbackCover ? [fallbackCover] : [];
+        const mergedImages =
+          nextImages.length > 0
+            ? nextImages
+            : fallbackCover
+              ? [fallbackCover]
+              : [];
 
         const nextSimilarTours = Array.isArray(similarJson?.data)
           ? similarJson.data.map((item) => ({
@@ -92,7 +117,9 @@ function TourDetailPage() {
 
         setTour(nextTour);
         setImages(mergedImages);
-        setSchedules(Array.isArray(scheduleJson?.data) ? scheduleJson.data : []);
+        setSchedules(
+          Array.isArray(scheduleJson?.data) ? scheduleJson.data : [],
+        );
         setItineraries(nextItineraries);
         setReviews(Array.isArray(reviewJson?.data) ? reviewJson.data : []);
         setSimilarTours(nextSimilarTours);
@@ -127,7 +154,11 @@ function TourDetailPage() {
   }, [tour]);
 
   if (loading) {
-    return <main className="tour-detail tour-detail--state">Đang tải chi tiết tour...</main>;
+    return (
+      <main className="tour-detail tour-detail--state">
+        Đang tải chi tiết tour...
+      </main>
+    );
   }
 
   if (error || !tour) {
@@ -150,11 +181,16 @@ function TourDetailPage() {
             <h1>{tour.ten_tour}</h1>
             <p>
               {"★".repeat(Math.round(averageRating) || 0)}
-              <span>{averageRating.toFixed(1)} ({reviews.length} đánh giá)</span>
+              <span>
+                {averageRating.toFixed(1)} ({reviews.length} đánh giá)
+              </span>
             </p>
           </article>
 
-          <section className="tour-detail__services card" aria-label="Dịch vụ kèm theo">
+          <section
+            className="tour-detail__services card"
+            aria-label="Dịch vụ kèm theo"
+          >
             <h3>Dịch vụ kèm theo</h3>
             <ul>
               {includedServices.map((service) => (
@@ -166,7 +202,13 @@ function TourDetailPage() {
           <TourTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           {activeTab === "overview" && <TourOverview tour={tour} />}
-          {activeTab === "itinerary" && <TourItinerary tour={tour} images={images} itineraries={itineraries} />}
+          {activeTab === "itinerary" && (
+            <TourItinerary
+              tour={tour}
+              images={images}
+              itineraries={itineraries}
+            />
+          )}
           {activeTab === "reviews" && <TourReviews reviews={reviews} />}
         </section>
 
@@ -175,7 +217,9 @@ function TourDetailPage() {
           <SimilarTours tours={similarTours} />
           <section className="tour-detail__mini-review card">
             <h3>Đánh giá nhanh</h3>
-            <p className="tour-detail__mini-score">{averageRating.toFixed(1)} / 5.0</p>
+            <p className="tour-detail__mini-score">
+              {averageRating.toFixed(1)} / 5.0
+            </p>
             <p>{reviews.length} khách đã đánh giá tour này.</p>
           </section>
         </aside>

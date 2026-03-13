@@ -3,7 +3,9 @@ import { MdClose } from "react-icons/md";
 import { getAuthToken } from "../../../utils/authStorage";
 import "./EditItineraryModal.scss";
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000").replace(/\/+$/, "");
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
+).replace(/\/+$/, "");
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
@@ -17,7 +19,13 @@ async function fetchJson(url, options = {}) {
   return payload;
 }
 
-function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmit }) {
+function EditItineraryModal({
+  open,
+  itinerary,
+  loading = false,
+  onClose,
+  onSubmit,
+}) {
   const [tours, setTours] = useState([]);
   const [toursLoading, setToursLoading] = useState(false);
 
@@ -52,7 +60,9 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
   async function fetchTours() {
     try {
       setToursLoading(true);
-      const payload = await fetchJson(`${API_BASE_URL}/api/tours?page=1&limit=200&sort=latest`);
+      const payload = await fetchJson(
+        `${API_BASE_URL}/api/tours?page=1&limit=200&sort=latest`,
+      );
       setTours(Array.isArray(payload?.data) ? payload.data : []);
     } catch {
       setTours([]);
@@ -68,7 +78,11 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
       nextErrors.tourId = "Vui lòng chọn tour.";
     }
 
-    if (!ngayThu || !Number.isInteger(Number(ngayThu)) || Number(ngayThu) <= 0) {
+    if (
+      !ngayThu ||
+      !Number.isInteger(Number(ngayThu)) ||
+      Number(ngayThu) <= 0
+    ) {
       nextErrors.ngayThu = "Ngày thứ phải là số nguyên > 0.";
     }
 
@@ -109,13 +123,16 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
       const formData = new FormData();
       formData.append("image", file);
 
-      const payload = await fetchJson(`${API_BASE_URL}/api/admin/itineraries/upload-image`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
+      const payload = await fetchJson(
+        `${API_BASE_URL}/api/admin/itineraries/upload-image`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       const uploadedUrl = payload?.data?.image_url || "";
       setImageUrl(uploadedUrl);
@@ -135,7 +152,9 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
   return (
     <div
       className="admin-modal__backdrop"
-      onClick={(event) => event.target === event.currentTarget && !loading && onClose()}
+      onClick={(event) =>
+        event.target === event.currentTarget && !loading && onClose()
+      }
     >
       <div className="itinerary-modal">
         <div className="itinerary-modal__header">
@@ -154,7 +173,11 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
           </button>
         </div>
 
-        <form className="itinerary-modal__body" onSubmit={handleSubmit} noValidate>
+        <form
+          className="itinerary-modal__body"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <div className="itinerary-modal__field">
             <label className="itinerary-modal__label">Tour</label>
             <select
@@ -166,14 +189,18 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
               }}
               disabled={loading || toursLoading}
             >
-              <option value="">{toursLoading ? "Đang tải..." : "-- Chọn tour --"}</option>
+              <option value="">
+                {toursLoading ? "Đang tải..." : "-- Chọn tour --"}
+              </option>
               {tours.map((tour) => (
                 <option key={tour.id} value={tour.id}>
                   {tour.ten_tour}
                 </option>
               ))}
             </select>
-            {errors.tourId && <p className="admin-field-error">{errors.tourId}</p>}
+            {errors.tourId && (
+              <p className="admin-field-error">{errors.tourId}</p>
+            )}
           </div>
 
           <div className="itinerary-modal__field">
@@ -189,7 +216,9 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
               }}
               disabled={loading}
             />
-            {errors.ngayThu && <p className="admin-field-error">{errors.ngayThu}</p>}
+            {errors.ngayThu && (
+              <p className="admin-field-error">{errors.ngayThu}</p>
+            )}
           </div>
 
           <div className="itinerary-modal__field">
@@ -204,7 +233,9 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
               }}
               disabled={loading}
             />
-            {errors.tieuDe && <p className="admin-field-error">{errors.tieuDe}</p>}
+            {errors.tieuDe && (
+              <p className="admin-field-error">{errors.tieuDe}</p>
+            )}
           </div>
 
           <div className="itinerary-modal__field">
@@ -231,7 +262,9 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
                 disabled={loading || uploadingImage}
                 placeholder="Nhập URL hoặc upload ảnh"
               />
-              <label className={`admin-btn admin-btn--ghost itinerary-modal__upload-btn${uploadingImage ? " is-uploading" : ""}`}>
+              <label
+                className={`admin-btn admin-btn--ghost itinerary-modal__upload-btn${uploadingImage ? " is-uploading" : ""}`}
+              >
                 <input
                   type="file"
                   accept="image/*"
@@ -242,11 +275,18 @@ function EditItineraryModal({ open, itinerary, loading = false, onClose, onSubmi
                 {uploadingImage ? "Đang upload..." : "Upload ảnh"}
               </label>
             </div>
-            {errors.imageUrl && <p className="admin-field-error">{errors.imageUrl}</p>}
+            {errors.imageUrl && (
+              <p className="admin-field-error">{errors.imageUrl}</p>
+            )}
           </div>
 
           <div className="itinerary-modal__footer">
-            <button type="button" className="admin-btn" onClick={onClose} disabled={loading}>
+            <button
+              type="button"
+              className="admin-btn"
+              onClick={onClose}
+              disabled={loading}
+            >
               Hủy
             </button>
             <button

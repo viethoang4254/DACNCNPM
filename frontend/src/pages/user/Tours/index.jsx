@@ -3,7 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import FilterSidebar from "./components/FilterSidebar";
 import TourList from "./components/TourList";
 import Pagination from "./components/Pagination";
-import { getTours as getToursApi } from "../../../services/tourService";
+import {
+  getTours as getToursApi,
+  searchTours as searchToursApi,
+} from "../../../services/tourService";
 import "./Tours.scss";
 
 const PAGE_LIMIT = 8;
@@ -39,6 +42,9 @@ function parseQuery(searchString) {
     sort,
     tinh_thanh: params.get("tinh_thanh") || "",
     search: (params.get("search") || params.get("keyword") || "").trim(),
+    destination: (params.get("destination") || "").trim(),
+    date: (params.get("date") || "").trim(),
+    guests: (params.get("guests") || "").trim(),
     price,
     duration,
   };
@@ -74,6 +80,9 @@ function ToursPage() {
       JSON.stringify({
         tinh_thanh: urlState.tinh_thanh,
         search: urlState.search,
+        destination: urlState.destination,
+        date: urlState.date,
+        guests: urlState.guests,
         sort: urlState.sort,
         price: urlState.price,
         duration: urlState.duration,
@@ -94,7 +103,29 @@ function ToursPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRevealingMore, setIsRevealingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [searchMessage, setSearchMessage] = useState("");
   const [keyword, setKeyword] = useState("");
+
+  const isHomeSearch = Boolean(urlState.destination || urlState.date || urlState.guests);
+  const hasToursPageFilters = useMemo(
+    () =>
+      Boolean(
+        urlState.search ||
+          urlState.tinh_thanh ||
+          urlState.price ||
+          urlState.duration ||
+          urlState.sort !== "newest" ||
+          urlState.page > 1,
+      ),
+    [
+      urlState.duration,
+      urlState.page,
+      urlState.price,
+      urlState.search,
+      urlState.sort,
+      urlState.tinh_thanh,
+    ],
+  );
 
   useEffect(() => {
     setKeyword(urlState.search || "");
@@ -117,6 +148,7 @@ function ToursPage() {
     setVisibleCount(INITIAL_VISIBLE);
     setTotal(0);
     setError(null);
+    setSearchMessage("");
   }, [queryKey]);
 
   useEffect(() => {
@@ -126,8 +158,18 @@ function ToursPage() {
       setIsLoading(true);
 
       try {
-        const params = buildApiParams(urlState);
-        const result = await getToursApi(params);
+        let result;
+
+        if (isHomeSearch && !hasToursPageFilters) {
+          result = await searchToursApi({
+            destination: urlState.destination || undefined,
+            date: urlState.date || undefined,
+            guests: urlState.guests || undefined,
+          });
+        } else {
+          const params = buildApiParams(urlState);
+          result = await getToursApi(params);
+        }
 
         if (ignore) return;
 
@@ -139,11 +181,13 @@ function ToursPage() {
           limit: result.limit,
         });
         setAllTours(result.tours || []);
+        setSearchMessage(result.message || "");
         setVisibleCount(INITIAL_VISIBLE);
       } catch (err) {
         if (ignore) return;
         const apiError = err?.response?.data?.message;
         setError(apiError || err.message || "Không thể tải danh sách tour");
+        setSearchMessage("");
         setAllTours([]);
         setPagination({ total: 0, totalPages: 1, page: 1, limit: PAGE_LIMIT });
       } finally {
@@ -157,7 +201,7 @@ function ToursPage() {
     return () => {
       ignore = true;
     };
-  }, [queryKey, urlState]);
+  }, [hasToursPageFilters, isHomeSearch, queryKey, urlState]);
 
   useEffect(() => {
     const hasMoreToReveal = visibleCount < allTours.length;
@@ -189,7 +233,7 @@ function ToursPage() {
   }, [allTours.length, visibleCount, isLoading]);
 
   const updateUrlQuery = useCallback(
-    (nextPartial, { resetPage = true } = {}) => {
+    (nextPartial, { resetPage = true, dropHomeSearch = false } = {}) => {
       const params = new URLSearchParams(location.search);
 
       Object.entries(nextPartial).forEach(([key, value]) => {
@@ -199,6 +243,12 @@ function ToursPage() {
           params.set(key, String(value));
         }
       });
+
+      if (dropHomeSearch) {
+        params.delete("destination");
+        params.delete("date");
+        params.delete("guests");
+      }
 
       params.set("limit", String(PAGE_LIMIT));
 
@@ -220,7 +270,7 @@ function ToursPage() {
   );
 
   function handleFilterChange(partial) {
-    updateUrlQuery(partial, { resetPage: true });
+    updateUrlQuery(partial, { resetPage: true, dropHomeSearch: true });
   }
 
   function handleFilterClear() {
@@ -233,15 +283,24 @@ function ToursPage() {
 
   function handleSearch(e) {
     e.preventDefault();
-    updateUrlQuery({ search: keyword.trim() }, { resetPage: true });
+    updateUrlQuery(
+      { search: keyword.trim() },
+      { resetPage: true, dropHomeSearch: true },
+    );
   }
 
   function handleSortChange(e) {
-    updateUrlQuery({ sort: e.target.value }, { resetPage: false });
+    updateUrlQuery(
+      { sort: e.target.value },
+      { resetPage: false, dropHomeSearch: true },
+    );
   }
 
   function handlePageChange(nextPage) {
-    updateUrlQuery({ page: nextPage }, { resetPage: false });
+    updateUrlQuery(
+      { page: nextPage },
+      { resetPage: false, dropHomeSearch: true },
+    );
   }
 
   const visibleTours = allTours.slice(0, visibleCount);
@@ -316,6 +375,12 @@ function ToursPage() {
                 </select>
               </div>
             </div>
+
+            {searchMessage && (
+              <div className="tours-page__search-message" role="status" aria-live="polite">
+                {searchMessage}
+              </div>
+            )}
 
             <TourList
               tours={visibleTours}

@@ -1,4 +1,36 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 function HeroSection() {
+  const navigate = useNavigate();
+  const [destination, setDestination] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [guests, setGuests] = useState("2");
+
+  const destinationOptions = useMemo(
+    () => [
+      { value: "", label: "Chọn điểm đến" },
+      { value: "da-nang", label: "Đà Nẵng" },
+      { value: "ha-noi", label: "Hà Nội" },
+      { value: "phu-quoc", label: "Phú Quốc" },
+      { value: "hoi-an", label: "Hội An" },
+      { value: "da-lat", label: "Đà Lạt" },
+      { value: "quang-ninh", label: "Hạ Long" },
+    ],
+    [],
+  );
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const params = new URLSearchParams();
+    if (destination) params.set("destination", destination);
+    if (startDate) params.set("date", startDate);
+    if (guests) params.set("guests", guests);
+
+    navigate(`/tours?${params.toString()}`);
+  };
+
   return (
     <section className="home__hero">
       <div className="home__hero-overlay" />
@@ -9,32 +41,45 @@ function HeroSection() {
           Lên kế hoạch và bắt đầu hành trình của bạn ngày hôm nay
         </p>
 
-        <div className="home__search" aria-label="travel search">
+        <form className="home__search" aria-label="travel search" onSubmit={handleSubmit}>
           <div className="home__search-grid">
             <label>
               Điểm đến
-              <input type="text" placeholder="Where to?" />
+              <select
+                value={destination}
+                onChange={(event) => setDestination(event.target.value)}
+              >
+                {destinationOptions.map((option) => (
+                  <option key={option.value || "all"} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
-              Check-in
-              <input type="date" />
+              Ngày khởi hành
+              <input
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
             </label>
             <label>
-              Check-out
-              <input type="date" />
-            </label>
-            <label>
-              lượng khách
-              <select defaultValue="2">
+              Số khách
+              <select
+                value={guests}
+                onChange={(event) => setGuests(event.target.value)}
+              >
                 <option value="1">1 người</option>
                 <option value="2">2 người</option>
                 <option value="3">3 người</option>
-                <option value="4">4+ người</option>
+                <option value="4">4 người</option>
+                <option value="5">5+ người</option>
               </select>
             </label>
-            <button type="button">Tìm Kiếm</button>
+            <button type="submit">Tìm Kiếm</button>
           </div>
-        </div>
+        </form>
       </div>
     </section>
   );
