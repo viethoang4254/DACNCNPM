@@ -86,17 +86,23 @@ function TourImageModal({
               type="button"
               className="admin-btn admin-btn--primary"
               onClick={onUpload}
-              disabled={processingFiles || uploading || loading || selectedFiles.length === 0}
+              disabled={
+                processingFiles ||
+                uploading ||
+                loading ||
+                selectedFiles.length === 0
+              }
             >
               {processingFiles
                 ? "Đang tối ưu..."
                 : uploading
-                ? "Đang tải lên..."
-                : `Tải lên (${selectedFiles.length})`}
+                  ? "Đang tải lên..."
+                  : `Tải lên (${selectedFiles.length})`}
             </button>
           </div>
           <p className="tour-images-modal__helper">
-            Ảnh sẽ được resize và nén tự động trước khi tải lên. Mỗi ảnh sau tối ưu tối đa {maxImageSizeMb}MB.
+            Ảnh sẽ được resize và nén tự động trước khi tải lên. Mỗi ảnh sau tối
+            ưu tối đa {maxImageSizeMb}MB.
           </p>
 
           <div className="tour-images-modal__url-row">
@@ -169,12 +175,22 @@ function TourImageModal({
                           Boolean(updatingImageId) ||
                           Boolean(settingCoverImageId)
                         }
-                        title={isCurrentCover(image.image_url) ? "Đang là ảnh nền" : "Đặt làm ảnh nền"}
-                        aria-label={isCurrentCover(image.image_url) ? `Ảnh ${image.id} đang là ảnh nền` : `Đặt ảnh ${image.id} làm ảnh nền`}
+                        title={
+                          isCurrentCover(image.image_url)
+                            ? "Đang là ảnh nền"
+                            : "Đặt làm ảnh nền"
+                        }
+                        aria-label={
+                          isCurrentCover(image.image_url)
+                            ? `Ảnh ${image.id} đang là ảnh nền`
+                            : `Đặt ảnh ${image.id} làm ảnh nền`
+                        }
                       >
-                        {settingCoverImageId === image.id
-                          ? <CgSpinner className="tour-images-card__icon-spin" />
-                          : <MdImage />}
+                        {settingCoverImageId === image.id ? (
+                          <CgSpinner className="tour-images-card__icon-spin" />
+                        ) : (
+                          <MdImage />
+                        )}
                       </button>
                       <button
                         type="button"
@@ -186,7 +202,11 @@ function TourImageModal({
                         title="Xóa ảnh"
                         aria-label={`Xóa ảnh ${image.id}`}
                       >
-                        {deletingImageId === image.id ? <CgSpinner className="tour-images-card__icon-spin" /> : <MdDelete />}
+                        {deletingImageId === image.id ? (
+                          <CgSpinner className="tour-images-card__icon-spin" />
+                        ) : (
+                          <MdDelete />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -239,8 +259,8 @@ function TourImageModal({
                           {processingFiles
                             ? "Đang tối ưu..."
                             : updatingImageId === image.id
-                            ? "Đang lưu..."
-                            : "Lưu thay đổi"}
+                              ? "Đang lưu..."
+                              : "Lưu thay đổi"}
                         </button>
                       </div>
                     </div>
