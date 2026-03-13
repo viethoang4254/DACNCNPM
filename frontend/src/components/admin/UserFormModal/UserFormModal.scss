@@ -1,0 +1,74 @@
+.admin-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 17, 28, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+
+.user-form-modal {
+  width: min(620px, 100%);
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+}
+
+.user-form-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.user-form-modal__header h3 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #0f172a;
+}
+
+.user-form-modal__header p {
+  margin: 4px 0 0;
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.user-form-modal__body {
+  padding: 20px 24px 24px;
+}
+
+.user-form-modal__label {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.user-form-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.user-form-modal__helper {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 640px) {
+  .user-form-modal__header {
+    flex-direction: column;
+  }
+
+  .user-form-modal__footer {
+    flex-direction: column-reverse;
+  }
+}

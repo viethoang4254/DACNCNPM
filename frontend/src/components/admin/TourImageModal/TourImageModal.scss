@@ -1,0 +1,211 @@
+.admin-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 17, 28, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+
+.tour-images-modal {
+  width: min(920px, 100%);
+  max-height: min(88vh, 900px);
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tour-images-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tour-images-modal__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.tour-images-modal__header p {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.tour-images-modal__body {
+  padding: 20px 24px 24px;
+  overflow-y: auto;
+}
+
+.tour-images-modal__upload-row,
+.tour-images-modal__url-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.tour-images-modal__upload-row {
+  margin-bottom: 16px;
+}
+
+.tour-images-modal input[type="file"].admin-input {
+  height: 48px;
+  padding: 6px 10px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  color: #334155;
+  font-size: 1.2rem;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.tour-images-modal input[type="file"].admin-input::file-selector-button {
+  height: 34px;
+  border: 1px solid #b6c2d1;
+  background: linear-gradient(180deg, #ffffff 0%, #e9eff7 100%);
+  color: #334155;
+  border-radius: 9px;
+  padding: 0 16px;
+  margin-right: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tour-images-modal input[type="file"].admin-input::file-selector-button:hover {
+  background: linear-gradient(180deg, #f8fbff 0%, #dde7f3 100%);
+  border-color: #93a5bc;
+}
+
+.tour-images-modal input[type="file"].admin-input::file-selector-button:active {
+  transform: translateY(1px);
+}
+
+.tour-images-modal input[type="file"].admin-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.tour-images-modal input[type="file"].admin-input:disabled::file-selector-button {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tour-images-modal__helper {
+  margin: -4px 0 14px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.tour-images-modal__url-row {
+  margin-bottom: 8px;
+}
+
+.tour-images-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.tour-images-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.tour-images-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  display: block;
+  background: #f8fafc;
+}
+
+.tour-images-card__footer {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tour-images-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tour-images-card__actions .admin-icon-btn {
+  width: 40px;
+  height: 40px;
+}
+
+.tour-images-card__icon-btn--active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.tour-images-card__icon-btn--active:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.tour-images-card__icon-spin {
+  animation: tour-image-spin 0.9s linear infinite;
+}
+
+.tour-images-card__footer span {
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.tour-images-card__edit-row {
+  padding: 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tour-images-card__edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@keyframes tour-image-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .tour-images-modal__header {
+    flex-direction: column;
+  }
+
+  .tour-images-modal__upload-row,
+  .tour-images-modal__url-row,
+  .tour-images-grid {
+    grid-template-columns: 1fr;
+  }
+}

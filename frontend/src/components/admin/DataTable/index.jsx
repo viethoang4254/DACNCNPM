@@ -1,4 +1,6 @@
-function DataTable({ columns, data, emptyText = "No data", keyField = "id" }) {
+import "./DataTable.scss";
+
+function DataTable({ columns, data, emptyText = "Không có dữ liệu", keyField = "id" }) {
   return (
     <div className="admin-table-wrap">
       <table className="admin-table">

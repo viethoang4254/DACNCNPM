@@ -1,11 +1,13 @@
+import "./ConfirmModal.scss";
+
 function ConfirmModal({
   open,
   title,
   message,
   onConfirm,
   onCancel,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText = "Xác nhận",
+  cancelText = "Hủy",
   hideCancel = false,
   confirmVariant = "danger",
 }) {

@@ -1,3 +1,5 @@
+import "./StatsCard.scss";
+
 function StatsCard({ title, value, hint, accent = "blue", icon: Icon }) {
   return (
     <article className={`stats-card stats-card--${accent}`}>

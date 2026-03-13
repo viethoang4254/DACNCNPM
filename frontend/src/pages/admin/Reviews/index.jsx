@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import DataTable from "../../../components/admin/DataTable";
 import Pagination from "../../../components/admin/Pagination";
 import apiClient from "../../../utils/apiClient";
+import "./Reviews.scss";
 
 const LIMIT = 10;
 
@@ -31,7 +32,7 @@ function Reviews() {
         setReviews(Array.isArray(res.data?.data) ? res.data.data : []);
       } catch (err) {
         if (!active) return;
-        setError(err?.response?.data?.message || "Cannot load reviews");
+        setError(err?.response?.data?.message || "Không thể tải danh sách đánh giá");
       } finally {
         if (active) setLoading(false);
       }
@@ -45,17 +46,17 @@ function Reviews() {
 
   const columns = [
     { key: "id",        header: "ID" },
-    { key: "user_name", header: "User" },
+    { key: "user_name", header: "Người dùng" },
     { key: "ten_tour",  header: "Tour" },
     {
       key: "rating",
-      header: "Rating",
+      header: "Đánh giá",
       render: (row) => <StarRating value={row.rating} />,
     },
-    { key: "comment",    header: "Comment" },
+    { key: "comment",    header: "Bình luận" },
     {
       key: "created_at",
-      header: "Date",
+      header: "Ngày tạo",
       render: (row) => new Date(row.created_at).toLocaleDateString("vi-VN"),
     },
   ];
@@ -63,14 +64,14 @@ function Reviews() {
   return (
     <div className="admin-card">
       <div className="admin-toolbar">
-        <h3>Reviews</h3>
-        <span className="admin-toolbar__meta">{reviews.length} reviews</span>
+        <h3>Đánh giá</h3>
+        <span className="admin-toolbar__meta">{reviews.length} đánh giá</span>
       </div>
       {error && <p className="admin-state admin-state--error">{error}</p>}
       {loading ? (
-        <p className="admin-state">Loading reviews…</p>
+        <p className="admin-state">Đang tải đánh giá...</p>
       ) : (
-        <DataTable columns={columns} data={paginated} emptyText="No reviews yet" />
+        <DataTable columns={columns} data={paginated} emptyText="Chưa có đánh giá" />
       )}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>

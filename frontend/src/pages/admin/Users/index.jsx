@@ -13,6 +13,12 @@ import {
   getUsers as getUsersRequest,
   updateUser as updateUserRequest,
 } from "../../../services/userService";
+import "./Users.scss";
+
+const roleLabels = {
+  admin: "Admin",
+  customer: "customer",
+};
 
 const LIMIT = 10;
 
@@ -26,7 +32,12 @@ function Users() {
   const [page, setPage] = useState(1);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [notification, setNotification] = useState({ open: false, title: "", message: "", variant: "primary" });
+  const [notification, setNotification] = useState({
+    open: false,
+    title: "",
+    message: "",
+    variant: "primary",
+  });
 
   async function fetchUsers() {
     try {
@@ -34,7 +45,7 @@ function Users() {
       setError("");
       setUsers(await getUsersRequest());
     } catch (err) {
-      setError(getApiMessage(err, "Cannot load users"));
+      setError(getApiMessage(err, "Không thể tải danh sách người dùng"));
     } finally {
       setLoading(false);
     }
@@ -55,9 +66,13 @@ function Users() {
       setShowModal(false);
       setSelectedUser(null);
       await fetchUsers();
-      openNotification("Success", "Thêm mới thành công.", "primary");
+      openNotification("Thành công", "Thêm mới thành công.", "primary");
     } catch (err) {
-      openNotification("Error", getApiMessage(err, "Thêm mới thất bại."), "danger");
+      openNotification(
+        "Lỗi",
+        getApiMessage(err, "Thêm mới thất bại."),
+        "danger",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -72,9 +87,13 @@ function Users() {
       setShowModal(false);
       setSelectedUser(null);
       await fetchUsers();
-      openNotification("Success", "Cập nhật thành công.", "primary");
+      openNotification("Thành công", "Cập nhật thành công.", "primary");
     } catch (err) {
-      openNotification("Error", getApiMessage(err, "Cập nhật thất bại."), "danger");
+      openNotification(
+        "Lỗi",
+        getApiMessage(err, "Cập nhật thất bại."),
+        "danger",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -89,10 +108,10 @@ function Users() {
       setShowDeleteConfirm(false);
       setSelectedUser(null);
       await fetchUsers();
-      openNotification("Success", "Xóa thành công.", "primary");
+      openNotification("Thành công", "Xóa thành công.", "primary");
     } catch (err) {
       setShowDeleteConfirm(false);
-      openNotification("Error", getApiMessage(err, "Xóa thất bại."), "danger");
+      openNotification("Lỗi", getApiMessage(err, "Xóa thất bại."), "danger");
     } finally {
       setSubmitting(false);
     }
@@ -135,11 +154,13 @@ function Users() {
     const kw = search.trim().toLowerCase();
     if (!kw) return users;
     return users.filter(
-      (u) => u.email?.toLowerCase().includes(kw) || u.ho_ten?.toLowerCase().includes(kw)
+      (u) =>
+        u.email?.toLowerCase().includes(kw) ||
+        u.ho_ten?.toLowerCase().includes(kw),
     );
   }, [search, users]);
 
-  const totalPages     = Math.max(1, Math.ceil(filtered.length / LIMIT));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT));
   const paginatedUsers = filtered.slice((page - 1) * LIMIT, page * LIMIT);
 
   useEffect(() => {
@@ -147,25 +168,27 @@ function Users() {
   }, [page, totalPages]);
 
   const columns = [
-    { key: "id",    header: "ID",    className: "admin-col-id" },
-    { key: "ho_ten", header: "Full Name" },
-    { key: "email",  header: "Email" },
-    { key: "so_dien_thoai", header: "Phone" },
+    { key: "id", header: "ID", className: "admin-col-id" },
+    { key: "ho_ten", header: "Họ tên" },
+    { key: "email", header: "Email" },
+    { key: "so_dien_thoai", header: "Số điện thoại" },
     {
       key: "role",
-      header: "Role",
+      header: "Vai trò",
       render: (row) => (
-        <span className={`status-pill status-pill--${row.role}`}>{row.role}</span>
+        <span className={`status-pill status-pill--${row.role}`}>
+          {roleLabels[row.role] || row.role}
+        </span>
       ),
     },
     {
       key: "created_at",
-      header: "Joined",
+      header: "Ngày tham gia",
       render: (row) => new Date(row.created_at).toLocaleDateString("vi-VN"),
     },
     {
       key: "actions",
-      header: "Actions",
+      header: "Thao tác",
       render: (row) => (
         <div className="admin-icon-actions">
           <button
@@ -173,8 +196,8 @@ function Users() {
             className="admin-icon-btn"
             onClick={() => handleEditUser(row)}
             disabled={submitting}
-            aria-label={`Edit user ${row.email}`}
-            title="Edit"
+            aria-label={`Sửa người dùng ${row.email}`}
+            title="Sửa"
           >
             <PiPencilLineFill />
           </button>
@@ -183,8 +206,8 @@ function Users() {
             className="admin-icon-btn admin-icon-btn--danger"
             onClick={() => handleDeleteClick(row)}
             disabled={submitting}
-            aria-label={`Delete user ${row.email}`}
-            title="Delete"
+            aria-label={`Xóa người dùng ${row.email}`}
+            title="Xóa"
           >
             <MdDelete />
           </button>
@@ -194,24 +217,34 @@ function Users() {
   ];
 
   return (
-    <div className="admin-card">
+    <div className="admin-card admin-page-users">
       <div className="admin-toolbar">
         <div>
-          <h3>Users</h3>
+          <h3>Người dùng</h3>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span className="admin-toolbar__meta">{filtered.length} users</span>
-          <button type="button" className="admin-btn admin-btn--primary" onClick={handleAddUser} disabled={submitting}>
+          <span className="admin-toolbar__meta">
+            {filtered.length} người dùng
+          </span>
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary"
+            onClick={handleAddUser}
+            disabled={submitting}
+          >
             <FaPlus />
-            Add User
+            Thêm người dùng
           </button>
           <div className="admin-search-wrap">
             <FaSearch className="admin-search-icon" />
             <input
               className="admin-input-search"
-              placeholder="Search name or email…"
+              placeholder="Tìm theo tên hoặc email..."
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
         </div>
@@ -220,9 +253,13 @@ function Users() {
       {error && <p className="admin-state admin-state--error">{error}</p>}
 
       {loading ? (
-        <p className="admin-state">Loading users…</p>
+        <p className="admin-state">Đang tải người dùng...</p>
       ) : (
-        <DataTable columns={columns} data={paginatedUsers} emptyText="No users found" />
+        <DataTable
+          columns={columns}
+          data={paginatedUsers}
+          emptyText="Không tìm thấy người dùng"
+        />
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
@@ -242,10 +279,10 @@ function Users() {
 
       <ConfirmModal
         open={showDeleteConfirm}
-        title="Delete User"
+        title="Xóa người dùng"
         message="Bạn có chắc muốn xóa người dùng này không?"
-        confirmText={submitting ? "Deleting..." : "Confirm Delete"}
-        cancelText="Cancel"
+        confirmText={submitting ? "Đang xóa..." : "Xác nhận xóa"}
+        cancelText="Hủy"
         onCancel={() => {
           if (submitting) return;
           setShowDeleteConfirm(false);
@@ -259,7 +296,7 @@ function Users() {
         open={notification.open}
         title={notification.title}
         message={notification.message}
-        confirmText="Close"
+        confirmText="Đóng"
         hideCancel
         onCancel={() => setNotification((prev) => ({ ...prev, open: false }))}
         onConfirm={() => setNotification((prev) => ({ ...prev, open: false }))}

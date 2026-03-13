@@ -16,10 +16,12 @@ function toTourCardModel(item) {
   };
 }
 
-function PopularTours({ fetchTours }) {
-  const [tours, setTours] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+function PopularTours({ fetchTours, tours: toursProp, isLoading: isLoadingProp, error: errorProp }) {
+  const [tours, setTours] = useState(Array.isArray(toursProp) ? toursProp : []);
+  const [isLoading, setIsLoading] = useState(typeof isLoadingProp === "boolean" ? isLoadingProp : true);
+  const [error, setError] = useState(errorProp || "");
+
+  const usesExternalData = Array.isArray(toursProp);
 
   const normalizedTours = useMemo(
     () => tours.map((item) => toTourCardModel(item)),
@@ -27,6 +29,13 @@ function PopularTours({ fetchTours }) {
   );
 
   useEffect(() => {
+    if (usesExternalData) {
+      setTours(toursProp);
+      setIsLoading(Boolean(isLoadingProp));
+      setError(errorProp || "");
+      return;
+    }
+
     const loadTours = async () => {
       try {
         setIsLoading(true);
@@ -47,7 +56,7 @@ function PopularTours({ fetchTours }) {
     };
 
     loadTours();
-  }, [fetchTours]);
+  }, [errorProp, fetchTours, isLoadingProp, toursProp, usesExternalData]);
 
   return (
     <section className="home__section home__section--popular">

@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import apiClient from "../../../utils/apiClient";
+import "./ChartRevenue.scss";
 
 function ChartRevenue() {
   const [rows, setRows] = useState([]);
@@ -25,7 +26,7 @@ function ChartRevenue() {
         setRows(Array.isArray(res.data?.data) ? res.data.data.reverse() : []);
       } catch (err) {
         if (!active) return;
-        setError(err?.response?.data?.message || "Cannot load revenue chart");
+        setError(err?.response?.data?.message || "Không thể tải biểu đồ doanh thu");
       } finally {
         if (active) setLoading(false);
       }
@@ -37,12 +38,12 @@ function ChartRevenue() {
     };
   }, []);
 
-  if (loading) return <p className="admin-state">Loading chart...</p>;
+  if (loading) return <p className="admin-state">Đang tải biểu đồ...</p>;
   if (error) return <p className="admin-state admin-state--error">{error}</p>;
 
   return (
     <div className="admin-card">
-      <h3>Monthly Revenue</h3>
+      <h3>Doanh thu theo tháng</h3>
       <div className="chart-box">
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={rows} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
