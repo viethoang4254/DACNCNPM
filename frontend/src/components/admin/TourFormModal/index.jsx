@@ -4,7 +4,6 @@ import "./TourFormModal.scss";
 const initialFormState = {
   ten_tour: "",
   mo_ta: "",
-  gia: "",
   tinh_thanh: "",
   diem_khoi_hanh: "",
   phuong_tien: "",
@@ -25,31 +24,35 @@ const initialTouchedState = {
 
 const sanitizeCurrencyInput = (value) => String(value ?? "").replace(/[^\d]/g, "");
 
-const formatCurrencyInput = (value) => {
-  if (value === null || value === undefined || value === "") return "";
-
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return Math.round(value).toLocaleString("vi-VN");
-  }
-
-  const trimmedValue = String(value).trim();
-  if (!trimmedValue) return "";
-
-  if (/^\d+(\.\d+)?$/.test(trimmedValue)) {
-    const numericValue = Number(trimmedValue);
-    if (Number.isFinite(numericValue)) {
-      return Math.round(numericValue).toLocaleString("vi-VN");
-    }
-  }
-
-  const digits = sanitizeCurrencyInput(trimmedValue);
-  if (!digits) return "";
-  return Number(digits).toLocaleString("vi-VN");
-};
-
 const normalizeCurrencyValue = (value) => {
   const digits = sanitizeCurrencyInput(value);
   return digits ? Number(digits) : 0;
+};
+
+const normalizeInitialPriceValue = (value) => {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  const raw = String(value).trim();
+  if (!raw) {
+    return "";
+  }
+
+  if (/^\d+(\.\d+)?$/.test(raw)) {
+    const numericValue = Number(raw);
+    if (Number.isFinite(numericValue)) {
+      return String(Math.round(numericValue));
+    }
+  }
+
+  return sanitizeCurrencyInput(raw);
+};
+
+const formatPriceForDisplay = (value) => {
+  const digits = sanitizeCurrencyInput(value);
+  if (!digits) return "";
+  return Number(digits).toLocaleString("vi-VN");
 };
 
 const getFieldError = (name, value) => {
@@ -103,6 +106,7 @@ const getFieldError = (name, value) => {
 
 function TourFormModal({ open, mode = "create", tour, loading = false, onClose, onSubmit }) {
   const [form, setForm] = useState(initialFormState);
+  const [price, setPrice] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState(initialTouchedState);
   const [formError, setFormError] = useState("");
@@ -110,6 +114,7 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
   useEffect(() => {
     if (!open) {
       setForm(initialFormState);
+      setPrice("");
       setFieldErrors({});
       setTouched(initialTouchedState);
       setFormError("");
@@ -119,13 +124,13 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
     setForm({
       ten_tour: tour?.ten_tour || "",
       mo_ta: tour?.mo_ta || "",
-      gia: formatCurrencyInput(tour?.gia ?? ""),
       tinh_thanh: tour?.tinh_thanh || "",
       diem_khoi_hanh: tour?.diem_khoi_hanh || "",
       phuong_tien: tour?.phuong_tien || "",
       so_ngay: tour?.so_ngay ?? "",
       so_nguoi_toi_da: tour?.so_nguoi_toi_da ?? "",
     });
+    setPrice(normalizeInitialPriceValue(tour?.gia ?? ""));
     setFieldErrors({});
     setTouched(initialTouchedState);
     setFormError("");
@@ -137,13 +142,24 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
 
   function handleChange(event) {
     const { name, value } = event.target;
-    const nextValue = name === "gia" ? formatCurrencyInput(value) : value;
-    setForm((prev) => ({ ...prev, [name]: nextValue }));
+    setForm((prev) => ({ ...prev, [name]: value }));
 
     if (touched[name]) {
       setFieldErrors((prev) => ({
         ...prev,
-        [name]: getFieldError(name, nextValue),
+        [name]: getFieldError(name, value),
+      }));
+    }
+  }
+
+  function handlePriceChange(event) {
+    const nextPrice = sanitizeCurrencyInput(event.target.value);
+    setPrice(nextPrice);
+
+    if (touched.gia) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        gia: getFieldError("gia", nextPrice),
       }));
     }
   }
@@ -174,7 +190,7 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
     const nextFieldErrors = {
       ten_tour: getFieldError("ten_tour", form.ten_tour),
       mo_ta: getFieldError("mo_ta", form.mo_ta),
-      gia: getFieldError("gia", form.gia),
+      gia: getFieldError("gia", price),
       tinh_thanh: getFieldError("tinh_thanh", form.tinh_thanh),
       diem_khoi_hanh: getFieldError("diem_khoi_hanh", form.diem_khoi_hanh),
       phuong_tien: getFieldError("phuong_tien", form.phuong_tien),
@@ -195,7 +211,7 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
     onSubmit({
       ten_tour: form.ten_tour.trim(),
       mo_ta: form.mo_ta.trim(),
-      gia: normalizeCurrencyValue(form.gia),
+      gia: normalizeCurrencyValue(price),
       tinh_thanh: form.tinh_thanh.trim(),
       diem_khoi_hanh: form.diem_khoi_hanh.trim(),
       phuong_tien: form.phuong_tien.trim(),
@@ -260,13 +276,13 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
                 name="gia"
                 type="text"
                 inputMode="numeric"
-                value={form.gia}
-                onChange={handleChange}
+                value={price}
+                onChange={handlePriceChange}
                 onBlur={handleBlur}
-                placeholder="Nhập giá tour, ví dụ 35.500.000"
+                placeholder="Nhập giá tour, ví dụ 35500000"
                 aria-invalid={Boolean(touched.gia && fieldErrors.gia)}
               />
-              {!touched.gia && !fieldErrors.gia && form.gia && <p className="admin-field-error" style={{ color: "#64748b" }}>{form.gia} VNĐ</p>}
+              {!touched.gia && !fieldErrors.gia && price && <p className="admin-field-error" style={{ color: "#64748b" }}>{formatPriceForDisplay(price)} VNĐ</p>}
               {touched.gia && fieldErrors.gia && <p className="admin-field-error">{fieldErrors.gia}</p>}
             </div>
 
