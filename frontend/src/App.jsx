@@ -14,6 +14,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Users from "./pages/admin/Users";
 import AdminTours from "./pages/admin/Tours";
+import TourSchedules from "./pages/admin/TourSchedules";
 import Bookings from "./pages/admin/Bookings";
 import Payments from "./pages/admin/Payments";
 import Reviews from "./pages/admin/Reviews";
@@ -123,6 +124,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<Users />} />
           <Route path="tours" element={<AdminTours />} />
+          <Route path="schedules" element={<TourSchedules />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="payments" element={<Payments />} />
           <Route path="reviews" element={<Reviews />} />
