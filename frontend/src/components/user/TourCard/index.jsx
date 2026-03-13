@@ -14,8 +14,11 @@ function TourCard({ tour }) {
       </div>
 
       <div className="tour-card__info">
-        <h3 className="tour-card__name">{tour.name}</h3>
-        <p className="tour-card__location">{tour.location}</p>
+        <div className="tour-card__content">
+          <h3 className="tour-card__name">{tour.name}</h3>
+          <p className="tour-card__location">{tour.location}</p>
+        </div>
+
         <div className="tour-card__meta">
           <p className="tour-card__price">
             {price} ₫

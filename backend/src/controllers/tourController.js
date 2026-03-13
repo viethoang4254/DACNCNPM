@@ -25,6 +25,7 @@ import {
 } from "../models/tourModel.js";
 import { getToursService } from "../services/tourService.js";
 import { getReviewsByTourId } from "../models/reviewModel.js";
+import { getItinerariesByTourId } from "../models/itineraryModel.js";
 
 const parsePaging = (req) => {
   const page = Number(req.query.page || 1);
@@ -127,7 +128,11 @@ export const getTourByIdController = asyncHandler(async (req, res) => {
     });
   }
 
-  const [images, schedules] = await Promise.all([getTourImages(id), getTourSchedules(id)]);
+  const [images, schedules, itineraries] = await Promise.all([
+    getTourImages(id),
+    getTourSchedules(id),
+    getItinerariesByTourId(id),
+  ]);
 
   return sendResponse(res, {
     statusCode: 200,
@@ -137,7 +142,31 @@ export const getTourByIdController = asyncHandler(async (req, res) => {
       ...tour,
       images,
       schedules,
+      itineraries,
     },
+  });
+});
+
+export const getTourItinerariesController = asyncHandler(async (req, res) => {
+  const tourId = Number(req.params.id);
+  const tour = await getTourById(tourId);
+
+  if (!tour) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Tour not found",
+      data: {},
+    });
+  }
+
+  const itineraries = await getItinerariesByTourId(tourId);
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Tour itineraries fetched successfully",
+    data: itineraries,
   });
 });
 

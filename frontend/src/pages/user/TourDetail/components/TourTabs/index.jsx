@@ -4,7 +4,6 @@ function TourTabs({ activeTab, onTabChange }) {
   const tabs = [
     { id: "overview", label: "Giới thiệu tour" },
     { id: "itinerary", label: "Lịch trình tour" },
-    { id: "images", label: "Hình ảnh" },
     { id: "reviews", label: "Đánh giá" },
   ];
 

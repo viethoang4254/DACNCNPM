@@ -1,4 +1,4 @@
-import { FaChartLine, FaUsers, FaMapMarkedAlt, FaBook, FaMoneyCheckAlt, FaStar, FaCompass, FaCalendarAlt } from "react-icons/fa";
+import { FaChartLine, FaUsers, FaMapMarkedAlt, FaBook, FaMoneyCheckAlt, FaStar, FaCompass, FaCalendarAlt, FaRoute } from "react-icons/fa";
 import { NavLink } from "react-router-dom";
 import "./AdminSidebar.scss";
 
@@ -7,6 +7,7 @@ const menuItems = [
   { to: "/admin/users",      label: "Users",      icon: FaUsers },
   { to: "/admin/tours",      label: "Tours",      icon: FaMapMarkedAlt },
   { to: "/admin/schedules",  label: "Schedules",  icon: FaCalendarAlt },
+  { to: "/admin/itineraries", label: "Itineraries", icon: FaRoute },
   { to: "/admin/bookings",   label: "Bookings",   icon: FaBook },
   { to: "/admin/payments",   label: "Payments",   icon: FaMoneyCheckAlt },
   { to: "/admin/reviews",    label: "Reviews",    icon: FaStar },
