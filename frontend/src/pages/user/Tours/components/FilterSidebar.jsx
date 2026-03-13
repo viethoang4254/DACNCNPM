@@ -17,16 +17,16 @@ const DESTINATIONS = [
 ];
 
 const DAYS_OPTIONS = [
-  { label: "1 – 3 ngày", minDays: 1, maxDays: 3 },
-  { label: "4 – 7 ngày", minDays: 4, maxDays: 7 },
-  { label: "Trên 7 ngày", minDays: 8, maxDays: undefined },
+  { label: "1 – 3 ngày", value: "1-3" },
+  { label: "4 – 7 ngày", value: "4-7" },
+  { label: "Trên 7 ngày", value: "over-7" },
 ];
 
 const PRICE_OPTIONS = [
-  { label: "Dưới 2 triệu", minPrice: 0, maxPrice: 2000000 },
-  { label: "2 – 5 triệu", minPrice: 2000000, maxPrice: 5000000 },
-  { label: "5 – 10 triệu", minPrice: 5000000, maxPrice: 10000000 },
-  { label: "Trên 10 triệu", minPrice: 10000000, maxPrice: undefined },
+  { label: "Dưới 2 triệu", value: "under-2" },
+  { label: "2 – 5 triệu", value: "2-5" },
+  { label: "5 – 10 triệu", value: "5-10" },
+  { label: "Trên 10 triệu", value: "over-10" },
 ];
 
 function FilterSidebar({ filters, onChange, onClear }) {
@@ -35,29 +35,17 @@ function FilterSidebar({ filters, onChange, onClear }) {
   };
 
   const handleDays = (opt) => {
-    const isSelected =
-      filters.minDays === opt.minDays && filters.maxDays === opt.maxDays;
-    onChange(
-      isSelected
-        ? { minDays: undefined, maxDays: undefined }
-        : { minDays: opt.minDays, maxDays: opt.maxDays },
-    );
+    const isSelected = filters.duration === opt.value;
+    onChange({ duration: isSelected ? "" : opt.value });
   };
 
   const handlePrice = (opt) => {
-    const isSelected =
-      filters.minPrice === opt.minPrice && filters.maxPrice === opt.maxPrice;
-    onChange(
-      isSelected
-        ? { minPrice: undefined, maxPrice: undefined }
-        : { minPrice: opt.minPrice, maxPrice: opt.maxPrice },
-    );
+    const isSelected = filters.price === opt.value;
+    onChange({ price: isSelected ? "" : opt.value });
   };
 
   const hasActiveFilter =
-    filters.tinh_thanh ||
-    filters.minDays !== undefined ||
-    filters.minPrice !== undefined;
+    filters.tinh_thanh || filters.duration || filters.price;
 
   return (
     <aside className="filter-sidebar">
@@ -111,10 +99,7 @@ function FilterSidebar({ filters, onChange, onClear }) {
               <label className="filter-sidebar__option">
                 <input
                   type="checkbox"
-                  checked={
-                    filters.minDays === opt.minDays &&
-                    filters.maxDays === opt.maxDays
-                  }
+                  checked={filters.duration === opt.value}
                   onChange={() => handleDays(opt)}
                 />
                 <span className="filter-sidebar__checkmark" />
@@ -139,10 +124,7 @@ function FilterSidebar({ filters, onChange, onClear }) {
               <label className="filter-sidebar__option">
                 <input
                   type="checkbox"
-                  checked={
-                    filters.minPrice === opt.minPrice &&
-                    filters.maxPrice === opt.maxPrice
-                  }
+                  checked={filters.price === opt.value}
                   onChange={() => handlePrice(opt)}
                 />
                 <span className="filter-sidebar__checkmark" />

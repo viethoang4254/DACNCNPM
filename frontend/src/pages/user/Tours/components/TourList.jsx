@@ -17,7 +17,7 @@ function TourList({ tours, isLoading, error }) {
   if (isLoading) {
     return (
       <div className="tour-list">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
       </div>

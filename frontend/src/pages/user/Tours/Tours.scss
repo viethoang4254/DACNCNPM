@@ -96,6 +96,22 @@ button {
 .tours-page__main {
   flex: 1;
   min-width: 0;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.tours-page__main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tours-page__main::-webkit-scrollbar-thumb {
+  background: #cfd9e6;
+  border-radius: 999px;
+}
+
+.tours-page__main::-webkit-scrollbar-thumb:hover {
+  background: #b7c6d8;
 }
 
 // ─── Toolbar ─────────────────────────────────────────────────────────────────
@@ -106,6 +122,12 @@ button {
   gap: 12px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: var(--color-surface);
+  padding: 10px 0;
+  border-bottom: 1px solid #e8eef5;
 }
 
 .tours-page__result-count {
@@ -171,6 +193,43 @@ button {
   font-size: 0.9rem;
   color: #6b7c93;
   margin: 0;
+}
+
+.tours-page__sentinel {
+  width: 100%;
+  height: 1px;
+}
+
+.tours-page__loading-more {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.4rem;
+  color: #5a6b7c;
+}
+
+.tours-page__spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #dbe5f0;
+  border-top-color: var(--color-primary);
+  animation: toursSpin 0.8s linear infinite;
+}
+
+.tours-page__end {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 1.35rem;
+  color: #7a8ea7;
+}
+
+@keyframes toursSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // ─── TourCard (horizontal) ───────────────────────────────────────────────────
@@ -593,6 +652,12 @@ button {
     flex: none;
     width: 100%;
     position: static;
+  }
+
+  .tours-page__main {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .tour-card-h {
