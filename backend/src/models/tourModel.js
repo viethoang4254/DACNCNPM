@@ -208,6 +208,48 @@ export const getLatestTours = async (limit = 8) => {
   return rows;
 };
 
+export const getSimilarToursByTourId = async (tourId, limit = 3) => {
+  const safeLimit = Number.isFinite(Number(limit)) ? Math.max(1, Number(limit)) : 3;
+
+  const [baseTourRows] = await pool.execute(
+    "SELECT id, tinh_thanh FROM tours WHERE id = ? LIMIT 1",
+    [tourId]
+  );
+
+  const baseTour = baseTourRows[0] || null;
+  if (!baseTour) {
+    return [];
+  }
+
+  const [rows] = await pool.execute(
+    `SELECT
+        t.id,
+        t.ten_tour,
+        t.mo_ta,
+        t.gia,
+        t.tinh_thanh,
+        t.diem_khoi_hanh,
+        t.phuong_tien,
+        t.so_ngay,
+        t.so_nguoi_toi_da,
+        t.created_at,
+        (
+          SELECT ti.image_url
+          FROM tour_images ti
+          WHERE ti.tour_id = t.id
+          ORDER BY ti.id ASC
+          LIMIT 1
+        ) AS hinh_anh
+     FROM tours t
+     WHERE t.tinh_thanh = ? AND t.id <> ?
+     ORDER BY t.created_at DESC
+     LIMIT ${safeLimit}`,
+    [baseTour.tinh_thanh, tourId]
+  );
+
+  return rows;
+};
+
 export const addTourImages = async (tourId, imageUrls) => {
   if (imageUrls.length === 0) return 0;
 

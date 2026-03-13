@@ -5,6 +5,7 @@ import {
   FaBus,
   FaArrowRight,
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -90,10 +91,10 @@ function TourCard({ tour }) {
             <span className="tour-card-h__departure">
               Khởi hành từ: <strong>{departureLabel}</strong>
             </span>
-            <button type="button" className="tour-card-h__btn">
+            <Link to={`/tours/${tour.id}`} className="tour-card-h__btn">
               Xem chi tiết
               <FaArrowRight className="tour-card-h__btn-icon" />
-            </button>
+            </Link>
           </div>
         </div>
       </div>

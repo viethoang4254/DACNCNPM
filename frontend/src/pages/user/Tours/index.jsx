@@ -237,7 +237,7 @@ function ToursPage() {
   }
 
   function handleSortChange(e) {
-    updateUrlQuery({ sort: e.target.value }, { resetPage: true });
+    updateUrlQuery({ sort: e.target.value }, { resetPage: false });
   }
 
   function handlePageChange(nextPage) {
@@ -286,68 +286,68 @@ function ToursPage() {
           />
         </aside>
 
-        <main className="tours-page__main" ref={scrollContainerRef}>
-          <div className="tours-page__toolbar">
-            <p className="tours-page__result-count">
-              {isLoading && allTours.length === 0 ? (
-                "Đang tải..."
-              ) : (
-                <>
-                  {total > 0
-                    ? `Đã hiển thị ${shownTours}/${Math.max(total, allTours.length)} tour`
-                    : "Không tìm thấy tour nào"}
-                </>
-              )}
-            </p>
-            <div className="tours-page__sort-wrap">
-              <label htmlFor="sort-select" className="tours-page__sort-label">
-                Sắp xếp:
-              </label>
-              <select
-                id="sort-select"
-                className="tours-page__sort-select"
-                value={urlState.sort}
-                onChange={handleSortChange}
-              >
-                <option value="newest">Mới nhất</option>
-                <option value="price_asc">Giá tăng dần</option>
-                <option value="price_desc">Giá giảm dần</option>
-              </select>
+        <main className="tours-page__main">
+          <div className="tours-page__main-scroll" ref={scrollContainerRef}>
+            <div className="tours-page__toolbar">
+              <p className="tours-page__result-count">
+                {isLoading && allTours.length === 0 ? (
+                  "Đang tải..."
+                ) : (
+                  <>
+                    {total > 0
+                      ? `Đã hiển thị ${shownTours}/${Math.max(total, allTours.length)} tour`
+                      : "Không tìm thấy tour nào"}
+                  </>
+                )}
+              </p>
+              <div className="tours-page__sort-wrap">
+                <label htmlFor="sort-select" className="tours-page__sort-label">
+                  Sắp xếp:
+                </label>
+                <select
+                  id="sort-select"
+                  className="tours-page__sort-select"
+                  value={urlState.sort}
+                  onChange={handleSortChange}
+                >
+                  <option value="newest">Mới nhất</option>
+                  <option value="price_asc">Giá tăng dần</option>
+                  <option value="price_desc">Giá giảm dần</option>
+                </select>
+              </div>
             </div>
+
+            <TourList
+              tours={visibleTours}
+              isLoading={isLoading && allTours.length === 0}
+              error={error}
+            />
+
+            <div
+              ref={loadMoreRef}
+              className="tours-page__sentinel"
+              aria-hidden="true"
+            />
+
+            {isRevealingMore && hasMoreToReveal && (
+              <div
+                className="tours-page__loading-more"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="tours-page__spinner" aria-hidden="true" />
+                <span>Đang tải thêm tour...</span>
+              </div>
+            )}
           </div>
 
-          <TourList
-            tours={visibleTours}
-            isLoading={isLoading && allTours.length === 0}
-            error={error}
-          />
-
-          <div
-            ref={loadMoreRef}
-            className="tours-page__sentinel"
-            aria-hidden="true"
-          />
-
-          {isRevealingMore && hasMoreToReveal && (
-            <div
-              className="tours-page__loading-more"
-              role="status"
-              aria-live="polite"
-            >
-              <span className="tours-page__spinner" aria-hidden="true" />
-              <span>Đang tải thêm tour...</span>
-            </div>
-          )}
-
-          {/* {!hasMoreToReveal && allTours.length > 0 && (
-            <p className="tours-page__end">Đã hiển thị hết tour của trang này.</p>
-          )} */}
-
-          <Pagination
-            page={urlState.page}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange}
-          />
+          <div className="tours-page__pagination-wrap">
+            <Pagination
+              page={urlState.page}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
         </main>
       </div>
     </div>

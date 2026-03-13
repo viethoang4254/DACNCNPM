@@ -12,8 +12,10 @@ import {
   getLatestToursController,
   getTourByIdController,
   getTourImagesController,
+  getTourReviewsController,
   getTourSchedulesController,
   getToursController,
+  getSimilarToursController,
   searchToursController,
   setTourCoverImageController,
   updateTourController,
@@ -82,6 +84,18 @@ router.get("/search", validationMiddleware, searchToursController);
 router.get("/filter", validationMiddleware, filterToursController);
 router.get("/featured", getFeaturedToursController);
 router.get("/latest", getLatestToursController);
+router.get(
+  "/similar/:id",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  getSimilarToursController
+);
+router.get(
+  "/:id/reviews",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  getTourReviewsController
+);
 
 router.get(
   "/:id/images",

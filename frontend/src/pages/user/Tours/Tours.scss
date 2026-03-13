@@ -96,22 +96,34 @@ button {
 .tours-page__main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tours-page__main-scroll {
   max-height: calc(100vh - 110px);
   overflow-y: auto;
   padding-right: 6px;
+  min-height: 0;
 }
 
-.tours-page__main::-webkit-scrollbar {
+.tours-page__main-scroll::-webkit-scrollbar {
   width: 8px;
 }
 
-.tours-page__main::-webkit-scrollbar-thumb {
+.tours-page__main-scroll::-webkit-scrollbar-thumb {
   background: #cfd9e6;
   border-radius: 999px;
 }
 
-.tours-page__main::-webkit-scrollbar-thumb:hover {
+.tours-page__main-scroll::-webkit-scrollbar-thumb:hover {
   background: #b7c6d8;
+}
+
+.tours-page__pagination-wrap {
+  background: var(--color-surface);
+  padding-top: 4px;
 }
 
 // ─── Toolbar ─────────────────────────────────────────────────────────────────
@@ -655,6 +667,10 @@ button {
   }
 
   .tours-page__main {
+    gap: 12px;
+  }
+
+  .tours-page__main-scroll {
     max-height: none;
     overflow: visible;
     padding-right: 0;

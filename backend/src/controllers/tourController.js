@@ -17,12 +17,14 @@ import {
   getTourImageById,
   getTourImages,
   getTourSchedules,
+  getSimilarToursByTourId,
   setTourCoverImageById,
   updateTour,
   updateTourImageById,
   updateTourSchedule,
 } from "../models/tourModel.js";
 import { getToursService } from "../services/tourService.js";
+import { getReviewsByTourId } from "../models/reviewModel.js";
 
 const parsePaging = (req) => {
   const page = Number(req.query.page || 1);
@@ -214,6 +216,52 @@ export const getLatestToursController = asyncHandler(async (req, res) => {
     statusCode: 200,
     success: true,
     message: "Latest tours fetched successfully",
+    data: tours,
+  });
+});
+
+export const getTourReviewsController = asyncHandler(async (req, res) => {
+  const tourId = Number(req.params.id);
+  const tour = await getTourById(tourId);
+
+  if (!tour) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Tour not found",
+      data: {},
+    });
+  }
+
+  const reviews = await getReviewsByTourId(tourId);
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Tour reviews fetched successfully",
+    data: reviews,
+  });
+});
+
+export const getSimilarToursController = asyncHandler(async (req, res) => {
+  const tourId = Number(req.params.id);
+  const tour = await getTourById(tourId);
+
+  if (!tour) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Tour not found",
+      data: {},
+    });
+  }
+
+  const tours = await getSimilarToursByTourId(tourId, Number(req.query.limit || 3));
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Similar tours fetched successfully",
     data: tours,
   });
 });
