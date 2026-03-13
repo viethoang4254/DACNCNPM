@@ -65,6 +65,41 @@ CREATE TABLE IF NOT EXISTS tour_schedules (
   CONSTRAINT chk_tour_schedules_slots CHECK (available_slots >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS tour_itineraries (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tour_id INT NOT NULL,
+  ngay_thu INT NOT NULL,
+  tieu_de VARCHAR(255) NOT NULL,
+  description TEXT,
+  image_url VARCHAR(255),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_tour_itineraries_tour_id (tour_id),
+  INDEX idx_tour_itineraries_ngay_thu (ngay_thu),
+  CONSTRAINT uq_tour_itineraries_tour_day UNIQUE (tour_id, ngay_thu),
+  CONSTRAINT fk_tour_itineraries_tour
+    FOREIGN KEY (tour_id)
+    REFERENCES tours(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT chk_tour_itineraries_ngay_thu CHECK (ngay_thu > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET @has_old_itinerary_desc_col := (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'tour_itineraries'
+    AND COLUMN_NAME = 'mo_ta'
+);
+SET @rename_itinerary_desc_sql := IF(
+  @has_old_itinerary_desc_col > 0,
+  'ALTER TABLE tour_itineraries CHANGE COLUMN mo_ta description TEXT NULL',
+  'SELECT 1'
+);
+PREPARE rename_itinerary_desc_stmt FROM @rename_itinerary_desc_sql;
+EXECUTE rename_itinerary_desc_stmt;
+DEALLOCATE PREPARE rename_itinerary_desc_stmt;
+
 CREATE TABLE IF NOT EXISTS bookings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,

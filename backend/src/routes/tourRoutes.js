@@ -12,6 +12,7 @@ import {
   getLatestToursController,
   getTourByIdController,
   getTourImagesController,
+  getTourItinerariesController,
   getTourReviewsController,
   getTourSchedulesController,
   getToursController,
@@ -147,6 +148,13 @@ router.get(
   [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
   validationMiddleware,
   getTourSchedulesController
+);
+
+router.get(
+  "/:id/itineraries",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  getTourItinerariesController
 );
 
 router.post(

@@ -1,0 +1,29 @@
+.admin-page-itineraries {
+  // inherits layout from .admin-card
+}
+
+.admin-page-itineraries__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.itinerary-day-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #dbeafe;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .admin-page-itineraries__actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

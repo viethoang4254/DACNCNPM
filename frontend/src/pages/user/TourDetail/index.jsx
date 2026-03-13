@@ -6,7 +6,6 @@ import Breadcrumb from "./components/Breadcrumb/index.jsx";
 import TourTabs from "./components/TourTabs/index.jsx";
 import TourOverview from "./components/TourOverview/index.jsx";
 import TourItinerary from "./components/TourItinerary/index.jsx";
-import TourImages from "./components/TourImages/index.jsx";
 import TourReviews from "./components/TourReviews/index.jsx";
 import SimilarTours from "./components/SimilarTours/index.jsx";
 import "./TourDetail.scss";
@@ -30,6 +29,7 @@ function TourDetailPage() {
   const [tour, setTour] = useState(null);
   const [images, setImages] = useState([]);
   const [schedules, setSchedules] = useState([]);
+  const [itineraries, setItineraries] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [similarTours, setSimilarTours] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
@@ -44,10 +44,11 @@ function TourDetailPage() {
       setError("");
 
       try {
-        const [tourRes, imageRes, scheduleRes, reviewRes, similarRes] = await Promise.all([
+        const [tourRes, imageRes, scheduleRes, itineraryRes, reviewRes, similarRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/tours/${id}`),
           fetch(`${API_BASE_URL}/api/tours/${id}/images`),
           fetch(`${API_BASE_URL}/api/tours/${id}/schedules`),
+          fetch(`${API_BASE_URL}/api/tours/${id}/itineraries`),
           fetch(`${API_BASE_URL}/api/tours/${id}/reviews`),
           fetch(`${API_BASE_URL}/api/tours/similar/${id}`),
         ]);
@@ -56,10 +57,11 @@ function TourDetailPage() {
           throw new Error(`Không thể tải tour (${tourRes.status})`);
         }
 
-        const [tourJson, imageJson, scheduleJson, reviewJson, similarJson] = await Promise.all([
+        const [tourJson, imageJson, scheduleJson, itineraryJson, reviewJson, similarJson] = await Promise.all([
           tourRes.json(),
           imageRes.ok ? imageRes.json() : Promise.resolve({ data: [] }),
           scheduleRes.ok ? scheduleRes.json() : Promise.resolve({ data: [] }),
+          itineraryRes.ok ? itineraryRes.json() : Promise.resolve({ data: [] }),
           reviewRes.ok ? reviewRes.json() : Promise.resolve({ data: [] }),
           similarRes.ok ? similarRes.json() : Promise.resolve({ data: [] }),
         ]);
@@ -81,9 +83,17 @@ function TourDetailPage() {
             }))
           : [];
 
+        const nextItineraries = Array.isArray(itineraryJson?.data)
+          ? itineraryJson.data.map((item) => ({
+              ...item,
+              image_url: resolveImageUrl(item.image_url),
+            }))
+          : [];
+
         setTour(nextTour);
         setImages(mergedImages);
         setSchedules(Array.isArray(scheduleJson?.data) ? scheduleJson.data : []);
+        setItineraries(nextItineraries);
         setReviews(Array.isArray(reviewJson?.data) ? reviewJson.data : []);
         setSimilarTours(nextSimilarTours);
       } catch (err) {
@@ -103,6 +113,18 @@ function TourDetailPage() {
   }, [id]);
 
   const averageRating = useMemo(() => getAverageRating(reviews), [reviews]);
+
+  const includedServices = useMemo(() => {
+    if (!tour) return [];
+
+    return [
+      `Xe đưa đón bằng ${tour.phuong_tien || "phương tiện du lịch"} theo lịch trình`,
+      `Lưu trú tiêu chuẩn trong ${Math.max(1, Number(tour.so_ngay || 1))} ngày`,
+      "Vé tham quan các điểm trong chương trình",
+      "Hướng dẫn viên đồng hành xuyên suốt tour",
+      "Nước suối, bảo hiểm du lịch và hỗ trợ 24/7",
+    ];
+  }, [tour]);
 
   if (loading) {
     return <main className="tour-detail tour-detail--state">Đang tải chi tiết tour...</main>;
@@ -132,11 +154,19 @@ function TourDetailPage() {
             </p>
           </article>
 
+          <section className="tour-detail__services card" aria-label="Dịch vụ kèm theo">
+            <h3>Dịch vụ kèm theo</h3>
+            <ul>
+              {includedServices.map((service) => (
+                <li key={service}>{service}</li>
+              ))}
+            </ul>
+          </section>
+
           <TourTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           {activeTab === "overview" && <TourOverview tour={tour} />}
-          {activeTab === "itinerary" && <TourItinerary tour={tour} images={images} />}
-          {activeTab === "images" && <TourImages images={images} />}
+          {activeTab === "itinerary" && <TourItinerary tour={tour} images={images} itineraries={itineraries} />}
           {activeTab === "reviews" && <TourReviews reviews={reviews} />}
         </section>
 

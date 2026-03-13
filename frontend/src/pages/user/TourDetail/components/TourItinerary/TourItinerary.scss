@@ -3,6 +3,15 @@
   gap: 12px;
 }
 
+.tour-detail__timeline-empty {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+}
+
 .tour-detail__timeline-item {
   display: grid;
   grid-template-columns: 96px 1fr;
@@ -27,9 +36,10 @@
   color: #2563eb;
 }
 
-.tour-detail__timeline-content p {
+.tour-detail__timeline-description {
   margin: 0;
   font-size: 1.35rem;
+  white-space: pre-line;
 }
 
 @media (max-width: 640px) {

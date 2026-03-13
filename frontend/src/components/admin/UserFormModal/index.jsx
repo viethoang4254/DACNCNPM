@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MdClose } from "react-icons/md";
 import "./UserFormModal.scss";
 
 const initialFormState = {
@@ -179,11 +180,12 @@ function UserFormModal({
           </div>
           <button
             type="button"
-            className="admin-btn admin-btn--ghost"
+            className="user-form-modal__close"
             onClick={onClose}
             disabled={loading}
+            aria-label="Đóng"
           >
-            Đóng
+            <MdClose />
           </button>
         </div>
 

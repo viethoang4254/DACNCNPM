@@ -2,14 +2,16 @@
   --primary: #2563eb;
   --accent: #f97316;
   --bg: #f8fafc;
+  --page-max-width: 1200px;
+  --page-gutter: 20px;
 
   background: var(--bg);
   min-height: 100vh;
-  padding: 28px 16px 52px;
+  padding: 28px 0 52px;
 }
 
 .tour-detail__grid {
-  width: min(1240px, 100%);
+  width: min(var(--page-max-width), calc(100% - (var(--page-gutter) * 2)));
   margin: 0 auto;
   display: grid;
   grid-template-columns: 7fr 3fr;
@@ -51,6 +53,43 @@
 
 .tour-detail__headline span {
   color: #475569;
+}
+
+.tour-detail__services {
+  padding: 14px 16px;
+}
+
+.tour-detail__services h3 {
+  margin: 0 0 10px;
+  font-size: 1.8rem;
+  color: #0f172a;
+}
+
+.tour-detail__services ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.tour-detail__services li {
+  position: relative;
+  padding-left: 18px;
+  color: #475569;
+  font-size: 1.4rem;
+  line-height: 1.6;
+}
+
+.tour-detail__services li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  position: absolute;
+  left: 0;
+  top: 0.58em;
 }
 
 .tour-detail__section {

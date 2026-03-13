@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MdClose } from "react-icons/md";
 import "./TourFormModal.scss";
 
 const initialFormState = {
@@ -269,11 +270,12 @@ function TourFormModal({
           </div>
           <button
             type="button"
-            className="admin-btn admin-btn--ghost"
+            className="tour-form-modal__close"
             onClick={onClose}
             disabled={loading}
+            aria-label="Đóng"
           >
-            Đóng
+            <MdClose />
           </button>
         </div>
 

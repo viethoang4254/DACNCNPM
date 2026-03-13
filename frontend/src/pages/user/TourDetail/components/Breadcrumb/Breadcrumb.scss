@@ -1,5 +1,5 @@
 .tour-detail__breadcrumb {
-  width: min(1240px, 100%);
+  width: min(var(--page-max-width), calc(100% - (var(--page-gutter) * 2)));
   margin: 0 auto 14px;
   display: flex;
   align-items: center;
