@@ -1,94 +1,252 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import FilterSidebar from "./components/FilterSidebar";
 import TourList from "./components/TourList";
 import Pagination from "./components/Pagination";
+import { getTours as getToursApi } from "../../../services/tourService";
 import "./Tours.scss";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-const LIMIT = 5;
+const PAGE_LIMIT = 8;
+const INITIAL_VISIBLE = 4;
+const VISIBLE_STEP = 4;
 
-const DEFAULT_FILTERS = {
-  keyword: "",
-  tinh_thanh: [],
-  minDays: null,
-  maxDays: null,
-  minPrice: null,
-  maxPrice: null,
-  sort: "created_at_desc",
-};
+const SORT_OPTIONS = ["newest", "price_asc", "price_desc"];
+const PRICE_OPTIONS = ["under-2", "2-5", "5-10", "over-10"];
+const DURATION_OPTIONS = ["1-3", "4-7", "over-7"];
 
-function buildQuery(filters, page) {
-  const params = new URLSearchParams();
-  params.set("page", page);
-  params.set("limit", LIMIT);
-  if (filters.keyword) params.set("keyword", filters.keyword);
-  if (filters.tinh_thanh?.length === 1)
-    params.set("tinh_thanh", filters.tinh_thanh[0]);
-  if (filters.minPrice != null) params.set("minPrice", filters.minPrice);
-  if (filters.maxPrice != null) params.set("maxPrice", filters.maxPrice);
-  if (filters.minDays != null) params.set("minDays", filters.minDays);
-  if (filters.maxDays != null) params.set("maxDays", filters.maxDays);
-  if (filters.sort) params.set("sort", filters.sort);
-  return params.toString();
+function parseQuery(searchString) {
+  const params = new URLSearchParams(searchString);
+
+  const rawPage = Number(params.get("page") || 1);
+  const page =
+    Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+
+  const sort = SORT_OPTIONS.includes(params.get("sort"))
+    ? params.get("sort")
+    : "newest";
+
+  const price = PRICE_OPTIONS.includes(params.get("price"))
+    ? params.get("price")
+    : "";
+
+  const duration = DURATION_OPTIONS.includes(params.get("duration"))
+    ? params.get("duration")
+    : "";
+
+  return {
+    page,
+    limit: PAGE_LIMIT,
+    sort,
+    tinh_thanh: params.get("tinh_thanh") || "",
+    search: (params.get("search") || params.get("keyword") || "").trim(),
+    price,
+    duration,
+  };
+}
+
+function buildApiParams(state) {
+  const params = {
+    page: state.page || 1,
+    limit: PAGE_LIMIT,
+    sort: state.sort || "newest",
+  };
+
+  if (state.tinh_thanh) params.tinh_thanh = state.tinh_thanh;
+  if (state.price) params.price = state.price;
+  if (state.duration) params.duration = state.duration;
+  if (state.search) params.search = state.search;
+
+  return params;
 }
 
 function ToursPage() {
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [page, setPage] = useState(1);
-  const [tours, setTours] = useState([]);
-  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const location = useLocation();
+  const navigate = useNavigate();
+  const scrollContainerRef = useRef(null);
+  const loadMoreRef = useRef(null);
+
+  const urlState = useMemo(
+    () => parseQuery(location.search),
+    [location.search],
+  );
+  const queryKey = useMemo(
+    () =>
+      JSON.stringify({
+        tinh_thanh: urlState.tinh_thanh,
+        search: urlState.search,
+        sort: urlState.sort,
+        price: urlState.price,
+        duration: urlState.duration,
+        page: urlState.page,
+      }),
+    [urlState],
+  );
+
+  const [allTours, setAllTours] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 1,
+    page: 1,
+    limit: PAGE_LIMIT,
+  });
+  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRevealingMore, setIsRevealingMore] = useState(false);
   const [error, setError] = useState(null);
   const [keyword, setKeyword] = useState("");
 
-  const fetchTours = useCallback(async (currentFilters, currentPage) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const query = buildQuery(currentFilters, currentPage);
-      const res = await fetch(`${API_BASE_URL}/api/tours?${query}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (!json.success) throw new Error(json.message || "Lỗi khi tải dữ liệu");
-      setTours(json.data || []);
-      setPagination(json.pagination || { total: 0, totalPages: 1 });
-    } catch (err) {
-      setError(err.message);
-      setTours([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  useEffect(() => {
+    setKeyword(urlState.search || "");
+  }, [urlState.search]);
 
   useEffect(() => {
-    fetchTours(filters, page);
-  }, [filters, page, fetchTours]);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } else {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+
+    setAllTours([]);
+    setVisibleCount(INITIAL_VISIBLE);
+    setTotal(0);
+    setError(null);
+  }, [queryKey]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchTours = async () => {
+      setIsLoading(true);
+
+      try {
+        const params = buildApiParams(urlState);
+        const result = await getToursApi(params);
+
+        if (ignore) return;
+
+        setTotal(result.total);
+        setPagination({
+          total: result.total,
+          totalPages: result.totalPages,
+          page: result.page,
+          limit: result.limit,
+        });
+        setAllTours(result.tours || []);
+        setVisibleCount(INITIAL_VISIBLE);
+      } catch (err) {
+        if (ignore) return;
+        const apiError = err?.response?.data?.message;
+        setError(apiError || err.message || "Không thể tải danh sách tour");
+        setAllTours([]);
+        setPagination({ total: 0, totalPages: 1, page: 1, limit: PAGE_LIMIT });
+      } finally {
+        if (ignore) return;
+        setIsLoading(false);
+      }
+    };
+
+    fetchTours();
+
+    return () => {
+      ignore = true;
+    };
+  }, [queryKey, urlState]);
+
+  useEffect(() => {
+    const hasMoreToReveal = visibleCount < allTours.length;
+    if (!hasMoreToReveal || isLoading) return;
+    if (!loadMoreRef.current) return;
+
+    const rootContainer = scrollContainerRef.current;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) return;
+        setIsRevealingMore(true);
+        setVisibleCount((prev) =>
+          Math.min(prev + VISIBLE_STEP, allTours.length),
+        );
+        setTimeout(() => setIsRevealingMore(false), 250);
+      },
+      {
+        root: rootContainer || null,
+        rootMargin: "140px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [allTours.length, visibleCount, isLoading]);
+
+  const updateUrlQuery = useCallback(
+    (nextPartial, { resetPage = true } = {}) => {
+      const params = new URLSearchParams(location.search);
+
+      Object.entries(nextPartial).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+
+      params.set("limit", String(PAGE_LIMIT));
+
+      if (resetPage) {
+        params.set("page", "1");
+      } else if (!params.get("page")) {
+        params.set("page", "1");
+      }
+
+      navigate(
+        {
+          pathname: "/tours",
+          search: `?${params.toString()}`,
+        },
+        { replace: false },
+      );
+    },
+    [location.search, navigate],
+  );
 
   function handleFilterChange(partial) {
-    setFilters((prev) => ({ ...prev, ...partial }));
-    setPage(1);
+    updateUrlQuery(partial, { resetPage: true });
   }
 
   function handleFilterClear() {
-    setFilters(DEFAULT_FILTERS);
+    navigate({
+      pathname: "/tours",
+      search: `?page=1&limit=${PAGE_LIMIT}&sort=newest`,
+    });
     setKeyword("");
-    setPage(1);
   }
 
   function handleSearch(e) {
     e.preventDefault();
-    setFilters((prev) => ({ ...prev, keyword }));
-    setPage(1);
+    updateUrlQuery({ search: keyword.trim() }, { resetPage: true });
   }
 
   function handleSortChange(e) {
-    setFilters((prev) => ({ ...prev, sort: e.target.value }));
-    setPage(1);
+    updateUrlQuery({ sort: e.target.value }, { resetPage: true });
   }
 
-  const start = (page - 1) * LIMIT + 1;
-  const end = Math.min(page * LIMIT, pagination.total);
+  function handlePageChange(nextPage) {
+    updateUrlQuery({ page: nextPage }, { resetPage: false });
+  }
+
+  const visibleTours = allTours.slice(0, visibleCount);
+  const shownTours = visibleTours.length;
+  const hasMoreToReveal = visibleCount < allTours.length;
 
   return (
     <div className="tours-page">
@@ -118,21 +276,25 @@ function ToursPage() {
       <div className="tours-page__container">
         <aside className="tours-page__sidebar">
           <FilterSidebar
-            filters={filters}
+            filters={{
+              tinh_thanh: urlState.tinh_thanh,
+              duration: urlState.duration,
+              price: urlState.price,
+            }}
             onChange={handleFilterChange}
             onClear={handleFilterClear}
           />
         </aside>
 
-        <main className="tours-page__main">
+        <main className="tours-page__main" ref={scrollContainerRef}>
           <div className="tours-page__toolbar">
             <p className="tours-page__result-count">
-              {isLoading ? (
+              {isLoading && allTours.length === 0 ? (
                 "Đang tải..."
               ) : (
                 <>
-                  {pagination.total > 0
-                    ? `Hiển thị ${start}–${end} trong ${pagination.total} tour`
+                  {total > 0
+                    ? `Đã hiển thị ${shownTours}/${Math.max(total, allTours.length)} tour`
                     : "Không tìm thấy tour nào"}
                 </>
               )}
@@ -144,23 +306,47 @@ function ToursPage() {
               <select
                 id="sort-select"
                 className="tours-page__sort-select"
-                value={filters.sort}
+                value={urlState.sort}
                 onChange={handleSortChange}
               >
-                <option value="created_at_desc">Mới nhất</option>
-                <option value="gia_asc">Giá tăng dần</option>
-                <option value="gia_desc">Giá giảm dần</option>
-                <option value="ten_tour_asc">Tên A–Z</option>
+                <option value="newest">Mới nhất</option>
+                <option value="price_asc">Giá tăng dần</option>
+                <option value="price_desc">Giá giảm dần</option>
               </select>
             </div>
           </div>
 
-          <TourList tours={tours} isLoading={isLoading} error={error} />
+          <TourList
+            tours={visibleTours}
+            isLoading={isLoading && allTours.length === 0}
+            error={error}
+          />
+
+          <div
+            ref={loadMoreRef}
+            className="tours-page__sentinel"
+            aria-hidden="true"
+          />
+
+          {isRevealingMore && hasMoreToReveal && (
+            <div
+              className="tours-page__loading-more"
+              role="status"
+              aria-live="polite"
+            >
+              <span className="tours-page__spinner" aria-hidden="true" />
+              <span>Đang tải thêm tour...</span>
+            </div>
+          )}
+
+          {/* {!hasMoreToReveal && allTours.length > 0 && (
+            <p className="tours-page__end">Đã hiển thị hết tour của trang này.</p>
+          )} */}
 
           <Pagination
-            page={page}
+            page={urlState.page}
             totalPages={pagination.totalPages}
-            onPageChange={setPage}
+            onPageChange={handlePageChange}
           />
         </main>
       </div>

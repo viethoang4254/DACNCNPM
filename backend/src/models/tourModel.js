@@ -1,55 +1,97 @@
 import pool from "../config/db.js";
 
 const mapSortField = (sort) => {
-  if (sort === "price" || sort === "gia_asc") return "gia ASC";
-  if (sort === "-price" || sort === "gia_desc") return "gia DESC";
-  if (sort === "latest" || sort === "created_at_desc") return "created_at DESC";
-  if (sort === "ten_tour_asc") return "ten_tour ASC";
-  return "id DESC";
+  if (sort === "newest") return "t.created_at DESC";
+  if (sort === "price_asc") return "t.gia ASC";
+  if (sort === "price_desc") return "t.gia DESC";
+  if (sort === "price" || sort === "gia_asc") return "t.gia ASC";
+  if (sort === "-price" || sort === "gia_desc") return "t.gia DESC";
+  if (sort === "latest" || sort === "created_at_desc") return "t.created_at DESC";
+  if (sort === "ten_tour_asc") return "t.ten_tour ASC";
+  return "t.id DESC";
 };
 
-export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_hanh, minPrice, maxPrice, sort, minDays, maxDays }) => {
+const applyPriceRange = (price) => {
+  if (price === "under-2") return { min: undefined, max: 2000000, maxExclusive: true };
+  if (price === "2-5") return { min: 2000000, max: 5000000 };
+  if (price === "5-10") return { min: 5000000, max: 10000000 };
+  if (price === "over-10") return { min: 10000000, max: undefined, minExclusive: true };
+  return null;
+};
+
+const applyDurationRange = (duration) => {
+  if (duration === "1-3") return { min: 1, max: 3 };
+  if (duration === "4-7") return { min: 4, max: 7 };
+  if (duration === "over-7") return { min: 7, max: undefined, minExclusive: true };
+  return null;
+};
+
+export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_hanh, price, duration, minPrice, maxPrice, sort, minDays, maxDays }) => {
   const whereParts = [];
   const params = [];
 
   if (keyword) {
-    whereParts.push("(ten_tour LIKE ? OR mo_ta LIKE ? OR tinh_thanh LIKE ?)");
+    whereParts.push("(t.ten_tour LIKE ? OR t.mo_ta LIKE ? OR t.tinh_thanh LIKE ?)");
     params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
   }
 
   if (tinh_thanh) {
-    whereParts.push("tinh_thanh = ?");
-    params.push(tinh_thanh);
+    whereParts.push("(t.tinh_thanh = ? OR t.ten_tour LIKE ?)");
+    params.push(tinh_thanh, `%${tinh_thanh}%`);
   }
 
   if (diem_khoi_hanh) {
-    whereParts.push("diem_khoi_hanh = ?");
+    whereParts.push("t.diem_khoi_hanh = ?");
     params.push(diem_khoi_hanh);
   }
 
+  const priceRange = applyPriceRange(price);
+  if (priceRange) {
+    if (priceRange.min !== undefined) {
+      whereParts.push(priceRange.minExclusive ? "t.gia > ?" : "t.gia >= ?");
+      params.push(priceRange.min);
+    }
+    if (priceRange.max !== undefined) {
+      whereParts.push(priceRange.maxExclusive ? "t.gia < ?" : "t.gia <= ?");
+      params.push(priceRange.max);
+    }
+  }
+
+  const durationRange = applyDurationRange(duration);
+  if (durationRange) {
+    if (durationRange.min !== undefined) {
+      whereParts.push(durationRange.minExclusive ? "t.so_ngay > ?" : "t.so_ngay >= ?");
+      params.push(durationRange.min);
+    }
+    if (durationRange.max !== undefined) {
+      whereParts.push(durationRange.maxExclusive ? "t.so_ngay < ?" : "t.so_ngay <= ?");
+      params.push(durationRange.max);
+    }
+  }
+
   if (minPrice !== undefined) {
-    whereParts.push("gia >= ?");
+    whereParts.push("t.gia >= ?");
     params.push(minPrice);
   }
 
   if (maxPrice !== undefined) {
-    whereParts.push("gia <= ?");
+    whereParts.push("t.gia <= ?");
     params.push(maxPrice);
   }
 
   if (minDays !== undefined) {
-    whereParts.push("so_ngay >= ?");
+    whereParts.push("t.so_ngay >= ?");
     params.push(minDays);
   }
 
   if (maxDays !== undefined) {
-    whereParts.push("so_ngay <= ?");
+    whereParts.push("t.so_ngay <= ?");
     params.push(maxDays);
   }
 
   const whereSql = whereParts.length > 0 ? `WHERE ${whereParts.join(" AND ")}` : "";
 
-  const [countRows] = await pool.execute(`SELECT COUNT(*) AS total FROM tours ${whereSql}`, params);
+  const [countRows] = await pool.execute(`SELECT COUNT(*) AS total FROM tours t ${whereSql}`, params);
   const total = countRows[0]?.total || 0;
 
   const safeLimit = Number.isFinite(Number(limit)) ? Math.max(1, Number(limit)) : 10;
@@ -58,15 +100,28 @@ export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_han
   const orderBy = mapSortField(sort);
 
   const [rows] = await pool.execute(
-    `SELECT id, ten_tour, mo_ta, gia, tinh_thanh, diem_khoi_hanh, phuong_tien, so_ngay, so_nguoi_toi_da, created_at,
-            (
-              SELECT ti.image_url
-              FROM tour_images ti
-              WHERE ti.tour_id = tours.id
-              ORDER BY ti.id ASC
-              LIMIT 1
-            ) AS hinh_anh
-     FROM tours
+    `SELECT
+        t.id,
+        t.ten_tour,
+        t.mo_ta,
+        t.gia,
+        t.tinh_thanh,
+        t.diem_khoi_hanh,
+        t.phuong_tien,
+        t.so_ngay,
+        t.so_nguoi_toi_da,
+        t.created_at,
+        ti.image_url AS hinh_anh
+     FROM tours t
+     LEFT JOIN (
+       SELECT timg.tour_id, timg.image_url
+       FROM tour_images timg
+       INNER JOIN (
+         SELECT tour_id, MIN(id) AS first_image_id
+         FROM tour_images
+         GROUP BY tour_id
+       ) tif ON tif.tour_id = timg.tour_id AND tif.first_image_id = timg.id
+     ) ti ON ti.tour_id = t.id
      ${whereSql}
      ORDER BY ${orderBy}
      LIMIT ${safeLimit} OFFSET ${offset}`,

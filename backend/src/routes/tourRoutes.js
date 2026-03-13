@@ -48,12 +48,29 @@ router.get(
   [
     query("page").optional().isInt({ gt: 0 }).withMessage("page must be a positive integer"),
     query("limit").optional().isInt({ gt: 0 }).withMessage("limit must be a positive integer"),
+    query("search").optional().isString(),
     query("keyword").optional().isString(),
     query("tinh_thanh").optional().isString(),
     query("diem_khoi_hanh").optional().isString(),
+    query("price").optional().isIn(["under-2", "2-5", "5-10", "over-10"]).withMessage("price is invalid"),
+    query("duration").optional().isIn(["1-3", "4-7", "over-7"]).withMessage("duration is invalid"),
     query("minPrice").optional().isFloat({ min: 0 }).withMessage("minPrice must be >= 0"),
     query("maxPrice").optional().isFloat({ min: 0 }).withMessage("maxPrice must be >= 0"),
-    query("sort").optional().isIn(["price", "-price", "latest", "gia_asc", "gia_desc", "created_at_desc", "ten_tour_asc"]).withMessage("sort is invalid"),
+    query("sort")
+      .optional()
+      .isIn([
+        "newest",
+        "price_asc",
+        "price_desc",
+        "price",
+        "-price",
+        "latest",
+        "gia_asc",
+        "gia_desc",
+        "created_at_desc",
+        "ten_tour_asc",
+      ])
+      .withMessage("sort is invalid"),
     query("minDays").optional().isInt({ min: 1 }).withMessage("minDays must be >= 1"),
     query("maxDays").optional().isInt({ min: 1 }).withMessage("maxDays must be >= 1"),
   ],

@@ -17,12 +17,12 @@ import {
   getTourImageById,
   getTourImages,
   getTourSchedules,
-  getTours,
   setTourCoverImageById,
   updateTour,
   updateTourImageById,
   updateTourSchedule,
 } from "../models/tourModel.js";
+import { getToursService } from "../services/tourService.js";
 
 const parsePaging = (req) => {
   const page = Number(req.query.page || 1);
@@ -38,14 +38,16 @@ const normalizeTourQuery = (req) => {
   return {
     page,
     limit,
-    keyword: req.query.keyword?.trim(),
+    keyword: req.query.search?.trim() || req.query.keyword?.trim(),
     tinh_thanh: req.query.tinh_thanh?.trim(),
     diem_khoi_hanh: req.query.diem_khoi_hanh?.trim(),
+    price: req.query.price?.trim(),
+    duration: req.query.duration?.trim(),
     minPrice: req.query.minPrice !== undefined ? Number(req.query.minPrice) : undefined,
     maxPrice: req.query.maxPrice !== undefined ? Number(req.query.maxPrice) : undefined,
     minDays: req.query.minDays !== undefined ? Number(req.query.minDays) : undefined,
     maxDays: req.query.maxDays !== undefined ? Number(req.query.maxDays) : undefined,
-    sort: req.query.sort?.trim(),
+    sort: req.query.sort?.trim() || "newest",
   };
 };
 
@@ -92,12 +94,15 @@ const normalizeImageUrls = (body) => {
 
 export const getToursController = asyncHandler(async (req, res) => {
   const query = normalizeTourQuery(req);
-  const { tours, total } = await getTours(query);
+  const { tours, total } = await getToursService(query);
 
-  return sendResponse(res, {
-    statusCode: 200,
+  return res.status(200).json({
     success: true,
     message: "Tours fetched successfully",
+    tours,
+    total,
+    page: query.page,
+    limit: query.limit,
     data: tours,
     pagination: {
       page: query.page,

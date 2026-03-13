@@ -275,6 +275,12 @@
   overflow: hidden;
   border-radius: 18px;
   min-height: 220px;
+  cursor: pointer;
+  outline: none;
+}
+
+.home__featured-item:focus-visible {
+  box-shadow: 0 0 0 3px rgba(248, 103, 0, 0.45);
 }
 
 .home__featured-item:nth-child(1),
