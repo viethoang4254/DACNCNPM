@@ -10,7 +10,10 @@ import TourFormModal from "../../../components/admin/TourFormModal";
 import TourImageModal from "../../../components/admin/TourImageModal";
 
 import apiClient from "../../../utils/apiClient";
-import { optimizeImageFile, optimizeImageFiles } from "../../../utils/imageCompression";
+import {
+  optimizeImageFile,
+  optimizeImageFiles,
+} from "../../../utils/imageCompression";
 import "./Tours.scss";
 
 const LIMIT = 10;
@@ -70,18 +73,20 @@ function AdminTours() {
     if (!imageUrl) return "";
     if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
 
-    const baseUrl =
-      (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000").replace(
-        /\/+$/,
-        "",
-      );
+    const baseUrl = (
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
+    ).replace(/\/+$/, "");
 
-    return imageUrl.startsWith("/") ? `${baseUrl}${imageUrl}` : `${baseUrl}/${imageUrl}`;
+    return imageUrl.startsWith("/")
+      ? `${baseUrl}${imageUrl}`
+      : `${baseUrl}/${imageUrl}`;
   };
 
-  const getOversizedFiles = (files) => files.filter((file) => file.size > MAX_IMAGE_SIZE_BYTES);
+  const getOversizedFiles = (files) =>
+    files.filter((file) => file.size > MAX_IMAGE_SIZE_BYTES);
 
-  const getValidFiles = (files) => files.filter((file) => file.size <= MAX_IMAGE_SIZE_BYTES);
+  const getValidFiles = (files) =>
+    files.filter((file) => file.size <= MAX_IMAGE_SIZE_BYTES);
 
   const buildOversizedMessage = (files) => {
     if (files.length === 0) return "";
@@ -208,7 +213,14 @@ function AdminTours() {
   }
 
   function handleCloseImages() {
-    if (uploadingImages || processingImages || deletingImageId || updatingImageId || settingCoverImageId) return;
+    if (
+      uploadingImages ||
+      processingImages ||
+      deletingImageId ||
+      updatingImageId ||
+      settingCoverImageId
+    )
+      return;
     setShowImagesModal(false);
     setImageTour(null);
     setTourImages([]);
@@ -260,7 +272,8 @@ function AdminTours() {
   }
 
   async function handleUploadImages() {
-    if (!imageTour || selectedImageFiles.length === 0 || processingImages) return;
+    if (!imageTour || selectedImageFiles.length === 0 || processingImages)
+      return;
 
     try {
       setUploadingImages(true);
@@ -299,7 +312,9 @@ function AdminTours() {
     try {
       setUploadingImages(true);
       setImagesError("");
-      await apiClient.post(`/api/tours/${imageTour.id}/images`, { image_url: imageUrl });
+      await apiClient.post(`/api/tours/${imageTour.id}/images`, {
+        image_url: imageUrl,
+      });
 
       setImageUrlInput("");
       await Promise.all([fetchTourImages(imageTour.id), fetchTours()]);
@@ -489,7 +504,11 @@ function AdminTours() {
       header: tourColumnsLabels.thumbnail,
       render: (row) =>
         row.hinh_anh ? (
-          <img className="admin-thumb" src={resolveImageUrl(row.hinh_anh)} alt={row.ten_tour} />
+          <img
+            className="admin-thumb"
+            src={resolveImageUrl(row.hinh_anh)}
+            alt={row.ten_tour}
+          />
         ) : (
           <div className="admin-thumb-placeholder">IMG</div>
         ),

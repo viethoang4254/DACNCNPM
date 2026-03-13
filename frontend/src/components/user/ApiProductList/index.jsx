@@ -14,9 +14,16 @@ function toProductModel(item) {
   };
 }
 
-function ApiProductList({ fetchTours, tours: toursProp, isLoading: isLoadingProp, error: errorProp }) {
+function ApiProductList({
+  fetchTours,
+  tours: toursProp,
+  isLoading: isLoadingProp,
+  error: errorProp,
+}) {
   const [items, setItems] = useState(Array.isArray(toursProp) ? toursProp : []);
-  const [isLoading, setIsLoading] = useState(typeof isLoadingProp === "boolean" ? isLoadingProp : true);
+  const [isLoading, setIsLoading] = useState(
+    typeof isLoadingProp === "boolean" ? isLoadingProp : true,
+  );
   const [error, setError] = useState(errorProp || "");
 
   const usesExternalData = Array.isArray(toursProp);
