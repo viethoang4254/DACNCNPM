@@ -1,0 +1,37 @@
+.tour-detail__rating-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tour-detail__rating-head strong {
+  font-size: 2.8rem;
+  color: #0f172a;
+}
+
+.tour-detail__rating-head span {
+  color: #f59e0b;
+}
+
+.tour-detail__reviews-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tour-detail__review-item {
+  border: 1px solid #e8eef6;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.tour-detail__review-item header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.tour-detail__review-item p {
+  margin: 0;
+}

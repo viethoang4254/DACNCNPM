@@ -6,6 +6,7 @@ import Home from "./pages/user/Home";
 import Login from "./pages/user/Login";
 import Registry from "./pages/user/Registry";
 import Tours from "./pages/user/Tours";
+import TourDetail from "./pages/user/TourDetail";
 import About from "./pages/user/About";
 import Contact from "./pages/user/Contact";
 import ScrollToTop from "./components/common/ScrollToTop";
@@ -83,6 +84,14 @@ function App() {
           element={
             <UserRoute>
               <Tours />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/tours/:id"
+          element={
+            <UserRoute>
+              <TourDetail />
             </UserRoute>
           }
         />

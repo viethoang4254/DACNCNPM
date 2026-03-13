@@ -1,0 +1,15 @@
+@media (max-width: 1024px) {
+  .tour-detail__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tour-detail__right {
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .tour-detail {
+    padding: 18px 12px 40px;
+  }
+}
