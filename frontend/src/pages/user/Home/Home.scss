@@ -26,6 +26,11 @@
   margin-right: auto;
 }
 
+.home__section {
+  content-visibility: auto;
+  contain-intrinsic-size: 720px;
+}
+
 .home__hero {
   position: relative;
   min-height: 560px;

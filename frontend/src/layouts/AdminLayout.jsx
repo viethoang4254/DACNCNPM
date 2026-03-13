@@ -1,7 +1,8 @@
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminHeader from "../components/admin/AdminHeader";
-import "../assets/styles/admin.scss";
+import "./AdminLayout.scss";
+import "../components/admin/AdminBase.scss";
 
 function AdminLayout() {
   return (

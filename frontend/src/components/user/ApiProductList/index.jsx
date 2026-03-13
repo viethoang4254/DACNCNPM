@@ -14,10 +14,12 @@ function toProductModel(item) {
   };
 }
 
-function ApiProductList({ fetchTours }) {
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+function ApiProductList({ fetchTours, tours: toursProp, isLoading: isLoadingProp, error: errorProp }) {
+  const [items, setItems] = useState(Array.isArray(toursProp) ? toursProp : []);
+  const [isLoading, setIsLoading] = useState(typeof isLoadingProp === "boolean" ? isLoadingProp : true);
+  const [error, setError] = useState(errorProp || "");
+
+  const usesExternalData = Array.isArray(toursProp);
 
   const products = useMemo(
     () => items.map((item) => toProductModel(item)),
@@ -25,6 +27,13 @@ function ApiProductList({ fetchTours }) {
   );
 
   useEffect(() => {
+    if (usesExternalData) {
+      setItems(toursProp);
+      setIsLoading(Boolean(isLoadingProp));
+      setError(errorProp || "");
+      return;
+    }
+
     let isMounted = true;
 
     const loadProducts = async () => {
@@ -58,7 +67,7 @@ function ApiProductList({ fetchTours }) {
     return () => {
       isMounted = false;
     };
-  }, [fetchTours]);
+  }, [errorProp, fetchTours, isLoadingProp, toursProp, usesExternalData]);
 
   return (
     <section className="home__section home__section--products">
@@ -88,7 +97,7 @@ function ApiProductList({ fetchTours }) {
                 <h3>{item.name}</h3>
                 <p className="home__product-location">{item.location}</p>
                 <p className="home__product-price">
-                  {item.price.toLocaleString("vi-VN")} VND / 1 nguoi
+                  {item.price.toLocaleString("vi-VN")} VND / 1 người
                 </p>
               </div>
             </article>

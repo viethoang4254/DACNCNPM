@@ -1,8 +1,10 @@
+import { memo } from "react";
+
 function TourCard({ tour }) {
   return (
     <article className="tour-card">
       <div className="tour-card__image-wrap">
-        <img src={tour.image} alt={tour.name} loading="lazy" />
+        <img src={tour.image} alt={tour.name} loading="lazy" decoding="async" />
         <span className="tour-card__badge">{tour.days}N</span>
       </div>
 
@@ -22,4 +24,4 @@ function TourCard({ tour }) {
   );
 }
 
-export default TourCard;
+export default memo(TourCard);

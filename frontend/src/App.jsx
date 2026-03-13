@@ -28,6 +28,15 @@ function AdminRoute({ children }) {
   return children;
 }
 
+function UserRoute({ children }) {
+  const user = getAuthUser();
+  if (user?.role === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return children;
+}
+
 function App() {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
@@ -37,13 +46,62 @@ function App() {
       {!isAdminPath && <Header />}
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/customer" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/registry" element={<Registry />} />
-        <Route path="/tours" element={<Tours />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
+        <Route
+          path="/"
+          element={
+            <UserRoute>
+              <Home />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/customer"
+          element={
+            <UserRoute>
+              <Home />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <UserRoute>
+              <Login />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/registry"
+          element={
+            <UserRoute>
+              <Registry />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/tours"
+          element={
+            <UserRoute>
+              <Tours />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <UserRoute>
+              <About />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <UserRoute>
+              <Contact />
+            </UserRoute>
+          }
+        />
         <Route
           path="/admin"
           element={

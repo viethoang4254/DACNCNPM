@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./UserFormModal.scss";
 
 const initialFormState = {
   ho_ten: "",
@@ -23,39 +24,52 @@ const getFieldError = (name, value, mode) => {
   const normalizedValue = typeof value === "string" ? value.trim() : value;
 
   if (name === "ho_ten") {
-    if (!normalizedValue) return "Vui long nhap ho ten.";
-    if (normalizedValue.length < 2) return "Ho ten phai co it nhat 2 ky tu.";
+    if (!normalizedValue) return "Vui lòng nhập họ tên.";
+    if (normalizedValue.length < 2) return "Họ tên phải có ít nhất 2 ký tự.";
     return "";
   }
 
   if (name === "email") {
-    if (!normalizedValue) return "Vui long nhap email.";
-    if (!EMAIL_REGEX.test(normalizedValue)) return "Email khong dung dinh dang.";
+    if (!normalizedValue) return "Vui lòng nhập email.";
+    if (!EMAIL_REGEX.test(normalizedValue))
+      return "Email không đúng định dạng.";
     return "";
   }
 
   if (name === "so_dien_thoai") {
-    const normalizedPhone = String(value || "").replace(/\s+/g, "").trim();
-    if (!normalizedPhone) return "Vui long nhap so dien thoai.";
-    if (!PHONE_REGEX.test(normalizedPhone)) return "So dien thoai chua dung dinh dang Viet Nam.";
+    const normalizedPhone = String(value || "")
+      .replace(/\s+/g, "")
+      .trim();
+    if (!normalizedPhone) return "Vui lòng nhập số điện thoại.";
+    if (!PHONE_REGEX.test(normalizedPhone))
+      return "Số điện thoại chưa đúng định dạng Việt Nam.";
     return "";
   }
 
   if (name === "mat_khau") {
-    if (mode === "create" && !normalizedValue) return "Mat khau la bat buoc khi tao user.";
-    if (normalizedValue && normalizedValue.length < 6) return "Mat khau phai co it nhat 6 ky tu.";
+    if (mode === "create" && !normalizedValue)
+      return "Mật khẩu là bắt buộc khi tạo người dùng.";
+    if (normalizedValue && normalizedValue.length < 6)
+      return "Mật khẩu phải có ít nhất 6 ký tự.";
     return "";
   }
 
   if (name === "role") {
-    if (!["admin", "customer"].includes(value)) return "Role khong hop le.";
+    if (!["admin", "customer"].includes(value)) return "Vai trò không hợp lệ.";
     return "";
   }
 
   return "";
 };
 
-function UserFormModal({ open, mode = "create", user, loading = false, onClose, onSubmit }) {
+function UserFormModal({
+  open,
+  mode = "create",
+  user,
+  loading = false,
+  onClose,
+  onSubmit,
+}) {
   const [form, setForm] = useState(initialFormState);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
@@ -130,7 +144,7 @@ function UserFormModal({ open, mode = "create", user, loading = false, onClose, 
     setFieldErrors(nextFieldErrors);
 
     if (Object.values(nextFieldErrors).some(Boolean)) {
-      setFormError("Vui long kiem tra lai thong tin trong form.");
+      setFormError("Vui lòng kiểm tra lại thông tin trong biểu mẫu.");
       return;
     }
 
@@ -145,22 +159,40 @@ function UserFormModal({ open, mode = "create", user, loading = false, onClose, 
   }
 
   return (
-    <div className="admin-modal__backdrop" role="dialog" aria-modal="true" aria-labelledby="user-form-modal-title">
+    <div
+      className="admin-modal__backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="user-form-modal-title"
+    >
       <div className="user-form-modal">
         <div className="user-form-modal__header">
           <div>
-            <h3 id="user-form-modal-title">{mode === "create" ? "Add User" : "Edit User"}</h3>
-            <p>{mode === "create" ? "Tao nguoi dung moi trong he thong." : "Cap nhat thong tin nguoi dung."}</p>
+            <h3 id="user-form-modal-title">
+              {mode === "create" ? "Thêm người dùng" : "Chỉnh sửa người dùng"}
+            </h3>
+            <p>
+              {mode === "create"
+                ? "Tạo người dùng mới trong hệ thống."
+                : "Cập nhật thông tin người dùng."}
+            </p>
           </div>
-          <button type="button" className="admin-btn admin-btn--ghost" onClick={onClose} disabled={loading}>
-            Close
+          <button
+            type="button"
+            className="admin-btn admin-btn--ghost"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Đóng
           </button>
         </div>
 
         <form className="user-form-modal__body" onSubmit={handleSubmit}>
           <div className="admin-form-grid">
             <div>
-              <label className="user-form-modal__label" htmlFor="ho_ten">Name</label>
+              <label className="user-form-modal__label" htmlFor="ho_ten">
+                Họ tên
+              </label>
               <input
                 id="ho_ten"
                 className={`admin-input ${touched.ho_ten && fieldErrors.ho_ten ? "admin-input--invalid" : ""}`}
@@ -168,13 +200,17 @@ function UserFormModal({ open, mode = "create", user, loading = false, onClose, 
                 value={form.ho_ten}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="Nhap ho ten"
+                placeholder="Nhập họ tên"
                 aria-invalid={Boolean(touched.ho_ten && fieldErrors.ho_ten)}
               />
-              {touched.ho_ten && fieldErrors.ho_ten && <p className="admin-field-error">{fieldErrors.ho_ten}</p>}
+              {touched.ho_ten && fieldErrors.ho_ten && (
+                <p className="admin-field-error">{fieldErrors.ho_ten}</p>
+              )}
             </div>
             <div>
-              <label className="user-form-modal__label" htmlFor="email">Email</label>
+              <label className="user-form-modal__label" htmlFor="email">
+                Email
+              </label>
               <input
                 id="email"
                 className={`admin-input ${touched.email && fieldErrors.email ? "admin-input--invalid" : ""}`}
@@ -183,13 +219,17 @@ function UserFormModal({ open, mode = "create", user, loading = false, onClose, 
                 value={form.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="Nhap email"
+                placeholder="Nhập email"
                 aria-invalid={Boolean(touched.email && fieldErrors.email)}
               />
-              {touched.email && fieldErrors.email && <p className="admin-field-error">{fieldErrors.email}</p>}
+              {touched.email && fieldErrors.email && (
+                <p className="admin-field-error">{fieldErrors.email}</p>
+              )}
             </div>
             <div>
-              <label className="user-form-modal__label" htmlFor="so_dien_thoai">Phone</label>
+              <label className="user-form-modal__label" htmlFor="so_dien_thoai">
+                Số điện thoại
+              </label>
               <input
                 id="so_dien_thoai"
                 className={`admin-input ${touched.so_dien_thoai && fieldErrors.so_dien_thoai ? "admin-input--invalid" : ""}`}
@@ -197,13 +237,19 @@ function UserFormModal({ open, mode = "create", user, loading = false, onClose, 
                 value={form.so_dien_thoai}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="Nhap so dien thoai"
-                aria-invalid={Boolean(touched.so_dien_thoai && fieldErrors.so_dien_thoai)}
+                placeholder="Nhập số điện thoại"
+                aria-invalid={Boolean(
+                  touched.so_dien_thoai && fieldErrors.so_dien_thoai,
+                )}
               />
-              {touched.so_dien_thoai && fieldErrors.so_dien_thoai && <p className="admin-field-error">{fieldErrors.so_dien_thoai}</p>}
+              {touched.so_dien_thoai && fieldErrors.so_dien_thoai && (
+                <p className="admin-field-error">{fieldErrors.so_dien_thoai}</p>
+              )}
             </div>
             <div>
-              <label className="user-form-modal__label" htmlFor="role">Role</label>
+              <label className="user-form-modal__label" htmlFor="role">
+                Vai trò
+              </label>
               <select
                 id="role"
                 className={`admin-select ${touched.role && fieldErrors.role ? "admin-input--invalid" : ""}`}
@@ -212,14 +258,16 @@ function UserFormModal({ open, mode = "create", user, loading = false, onClose, 
                 onChange={handleChange}
                 onBlur={handleBlur}
               >
-                <option value="admin">admin</option>
-                <option value="customer">customer</option>
+                <option value="admin">Quản trị viên</option>
+                <option value="customer">Khách hàng</option>
               </select>
-              {touched.role && fieldErrors.role && <p className="admin-field-error">{fieldErrors.role}</p>}
+              {touched.role && fieldErrors.role && (
+                <p className="admin-field-error">{fieldErrors.role}</p>
+              )}
             </div>
             <div className="full">
               <label className="user-form-modal__label" htmlFor="mat_khau">
-                Password {mode === "edit" ? "(de trong neu khong doi)" : ""}
+                Mật khẩu {mode === "edit" ? "(để trống nếu không đổi)" : ""}
               </label>
               <input
                 id="mat_khau"
@@ -229,24 +277,43 @@ function UserFormModal({ open, mode = "create", user, loading = false, onClose, 
                 value={form.mat_khau}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder={mode === "create" ? "Nhap mat khau" : "Nhap mat khau moi neu can"}
+                placeholder={
+                  mode === "create"
+                    ? "Nhập mật khẩu"
+                    : "Nhập mật khẩu mới nếu cần"
+                }
                 aria-invalid={Boolean(touched.mat_khau && fieldErrors.mat_khau)}
               />
-              <p className="user-form-modal__helper">
-                {mode === "create" ? "Mat khau toi thieu 6 ky tu." : "De trong neu muon giu nguyen mat khau hien tai."}
-              </p>
-              {touched.mat_khau && fieldErrors.mat_khau && <p className="admin-field-error">{fieldErrors.mat_khau}</p>}
+              {/* <p className="user-form-modal__helper">
+                {mode === "create" ? "Mật khẩu tối thiểu 6 ký tự." : "Để trống nếu muốn giữ nguyên mật khẩu hiện tại."}
+              </p> */}
+              {touched.mat_khau && fieldErrors.mat_khau && (
+                <p className="admin-field-error">{fieldErrors.mat_khau}</p>
+              )}
             </div>
           </div>
 
           {formError && <p className="admin-form-error">{formError}</p>}
 
           <div className="user-form-modal__footer">
-            <button type="button" className="admin-btn" onClick={onClose} disabled={loading}>
-              Cancel
+            <button
+              type="button"
+              className="admin-btn"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Hủy
             </button>
-            <button type="submit" className="admin-btn admin-btn--primary" disabled={loading}>
-              {loading ? "Saving..." : mode === "create" ? "Create User" : "Update User"}
+            <button
+              type="submit"
+              className="admin-btn admin-btn--primary"
+              disabled={loading}
+            >
+              {loading
+                ? "Đang lưu..."
+                : mode === "create"
+                  ? "Tạo người dùng"
+                  : "Cập nhật người dùng"}
             </button>
           </div>
         </form>

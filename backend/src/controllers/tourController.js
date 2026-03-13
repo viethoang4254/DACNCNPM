@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import asyncHandler from "../utils/asyncHandler.js";
+import { optimizeUploadedImages, removeUploadedFiles } from "../middlewares/uploadMiddleware.js";
 import { sendResponse } from "../utils/response.js";
 import {
   addTourImages,
@@ -225,8 +226,8 @@ export const addTourImagesController = asyncHandler(async (req, res) => {
     });
   }
 
-  const files = req.files || [];
-  const uploadedImageUrls = mapUploadedPaths(files);
+  const optimizedFiles = await optimizeUploadedImages(req.files || []);
+  const uploadedImageUrls = mapUploadedPaths(optimizedFiles);
   const manualImageUrls = normalizeImageUrls(req.body);
   const imageUrls = [...uploadedImageUrls, ...manualImageUrls];
 
@@ -239,7 +240,12 @@ export const addTourImagesController = asyncHandler(async (req, res) => {
     });
   }
 
-  await addTourImages(tourId, imageUrls);
+  try {
+    await addTourImages(tourId, imageUrls);
+  } catch (error) {
+    await removeUploadedFiles(optimizedFiles);
+    throw error;
+  }
 
   return sendResponse(res, {
     statusCode: 201,
@@ -262,11 +268,13 @@ export const updateTourImageController = asyncHandler(async (req, res) => {
     });
   }
 
+  const optimizedFiles = req.file ? await optimizeUploadedImages([req.file]) : [];
   const manualUrl = req.body?.image_url?.trim();
-  const uploadedUrl = req.file ? mapUploadedPaths([req.file])[0] : "";
+  const uploadedUrl = optimizedFiles.length > 0 ? mapUploadedPaths(optimizedFiles)[0] : "";
   const nextImageUrl = uploadedUrl || manualUrl;
 
   if (!nextImageUrl) {
+    await removeUploadedFiles(optimizedFiles);
     return sendResponse(res, {
       statusCode: 400,
       success: false,
@@ -275,7 +283,14 @@ export const updateTourImageController = asyncHandler(async (req, res) => {
     });
   }
 
-  const updated = await updateTourImageById(imageId, nextImageUrl);
+  let updated;
+
+  try {
+    updated = await updateTourImageById(imageId, nextImageUrl);
+  } catch (error) {
+    await removeUploadedFiles(optimizedFiles);
+    throw error;
+  }
 
   if (image.image_url && image.image_url.includes("/uploads/") && image.image_url !== nextImageUrl) {
     const oldFileName = image.image_url.split("/uploads/")[1];

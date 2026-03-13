@@ -1,5 +1,6 @@
 import { FaChartLine, FaUsers, FaMapMarkedAlt, FaBook, FaMoneyCheckAlt, FaStar, FaCompass } from "react-icons/fa";
 import { NavLink } from "react-router-dom";
+import "./AdminSidebar.scss";
 
 const menuItems = [
   { to: "/admin/dashboard", label: "Dashboard", icon: FaChartLine },

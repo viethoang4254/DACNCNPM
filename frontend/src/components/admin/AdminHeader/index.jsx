@@ -2,14 +2,15 @@ import { useMemo } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearAuthSession, getAuthUser } from "../../../utils/authStorage";
+import "./AdminHeader.scss";
 
 const titleMap = {
-  "/admin/dashboard": { label: "Dashboard", sub: "Tổng quan hệ thống" },
-  "/admin/users":     { label: "Users",     sub: "Quản lý tài khoản người dùng" },
-  "/admin/tours":     { label: "Tours",     sub: "Danh sách tour du lịch" },
-  "/admin/bookings":  { label: "Bookings",  sub: "Quản lý đặt tour" },
-  "/admin/payments":  { label: "Payments",  sub: "Thống kê thanh toán" },
-  "/admin/reviews":   { label: "Reviews",   sub: "Quản lý đánh giá" },
+  "/admin/dashboard": { label: "Bảng điều khiển", sub: "Tổng quan hệ thống" },
+  "/admin/users":     { label: "Người dùng", sub: "Quản lý tài khoản người dùng" },
+  "/admin/tours":     { label: "Tour", sub: "Danh sách tour du lịch" },
+  "/admin/bookings":  { label: "Đặt tour", sub: "Quản lý đơn đặt tour" },
+  "/admin/payments":  { label: "Thanh toán", sub: "Thống kê thanh toán" },
+  "/admin/reviews":   { label: "Đánh giá", sub: "Quản lý đánh giá" },
 };
 
 function AdminHeader() {
@@ -18,7 +19,7 @@ function AdminHeader() {
   const user      = getAuthUser();
 
   const page = useMemo(
-    () => titleMap[location.pathname] || { label: "Admin", sub: "" },
+    () => titleMap[location.pathname] || { label: "Quản trị", sub: "" },
     [location.pathname]
   );
 
@@ -46,13 +47,13 @@ function AdminHeader() {
         <div className="admin-header__user">
           <div className="admin-header__avatar">{initials}</div>
           <div className="admin-header__user-info">
-            <strong>{user?.ho_ten || "Admin"}</strong>
+            <strong>{user?.ho_ten || "Quản trị viên"}</strong>
             <span>{user?.email || ""}</span>
           </div>
         </div>
         <button type="button" className="admin-btn admin-btn--ghost" onClick={handleLogout}>
           <FaSignOutAlt />
-          Logout
+          Đăng xuất
         </button>
       </div>
     </header>
