@@ -22,7 +22,8 @@ const initialTouchedState = {
   so_nguoi_toi_da: false,
 };
 
-const sanitizeCurrencyInput = (value) => String(value ?? "").replace(/[^\d]/g, "");
+const sanitizeCurrencyInput = (value) =>
+  String(value ?? "").replace(/[^\d]/g, "");
 
 const normalizeCurrencyValue = (value) => {
   const digits = sanitizeCurrencyInput(value);
@@ -58,7 +59,9 @@ const formatPriceForDisplay = (value) => {
 const getFieldError = (name, value) => {
   const normalizedValue = typeof value === "string" ? value.trim() : value;
 
-  if (["ten_tour", "tinh_thanh", "diem_khoi_hanh", "phuong_tien"].includes(name)) {
+  if (
+    ["ten_tour", "tinh_thanh", "diem_khoi_hanh", "phuong_tien"].includes(name)
+  ) {
     if (!normalizedValue) return "Trường này không được để trống.";
     return "";
   }
@@ -66,7 +69,11 @@ const getFieldError = (name, value) => {
   if (name === "gia") {
     const numericValue = normalizeCurrencyValue(value);
 
-    if (normalizedValue === "" || normalizedValue === null || normalizedValue === undefined) {
+    if (
+      normalizedValue === "" ||
+      normalizedValue === null ||
+      normalizedValue === undefined
+    ) {
       return "Vui lòng nhập giá tour.";
     }
 
@@ -78,11 +85,18 @@ const getFieldError = (name, value) => {
   }
 
   if (name === "so_ngay") {
-    if (normalizedValue === "" || normalizedValue === null || normalizedValue === undefined) {
+    if (
+      normalizedValue === "" ||
+      normalizedValue === null ||
+      normalizedValue === undefined
+    ) {
       return "Vui lòng nhập số ngày.";
     }
 
-    if (!Number.isInteger(Number(normalizedValue)) || Number(normalizedValue) <= 0) {
+    if (
+      !Number.isInteger(Number(normalizedValue)) ||
+      Number(normalizedValue) <= 0
+    ) {
       return "Số ngày phải là số nguyên dương.";
     }
 
@@ -90,11 +104,18 @@ const getFieldError = (name, value) => {
   }
 
   if (name === "so_nguoi_toi_da") {
-    if (normalizedValue === "" || normalizedValue === null || normalizedValue === undefined) {
+    if (
+      normalizedValue === "" ||
+      normalizedValue === null ||
+      normalizedValue === undefined
+    ) {
       return "Vui lòng nhập số người tối đa.";
     }
 
-    if (!Number.isInteger(Number(normalizedValue)) || Number(normalizedValue) <= 0) {
+    if (
+      !Number.isInteger(Number(normalizedValue)) ||
+      Number(normalizedValue) <= 0
+    ) {
       return "Số người tối đa phải là số nguyên dương.";
     }
 
@@ -104,7 +125,14 @@ const getFieldError = (name, value) => {
   return "";
 };
 
-function TourFormModal({ open, mode = "create", tour, loading = false, onClose, onSubmit }) {
+function TourFormModal({
+  open,
+  mode = "create",
+  tour,
+  loading = false,
+  onClose,
+  onSubmit,
+}) {
   const [form, setForm] = useState(initialFormState);
   const [price, setPrice] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
@@ -221,18 +249,30 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
   }
 
   return (
-    <div className="admin-modal__backdrop" role="dialog" aria-modal="true" aria-labelledby="tour-form-modal-title">
+    <div
+      className="admin-modal__backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tour-form-modal-title"
+    >
       <div className="tour-form-modal">
         <div className="tour-form-modal__header">
           <div>
-            <h3 id="tour-form-modal-title">{mode === "create" ? "Thêm tour" : "Chỉnh sửa tour"}</h3>
+            <h3 id="tour-form-modal-title">
+              {mode === "create" ? "Thêm tour" : "Chỉnh sửa tour"}
+            </h3>
             <p>
               {mode === "create"
                 ? "Tạo tour mới với đầy đủ thông tin theo schema database."
                 : "Cập nhật thông tin tour đang được chọn."}
             </p>
           </div>
-          <button type="button" className="admin-btn admin-btn--ghost" onClick={onClose} disabled={loading}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--ghost"
+            onClick={onClose}
+            disabled={loading}
+          >
             Đóng
           </button>
         </div>
@@ -240,7 +280,9 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
         <form className="tour-form-modal__body" onSubmit={handleSubmit}>
           <div className="admin-form-grid">
             <div className="full">
-              <label className="tour-form-modal__label" htmlFor="ten_tour">Tên tour</label>
+              <label className="tour-form-modal__label" htmlFor="ten_tour">
+                Tên tour
+              </label>
               <input
                 id="ten_tour"
                 className={`admin-input ${touched.ten_tour && fieldErrors.ten_tour ? "admin-input--invalid" : ""}`}
@@ -252,11 +294,15 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
                 placeholder="Nhập tên tour"
                 aria-invalid={Boolean(touched.ten_tour && fieldErrors.ten_tour)}
               />
-              {touched.ten_tour && fieldErrors.ten_tour && <p className="admin-field-error">{fieldErrors.ten_tour}</p>}
+              {touched.ten_tour && fieldErrors.ten_tour && (
+                <p className="admin-field-error">{fieldErrors.ten_tour}</p>
+              )}
             </div>
 
             <div className="full">
-              <label className="tour-form-modal__label" htmlFor="mo_ta">Mô tả</label>
+              <label className="tour-form-modal__label" htmlFor="mo_ta">
+                Mô tả
+              </label>
               <textarea
                 id="mo_ta"
                 className="admin-textarea"
@@ -269,7 +315,9 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="gia">Giá</label>
+              <label className="tour-form-modal__label" htmlFor="gia">
+                Giá
+              </label>
               <input
                 id="gia"
                 className={`admin-input ${touched.gia && fieldErrors.gia ? "admin-input--invalid" : ""}`}
@@ -282,12 +330,20 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
                 placeholder="Nhập giá tour, ví dụ 35500000"
                 aria-invalid={Boolean(touched.gia && fieldErrors.gia)}
               />
-              {!touched.gia && !fieldErrors.gia && price && <p className="admin-field-error" style={{ color: "#64748b" }}>{formatPriceForDisplay(price)} VNĐ</p>}
-              {touched.gia && fieldErrors.gia && <p className="admin-field-error">{fieldErrors.gia}</p>}
+              {!touched.gia && !fieldErrors.gia && price && (
+                <p className="admin-field-error" style={{ color: "#64748b" }}>
+                  {formatPriceForDisplay(price)} VNĐ
+                </p>
+              )}
+              {touched.gia && fieldErrors.gia && (
+                <p className="admin-field-error">{fieldErrors.gia}</p>
+              )}
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="tinh_thanh">Tỉnh thành</label>
+              <label className="tour-form-modal__label" htmlFor="tinh_thanh">
+                Tỉnh thành
+              </label>
               <input
                 id="tinh_thanh"
                 className={`admin-input ${touched.tinh_thanh && fieldErrors.tinh_thanh ? "admin-input--invalid" : ""}`}
@@ -297,13 +353,22 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Nhập tỉnh thành"
-                aria-invalid={Boolean(touched.tinh_thanh && fieldErrors.tinh_thanh)}
+                aria-invalid={Boolean(
+                  touched.tinh_thanh && fieldErrors.tinh_thanh,
+                )}
               />
-              {touched.tinh_thanh && fieldErrors.tinh_thanh && <p className="admin-field-error">{fieldErrors.tinh_thanh}</p>}
+              {touched.tinh_thanh && fieldErrors.tinh_thanh && (
+                <p className="admin-field-error">{fieldErrors.tinh_thanh}</p>
+              )}
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="diem_khoi_hanh">Điểm khởi hành</label>
+              <label
+                className="tour-form-modal__label"
+                htmlFor="diem_khoi_hanh"
+              >
+                Điểm khởi hành
+              </label>
               <input
                 id="diem_khoi_hanh"
                 className={`admin-input ${touched.diem_khoi_hanh && fieldErrors.diem_khoi_hanh ? "admin-input--invalid" : ""}`}
@@ -313,13 +378,21 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Nhập điểm khởi hành"
-                aria-invalid={Boolean(touched.diem_khoi_hanh && fieldErrors.diem_khoi_hanh)}
+                aria-invalid={Boolean(
+                  touched.diem_khoi_hanh && fieldErrors.diem_khoi_hanh,
+                )}
               />
-              {touched.diem_khoi_hanh && fieldErrors.diem_khoi_hanh && <p className="admin-field-error">{fieldErrors.diem_khoi_hanh}</p>}
+              {touched.diem_khoi_hanh && fieldErrors.diem_khoi_hanh && (
+                <p className="admin-field-error">
+                  {fieldErrors.diem_khoi_hanh}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="phuong_tien">Phương tiện</label>
+              <label className="tour-form-modal__label" htmlFor="phuong_tien">
+                Phương tiện
+              </label>
               <input
                 id="phuong_tien"
                 className={`admin-input ${touched.phuong_tien && fieldErrors.phuong_tien ? "admin-input--invalid" : ""}`}
@@ -329,13 +402,19 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Nhập phương tiện"
-                aria-invalid={Boolean(touched.phuong_tien && fieldErrors.phuong_tien)}
+                aria-invalid={Boolean(
+                  touched.phuong_tien && fieldErrors.phuong_tien,
+                )}
               />
-              {touched.phuong_tien && fieldErrors.phuong_tien && <p className="admin-field-error">{fieldErrors.phuong_tien}</p>}
+              {touched.phuong_tien && fieldErrors.phuong_tien && (
+                <p className="admin-field-error">{fieldErrors.phuong_tien}</p>
+              )}
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="so_ngay">Số ngày</label>
+              <label className="tour-form-modal__label" htmlFor="so_ngay">
+                Số ngày
+              </label>
               <input
                 id="so_ngay"
                 className={`admin-input ${touched.so_ngay && fieldErrors.so_ngay ? "admin-input--invalid" : ""}`}
@@ -349,11 +428,18 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
                 placeholder="Nhập số ngày"
                 aria-invalid={Boolean(touched.so_ngay && fieldErrors.so_ngay)}
               />
-              {touched.so_ngay && fieldErrors.so_ngay && <p className="admin-field-error">{fieldErrors.so_ngay}</p>}
+              {touched.so_ngay && fieldErrors.so_ngay && (
+                <p className="admin-field-error">{fieldErrors.so_ngay}</p>
+              )}
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="so_nguoi_toi_da">Số người tối đa</label>
+              <label
+                className="tour-form-modal__label"
+                htmlFor="so_nguoi_toi_da"
+              >
+                Số người tối đa
+              </label>
               <input
                 id="so_nguoi_toi_da"
                 className={`admin-input ${touched.so_nguoi_toi_da && fieldErrors.so_nguoi_toi_da ? "admin-input--invalid" : ""}`}
@@ -365,20 +451,39 @@ function TourFormModal({ open, mode = "create", tour, loading = false, onClose, 
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Nhập số người tối đa"
-                aria-invalid={Boolean(touched.so_nguoi_toi_da && fieldErrors.so_nguoi_toi_da)}
+                aria-invalid={Boolean(
+                  touched.so_nguoi_toi_da && fieldErrors.so_nguoi_toi_da,
+                )}
               />
-              {touched.so_nguoi_toi_da && fieldErrors.so_nguoi_toi_da && <p className="admin-field-error">{fieldErrors.so_nguoi_toi_da}</p>}
+              {touched.so_nguoi_toi_da && fieldErrors.so_nguoi_toi_da && (
+                <p className="admin-field-error">
+                  {fieldErrors.so_nguoi_toi_da}
+                </p>
+              )}
             </div>
           </div>
 
           {formError && <p className="admin-form-error">{formError}</p>}
 
           <div className="tour-form-modal__footer">
-            <button type="button" className="admin-btn" onClick={onClose} disabled={loading}>
+            <button
+              type="button"
+              className="admin-btn"
+              onClick={onClose}
+              disabled={loading}
+            >
               Hủy
             </button>
-            <button type="submit" className="admin-btn admin-btn--primary" disabled={loading}>
-              {loading ? "Đang lưu..." : mode === "create" ? "Tạo tour" : "Cập nhật tour"}
+            <button
+              type="submit"
+              className="admin-btn admin-btn--primary"
+              disabled={loading}
+            >
+              {loading
+                ? "Đang lưu..."
+                : mode === "create"
+                  ? "Tạo tour"
+                  : "Cập nhật tour"}
             </button>
           </div>
         </form>

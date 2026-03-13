@@ -1,13 +1,27 @@
 import "./Home.scss";
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import HeroSection from "../../../components/user/HeroSection";
-import PopularTours from "../../../components/user/PopularTours";
-import ApiProductList from "../../../components/user/ApiProductList";
+import TrendingDestinations from "../../../components/user/TrendingDestinations";
 import { featuredDestinations, reasons, reviews } from "../../../data/homeData";
 
-const FeaturedDestinations = lazy(() => import("../../../components/user/FeaturedDestinations"));
+// Lazy-load below-fold sections to reduce initial bundle size
+const FeaturedDestinations = lazy(
+  () => import("../../../components/user/FeaturedDestinations"),
+);
+const FeaturedTours = lazy(
+  () => import("../../../components/user/FeaturedTours"),
+);
 const WhyChooseUs = lazy(() => import("../../../components/user/WhyChooseUs"));
 const Reviews = lazy(() => import("../../../components/user/Reviews"));
+
+const SUSPENSE_FALLBACK = <p className="home__message">Đang tải nội dung...</p>;
 
 function Home() {
   const [tours, setTours] = useState([]);
@@ -29,21 +43,24 @@ function Home() {
     [apiBaseUrl],
   );
 
-  const fetchTours = useCallback(async (signal) => {
-    const response = await fetch(`${apiBaseUrl}/api/tours`, { signal });
+  const fetchTours = useCallback(
+    async (signal) => {
+      const response = await fetch(`${apiBaseUrl}/api/tours`, { signal });
 
-    if (!response.ok) {
-      throw new Error(`Request failed with status ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
 
-    const payload = await response.json();
-    const data = Array.isArray(payload.data) ? payload.data : [];
+      const payload = await response.json();
+      const data = Array.isArray(payload.data) ? payload.data : [];
 
-    return data.map((tour) => ({
-      ...tour,
-      hinh_anh: resolveImageUrl(tour.hinh_anh),
-    }));
-  }, [apiBaseUrl, resolveImageUrl]);
+      return data.map((tour) => ({
+        ...tour,
+        hinh_anh: resolveImageUrl(tour.hinh_anh),
+      }));
+    },
+    [apiBaseUrl, resolveImageUrl],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -75,15 +92,32 @@ function Home() {
   return (
     <main className="home">
       <HeroSection />
-      <PopularTours tours={tours} isLoading={toursLoading} error={toursError} />
-      <Suspense fallback={<p className="home__message">Đang tải nội dung...</p>}>
+
+      {/* Above-fold: TrendingDestinations shows top 4 tours immediately */}
+      <TrendingDestinations
+        tours={tours}
+        isLoading={toursLoading}
+        error={toursError}
+      />
+
+      <Suspense fallback={SUSPENSE_FALLBACK}>
         <FeaturedDestinations destinations={featuredDestinations} />
       </Suspense>
-      <ApiProductList tours={tours} isLoading={toursLoading} error={toursError} />
-      <Suspense fallback={<p className="home__message">Đang tải nội dung...</p>}>
+
+      {/* Below-fold: FeaturedTours shows up to 8 latest tours, lazily loaded */}
+      <Suspense fallback={SUSPENSE_FALLBACK}>
+        <FeaturedTours
+          tours={tours}
+          isLoading={toursLoading}
+          error={toursError}
+        />
+      </Suspense>
+
+      <Suspense fallback={SUSPENSE_FALLBACK}>
         <WhyChooseUs reasons={reasons} />
       </Suspense>
-      <Suspense fallback={<p className="home__message">Đang tải nội dung...</p>}>
+
+      <Suspense fallback={SUSPENSE_FALLBACK}>
         <Reviews reviews={reviews} />
       </Suspense>
     </main>
