@@ -81,7 +81,18 @@ router.get(
   getToursController
 );
 
-router.get("/search", validationMiddleware, searchToursController);
+router.get(
+  "/search",
+  [
+    query("destination").optional().isString().withMessage("destination must be a string"),
+    query("date").optional().isISO8601().withMessage("date must be a valid date"),
+    query("guests").optional().isInt({ gt: 0 }).withMessage("guests must be a positive integer"),
+    query("keyword").optional().isString(),
+    query("q").optional().isString(),
+  ],
+  validationMiddleware,
+  searchToursController
+);
 router.get("/filter", validationMiddleware, filterToursController);
 router.get("/featured", getFeaturedToursController);
 router.get("/latest", getLatestToursController);

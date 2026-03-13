@@ -26,6 +26,199 @@ const applyDurationRange = (duration) => {
   return null;
 };
 
+const firstTourImageSubquery = `
+  SELECT timg.tour_id, timg.image_url
+  FROM tour_images timg
+  INNER JOIN (
+    SELECT tour_id, MIN(id) AS first_image_id
+    FROM tour_images
+    GROUP BY tour_id
+  ) tif ON tif.tour_id = timg.tour_id AND tif.first_image_id = timg.id
+`;
+
+const tourSearchSelect = `
+  SELECT
+    t.id,
+    t.ten_tour,
+    t.mo_ta,
+    t.gia,
+    t.tinh_thanh,
+    t.diem_khoi_hanh,
+    t.phuong_tien,
+    t.so_ngay,
+    t.so_nguoi_toi_da,
+    t.created_at,
+    ti.image_url AS hinh_anh,
+    MIN(ts.start_date) AS nearest_start_date
+  FROM tours t
+  INNER JOIN tour_schedules ts ON ts.tour_id = t.id
+  LEFT JOIN (${firstTourImageSubquery}) ti ON ti.tour_id = t.id
+`;
+
+const DESTINATION_ALIASES = {
+  "da nang": ["Đà Nẵng", "Da Nang", "da-nang"],
+  "ha noi": ["Hà Nội", "Ha Noi", "ha-noi"],
+  "phu quoc": ["Phú Quốc", "Phu Quoc", "phu-quoc"],
+  "hoi an": ["Hội An", "Hoi An", "hoi-an"],
+  "da lat": ["Đà Lạt", "Da Lat", "da-lat"],
+  "quang ninh": ["Quảng Ninh", "Ha Long", "Hạ Long", "quang-ninh"],
+  "nha trang": ["Nha Trang", "Khánh Hòa", "khanh-hoa"],
+  "ho chi minh": ["TP. Hồ Chí Minh", "Ho Chi Minh", "hcm"],
+};
+
+const normalizeDestinationInput = (value) => {
+  if (typeof value !== "string") return "";
+  return value.trim().toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ");
+};
+
+const getDestinationCandidates = (destination) => {
+  const normalized = normalizeDestinationInput(destination);
+  if (!normalized) return [];
+
+  const candidates = new Set([
+    normalized,
+    normalized.replace(/\s+/g, "-"),
+    normalized.replace(/\s+/g, ""),
+  ]);
+
+  const aliases = DESTINATION_ALIASES[normalized] || [];
+  aliases.forEach((alias) => {
+    const normalizedAlias = normalizeDestinationInput(alias);
+    if (normalizedAlias) {
+      candidates.add(normalizedAlias);
+      candidates.add(normalizedAlias.replace(/\s+/g, "-"));
+    }
+    if (typeof alias === "string" && alias.trim()) {
+      candidates.add(alias.trim().toLowerCase());
+    }
+  });
+
+  return [...candidates];
+};
+
+const buildDestinationSqlFilter = (destination) => {
+  const candidates = getDestinationCandidates(destination);
+  if (candidates.length === 0) {
+    return { clause: "", params: [] };
+  }
+
+  const parts = [];
+  const params = [];
+
+  candidates.forEach((candidate) => {
+    const likeValue = `%${candidate}%`;
+    parts.push(
+      "(LOWER(t.tinh_thanh) LIKE ? OR LOWER(REPLACE(t.tinh_thanh, '-', ' ')) LIKE ? OR LOWER(t.ten_tour) LIKE ?)"
+    );
+    params.push(likeValue, likeValue, likeValue);
+  });
+
+  return {
+    clause: `(${parts.join(" OR ")})`,
+    params,
+  };
+};
+
+export const searchToursByCriteria = async ({ destination, date, guests }) => {
+  const guestCount = Number.isFinite(Number(guests)) ? Math.max(1, Number(guests)) : 1;
+  const filters = [];
+  const filterParams = [];
+
+  const destinationFilter = buildDestinationSqlFilter(destination);
+
+  if (destinationFilter.clause) {
+    filters.push(destinationFilter.clause);
+    filterParams.push(...destinationFilter.params);
+  }
+
+  const hasRequestedDate = Boolean(date);
+  if (hasRequestedDate) {
+    filters.push("ts.start_date >= ?");
+    filterParams.push(date);
+  }
+
+  filters.push("ts.available_slots >= ?");
+  filterParams.push(guestCount);
+
+  const whereSql = filters.length > 0 ? `WHERE ${filters.join(" AND ")}` : "";
+  const groupOrderSql = "GROUP BY t.id ORDER BY nearest_start_date ASC, t.created_at DESC";
+
+  const [rows] = await pool.execute(
+    `${tourSearchSelect}
+     ${whereSql}
+     ${groupOrderSql}`,
+    filterParams
+  );
+
+  if (rows.length > 0 || !hasRequestedDate) {
+    return {
+      tours: rows,
+      message: rows.length > 0 ? "Tìm thấy tour phù hợp." : "Không tìm thấy tour phù hợp.",
+      usedNearestDate: false,
+    };
+  }
+
+  const nearestDateFilters = [];
+  const nearestDateParams = [];
+
+  if (destinationFilter.clause) {
+    nearestDateFilters.push(destinationFilter.clause);
+    nearestDateParams.push(...destinationFilter.params);
+  }
+
+  nearestDateFilters.push("ts.start_date >= ?");
+  nearestDateParams.push(date);
+  nearestDateFilters.push("ts.available_slots >= ?");
+  nearestDateParams.push(guestCount);
+
+  const nearestDateWhere = `WHERE ${nearestDateFilters.join(" AND ")}`;
+
+  const [nearestDateRows] = await pool.execute(
+    `SELECT MIN(ts.start_date) AS nearest_start_date
+     FROM tours t
+     INNER JOIN tour_schedules ts ON ts.tour_id = t.id
+     ${nearestDateWhere}`,
+    nearestDateParams
+  );
+
+  const nearestDate = nearestDateRows[0]?.nearest_start_date || null;
+  if (!nearestDate) {
+    return {
+      tours: [],
+      message: "Không tìm thấy tour phù hợp với điều kiện tìm kiếm.",
+      usedNearestDate: false,
+    };
+  }
+
+  const suggestedFilters = [];
+  const suggestedParams = [];
+
+  if (destinationFilter.clause) {
+    suggestedFilters.push(destinationFilter.clause);
+    suggestedParams.push(...destinationFilter.params);
+  }
+
+  suggestedFilters.push("ts.start_date = ?");
+  suggestedParams.push(nearestDate);
+  suggestedFilters.push("ts.available_slots >= ?");
+  suggestedParams.push(guestCount);
+
+  const suggestedWhere = `WHERE ${suggestedFilters.join(" AND ")}`;
+
+  const [suggestedRows] = await pool.execute(
+    `${tourSearchSelect}
+     ${suggestedWhere}
+     ${groupOrderSql}`,
+    suggestedParams
+  );
+
+  return {
+    tours: suggestedRows,
+    message: "Không có tour đúng ngày bạn chọn. Đây là các ngày khởi hành gần nhất.",
+    usedNearestDate: true,
+  };
+};
+
 export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_hanh, price, duration, minPrice, maxPrice, sort, minDays, maxDays }) => {
   const whereParts = [];
   const params = [];
