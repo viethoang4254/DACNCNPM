@@ -4,7 +4,7 @@ import "./assets/styles/main.scss";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/user/Home";
 import Login from "./pages/user/Login";
-import Registry from "./pages/user/Registry";
+import Register from "./pages/user/Register";
 import Tours from "./pages/user/Tours";
 import TourDetail from "./pages/user/TourDetail";
 import About from "./pages/user/About";
@@ -74,10 +74,10 @@ function App() {
           }
         />
         <Route
-          path="/registry"
+          path="/register"
           element={
             <UserRoute>
-              <Registry />
+              <Register />
             </UserRoute>
           }
         />

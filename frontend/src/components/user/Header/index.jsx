@@ -117,7 +117,7 @@ function Header() {
                   <NavLink to="/login" className="account__btn-login">
                     Đăng Nhập
                   </NavLink>
-                  <NavLink to="/registry" className="account__btn-register">
+                  <NavLink to="/register" className="account__btn-register">
                     Đăng Ký
                   </NavLink>
                 </>

@@ -41,7 +41,11 @@ function HeroSection() {
           Lên kế hoạch và bắt đầu hành trình của bạn ngày hôm nay
         </p>
 
-        <form className="home__search" aria-label="travel search" onSubmit={handleSubmit}>
+        <form
+          className="home__search"
+          aria-label="travel search"
+          onSubmit={handleSubmit}
+        >
           <div className="home__search-grid">
             <label>
               Điểm đến
