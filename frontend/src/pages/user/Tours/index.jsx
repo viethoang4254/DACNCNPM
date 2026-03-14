@@ -106,16 +106,18 @@ function ToursPage() {
   const [searchMessage, setSearchMessage] = useState("");
   const [keyword, setKeyword] = useState("");
 
-  const isHomeSearch = Boolean(urlState.destination || urlState.date || urlState.guests);
+  const isHomeSearch = Boolean(
+    urlState.destination || urlState.date || urlState.guests,
+  );
   const hasToursPageFilters = useMemo(
     () =>
       Boolean(
         urlState.search ||
-          urlState.tinh_thanh ||
-          urlState.price ||
-          urlState.duration ||
-          urlState.sort !== "newest" ||
-          urlState.page > 1,
+        urlState.tinh_thanh ||
+        urlState.price ||
+        urlState.duration ||
+        urlState.sort !== "newest" ||
+        urlState.page > 1,
       ),
     [
       urlState.duration,
@@ -377,7 +379,11 @@ function ToursPage() {
             </div>
 
             {searchMessage && (
-              <div className="tours-page__search-message" role="status" aria-live="polite">
+              <div
+                className="tours-page__search-message"
+                role="status"
+                aria-live="polite"
+              >
                 {searchMessage}
               </div>
             )}

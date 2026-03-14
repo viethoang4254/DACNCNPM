@@ -215,7 +215,7 @@ function Login() {
           </form>
 
           <p className="auth-switch">
-            Chưa có tài khoản? <Link to="/registry">Đăng ký ngay</Link>
+            Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
           </p>
         </div>
       </section>
