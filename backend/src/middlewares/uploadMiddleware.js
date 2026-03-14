@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import multer from "multer";
 import sharp from "sharp";
+import { findDuplicateFileByHash } from "../utils/uploadHash.js";
 
 const toPositiveNumber = (value, fallback) => {
   const parsed = Number(value);
@@ -13,6 +14,7 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const MAX_IMAGE_SIZE_MB = toPositiveNumber(process.env.MAX_IMAGE_SIZE_MB, 15);
 const MAX_IMAGE_WIDTH_PX = Math.round(toPositiveNumber(process.env.MAX_IMAGE_WIDTH_PX, 1600));
 const IMAGE_QUALITY = clamp(Math.round(toPositiveNumber(process.env.IMAGE_QUALITY, 78)), 40, 90);
+const FILE_HASH_ALGORITHM = process.env.UPLOAD_HASH_ALGORITHM || "sha256";
 
 export const uploadDir = path.resolve("uploads");
 
@@ -55,7 +57,7 @@ const upload = multer({
 export const removeUploadedFiles = async (files = []) => {
   await Promise.all(
     files
-      .filter(Boolean)
+      .filter((file) => Boolean(file) && !file.isDuplicate)
       .map(async (file) => {
         const resolvedPath = file.path || (file.filename ? path.resolve(uploadDir, file.filename) : "");
 
@@ -83,6 +85,28 @@ const optimizeUploadedFile = async (file) => {
       .webp({ quality: IMAGE_QUALITY })
       .toFile(optimizedPath);
 
+    const duplicate = await findDuplicateFileByHash({
+      targetFilePath: optimizedPath,
+      directoryPath: uploadDir,
+      excludeFileNames: [optimizedFilename, file.filename],
+      algorithm: FILE_HASH_ALGORITHM,
+    });
+
+    if (duplicate) {
+      const duplicateStats = await fs.promises.stat(duplicate.path);
+      await removeUploadedFiles([{ path: optimizedPath }, file]);
+
+      return {
+        ...file,
+        filename: duplicate.filename,
+        path: duplicate.path,
+        mimetype: "image/webp",
+        size: duplicateStats.size,
+        isDuplicate: true,
+        hash: duplicate.hash,
+      };
+    }
+
     const stats = await fs.promises.stat(optimizedPath);
     await removeUploadedFiles([file]);
 
@@ -92,6 +116,7 @@ const optimizeUploadedFile = async (file) => {
       path: optimizedPath,
       mimetype: "image/webp",
       size: stats.size,
+      isDuplicate: false,
     };
   } catch (error) {
     await removeUploadedFiles([{ path: optimizedPath }, file]);
@@ -100,7 +125,15 @@ const optimizeUploadedFile = async (file) => {
 };
 
 export const optimizeUploadedImages = async (files = []) => {
-  return Promise.all(files.filter(Boolean).map(optimizeUploadedFile));
+  const uploadedFiles = files.filter(Boolean);
+  const optimizedFiles = [];
+
+  for (const file of uploadedFiles) {
+    const optimizedFile = await optimizeUploadedFile(file);
+    optimizedFiles.push(optimizedFile);
+  }
+
+  return optimizedFiles;
 };
 
 export default upload;
