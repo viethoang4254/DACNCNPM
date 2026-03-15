@@ -38,8 +38,13 @@ function Bookings() {
     return () => { active = false; };
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil(bookings.length / LIMIT));
-  const paginated  = useMemo(() => bookings.slice((page - 1) * LIMIT, page * LIMIT), [bookings, page]);
+  const visibleBookings = useMemo(
+    () => bookings.filter((booking) => booking.trang_thai !== "pending"),
+    [bookings],
+  );
+
+  const totalPages = Math.max(1, Math.ceil(visibleBookings.length / LIMIT));
+  const paginated  = useMemo(() => visibleBookings.slice((page - 1) * LIMIT, page * LIMIT), [visibleBookings, page]);
 
   const columns = [
     { key: "id",        header: "ID" },
@@ -86,13 +91,13 @@ function Bookings() {
       <div className="admin-card">
         <div className="admin-toolbar">
           <h3>Đặt tour</h3>
-          <span className="admin-toolbar__meta">{bookings.length} bản ghi</span>
+          <span className="admin-toolbar__meta">{visibleBookings.length} bản ghi</span>
         </div>
         {error && <p className="admin-state admin-state--error">{error}</p>}
         {loading ? (
           <p className="admin-state">Đang tải danh sách đặt tour...</p>
         ) : (
-          <DataTable columns={columns} data={paginated} emptyText="Không có đơn đặt tour" />
+          <DataTable columns={columns} data={paginated} emptyText="Chưa có đơn đã thanh toán" />
         )}
         <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>

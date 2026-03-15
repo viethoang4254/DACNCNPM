@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import apiClient from "../../../../../utils/apiClient";
+import { getAuthToken } from "../../../../../utils/authStorage";
 import "./BookingCard.scss";
 
 function formatCurrency(value) {
@@ -14,6 +16,8 @@ function formatDate(value) {
 }
 
 function BookingCard({ tour, schedules = [] }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [people, setPeople] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -74,17 +78,51 @@ function BookingCard({ tour, schedules = [] }) {
       return;
     }
 
+    const token = getAuthToken();
+    if (!token) {
+      navigate("/login", {
+        replace: false,
+        state: {
+          from: location.pathname,
+        },
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
       setMessage({ text: "", type: "" });
 
-      await apiClient.post("/api/bookings", {
+      const response = await apiClient.post("/api/bookings", {
+        tour_id: Number(tour?.id || 0),
         schedule_id: Number(selectedScheduleId),
-        quantity: Number(people),
+        so_nguoi: Number(people),
       });
 
-      setMessage({ text: "Đặt tour thành công.", type: "success" });
+      const bookingId = Number(
+        response?.data?.data?.id || response?.data?.data?.booking?.id || 0,
+      );
+
+      if (!bookingId) {
+        setMessage({
+          text: "Đặt tour thành công nhưng không nhận được mã booking.",
+          type: "error",
+        });
+        return;
+      }
+
+      navigate(`/checkout/${bookingId}`);
     } catch (error) {
+      if (error?.response?.status === 401) {
+        navigate("/login", {
+          replace: false,
+          state: {
+            from: location.pathname,
+          },
+        });
+        return;
+      }
+
       const apiMessage = error?.response?.data?.message;
       setMessage({
         text: apiMessage || "Không thể đặt tour. Vui lòng thử lại.",

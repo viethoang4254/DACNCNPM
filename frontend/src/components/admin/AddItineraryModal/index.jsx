@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MdClose } from "react-icons/md";
 import "./AddItineraryModal.scss";
 
@@ -21,6 +21,13 @@ const defaultItineraryTemplates = [
     description: "Mua sắm đặc sản địa phương và kết thúc tour.",
   },
 ];
+
+const MAX_VISIBLE_TOURS = 12;
+const formatTourOption = (name, days) => {
+  const base = `${String(name || "").trim()} (${Number(days || 0)} ngày)`;
+  if (base.length <= 80) return base;
+  return `${base.slice(0, 77)}...`;
+};
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
@@ -54,12 +61,34 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
   const [tours, setTours] = useState([]);
   const [toursLoading, setToursLoading] = useState(false);
   const [tourId, setTourId] = useState("");
+  const [tourKeyword, setTourKeyword] = useState("");
   const [itineraries, setItineraries] = useState([]);
   const [errors, setErrors] = useState({});
+
+  const matchingTours = useMemo(() => {
+    const keyword = tourKeyword.trim().toLowerCase();
+    if (!keyword) return tours;
+    return tours.filter((tour) =>
+      String(tour.ten_tour || "")
+        .toLowerCase()
+        .includes(keyword),
+    );
+  }, [tourKeyword, tours]);
+
+  const filteredTours = useMemo(
+    () => matchingTours.slice(0, MAX_VISIBLE_TOURS),
+    [matchingTours],
+  );
+
+  const hiddenToursCount = Math.max(
+    0,
+    matchingTours.length - filteredTours.length,
+  );
 
   useEffect(() => {
     if (!open) {
       setTourId("");
+      setTourKeyword("");
       setItineraries([]);
       setErrors({});
       return;
@@ -198,6 +227,14 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
         >
           <div className="itinerary-modal__field">
             <label className="itinerary-modal__label">Tour</label>
+            <input
+              type="text"
+              className="admin-input itinerary-modal__tour-search"
+              placeholder="Tìm nhanh tên tour..."
+              value={tourKeyword}
+              onChange={(event) => setTourKeyword(event.target.value)}
+              disabled={loading || toursLoading}
+            />
             <select
               className={`admin-select${errors.tourId ? " admin-input--invalid" : ""}`}
               value={tourId}
@@ -211,12 +248,23 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
               <option value="">
                 {toursLoading ? "Đang tải..." : "-- Chọn tour --"}
               </option>
-              {tours.map((tour) => (
+              {filteredTours.map((tour) => (
                 <option key={tour.id} value={tour.id}>
-                  {tour.ten_tour} ({tour.so_ngay} ngày)
+                  {formatTourOption(tour.ten_tour, tour.so_ngay)}
                 </option>
               ))}
+              {!toursLoading && filteredTours.length === 0 && (
+                <option value="" disabled>
+                  Không tìm thấy tour phù hợp
+                </option>
+              )}
             </select>
+            {!toursLoading && hiddenToursCount > 0 && (
+              <p className="itinerary-modal__hint">
+                Còn {hiddenToursCount} tour chưa hiển thị, hãy nhập thêm từ khóa
+                để thu gọn danh sách.
+              </p>
+            )}
             {errors.tourId && (
               <p className="admin-field-error">{errors.tourId}</p>
             )}
@@ -229,7 +277,7 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
               onClick={handleAutoGenerate}
               disabled={loading || toursLoading}
             >
-              Tự động tạo lịch trình
+              Tạo lịch trình
             </button>
           </div>
 

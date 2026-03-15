@@ -36,7 +36,11 @@ function Dashboard() {
 
         if (!active) return;
         setStats(statsRes.data?.data || stats);
-        setLatestBookings((bookingsRes.data?.data || []).slice(0, 5));
+        setLatestBookings(
+          (bookingsRes.data?.data || [])
+            .filter((b) => b.trang_thai !== "pending")
+            .slice(0, 5)
+        );
       } catch (err) {
         if (!active) return;
         setError(err?.response?.data?.message || "Không thể tải dữ liệu tổng quan");

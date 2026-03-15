@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function HeroSection() {
@@ -6,19 +6,6 @@ function HeroSection() {
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
   const [guests, setGuests] = useState("2");
-
-  const destinationOptions = useMemo(
-    () => [
-      { value: "", label: "Chọn điểm đến" },
-      { value: "da-nang", label: "Đà Nẵng" },
-      { value: "ha-noi", label: "Hà Nội" },
-      { value: "phu-quoc", label: "Phú Quốc" },
-      { value: "hoi-an", label: "Hội An" },
-      { value: "da-lat", label: "Đà Lạt" },
-      { value: "quang-ninh", label: "Hạ Long" },
-    ],
-    [],
-  );
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -49,16 +36,12 @@ function HeroSection() {
           <div className="home__search-grid">
             <label>
               Điểm đến
-              <select
+              <input
+                type="search"
                 value={destination}
                 onChange={(event) => setDestination(event.target.value)}
-              >
-                {destinationOptions.map((option) => (
-                  <option key={option.value || "all"} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                placeholder="Nhập điểm đến bạn muốn khám phá"
+              />
             </label>
             <label>
               Ngày khởi hành
