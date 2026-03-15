@@ -303,7 +303,7 @@ function TourItineraries() {
   return (
     <div className="admin-card admin-page-itineraries">
       <div className="admin-toolbar">
-        <h3>Tour Itineraries Management</h3>
+        <h3>Lịch trình</h3>
 
         <div className="admin-page-itineraries__actions">
           <span className="admin-toolbar__meta">
