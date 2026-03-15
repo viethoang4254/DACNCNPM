@@ -9,6 +9,8 @@ import Tours from "./pages/user/Tours";
 import TourDetail from "./pages/user/TourDetail";
 import About from "./pages/user/About";
 import Contact from "./pages/user/Contact";
+import CheckoutPage from "./components/user/CheckoutPage";
+import PaymentSuccess from "./components/user/CheckoutPage/PaymentSuccess";
 import ScrollToTop from "./components/common/ScrollToTop";
 import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -110,6 +112,22 @@ function App() {
           element={
             <UserRoute>
               <Contact />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/checkout/:bookingId"
+          element={
+            <UserRoute>
+              <CheckoutPage />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/payment-success"
+          element={
+            <UserRoute>
+              <PaymentSuccess />
             </UserRoute>
           }
         />

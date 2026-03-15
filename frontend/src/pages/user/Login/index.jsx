@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { saveAuthSession } from "../../../utils/authStorage";
 import "./Login.scss";
 
@@ -22,6 +22,11 @@ const validateEmail = (value) => {
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath =
+    typeof location?.state?.from === "string" && location.state.from.trim()
+      ? location.state.from
+      : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -101,7 +106,7 @@ function Login() {
       }
 
       if (user.role === "customer") {
-        navigate("/", { replace: true });
+        navigate(redirectPath, { replace: true });
         return;
       }
 

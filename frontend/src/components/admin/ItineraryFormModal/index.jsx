@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { MdClose } from "react-icons/md";
 import ItineraryAccordion from "../ItineraryAccordion";
+import TourSearchDropdown from "../TourSearchDropdown";
 import "./ItineraryFormModal.scss";
 
 const defaultDescriptionByDay = {
@@ -178,12 +179,15 @@ function ItineraryFormModal({
                 readOnly
               />
             ) : (
-              <select
-                className={`admin-select${errors.tourId ? " admin-input--invalid" : ""}`}
-                value={tourId}
+              <TourSearchDropdown
+                tours={tours}
+                selectedTourId={tourId}
                 disabled={loading}
-                onChange={(event) => {
-                  setTourId(event.target.value);
+                invalid={Boolean(errors.tourId)}
+                placeholder="Tìm nhanh tên tour..."
+                emptyLabel="-- Chọn tour --"
+                onSelectTour={(tour) => {
+                  setTourId(tour?.id ? String(tour.id) : "");
                   setItineraries([]);
                   setErrors((prev) => ({
                     ...prev,
@@ -191,14 +195,7 @@ function ItineraryFormModal({
                     itineraries: "",
                   }));
                 }}
-              >
-                <option value="">-- Chọn tour --</option>
-                {tours.map((tour) => (
-                  <option key={tour.id} value={tour.id}>
-                    {tour.ten_tour} ({tour.so_ngay} ngày)
-                  </option>
-                ))}
-              </select>
+              />
             )}
             {errors.tourId && (
               <p className="admin-field-error">{errors.tourId}</p>

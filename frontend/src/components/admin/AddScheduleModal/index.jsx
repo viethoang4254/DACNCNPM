@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
 import apiClient from "../../../utils/apiClient";
+import TourSearchDropdown from "../TourSearchDropdown";
 import "./AddScheduleModal.scss";
 
 const todayStr = () => new Date().toISOString().split("T")[0];
@@ -107,25 +108,19 @@ function AddScheduleModal({
                 readOnly
               />
             ) : (
-              <select
-                className={`admin-select${errors.tourId ? " admin-input--invalid" : ""}`}
-                value={tourId}
-                onChange={(e) => {
-                  setTourId(e.target.value);
+              <TourSearchDropdown
+                tours={tours}
+                selectedTourId={tourId}
+                disabled={loading || toursLoading}
+                invalid={Boolean(errors.tourId)}
+                placeholder="Tìm nhanh tên tour..."
+                emptyLabel={toursLoading ? "Đang tải..." : "-- Chọn tour --"}
+                onSelectTour={(tour) => {
+                  setTourId(tour?.id ? String(tour.id) : "");
                   setErrors((p) => ({ ...p, tourId: "" }));
                   onClearApiError?.();
                 }}
-                disabled={loading || toursLoading}
-              >
-                <option value="">
-                  {toursLoading ? "Đang tải..." : "-- Chọn tour --"}
-                </option>
-                {tours.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.ten_tour}
-                  </option>
-                ))}
-              </select>
+              />
             )}
             {errors.tourId && (
               <p className="admin-field-error">{errors.tourId}</p>

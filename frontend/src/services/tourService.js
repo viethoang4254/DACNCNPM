@@ -36,9 +36,12 @@ export const searchTours = async (params) => {
   return {
     tours,
     total: Number(payload.total ?? tours.length),
-    limit: Number(params?.limit ?? tours.length ?? 1),
-    page: 1,
-    totalPages: 1,
+    limit: Number(payload.limit ?? payload.pagination?.limit ?? params?.limit ?? 8),
+    page: Number(payload.page ?? payload.pagination?.page ?? params?.page ?? 1),
+    totalPages: Number(
+      payload.pagination?.totalPages ??
+        Math.max(1, Math.ceil(Number(payload.total ?? tours.length) / Math.max(1, Number(payload.limit ?? payload.pagination?.limit ?? params?.limit ?? 8))))
+    ),
     message: payload.message || "",
     usedNearestDate: Boolean(payload.usedNearestDate),
   };

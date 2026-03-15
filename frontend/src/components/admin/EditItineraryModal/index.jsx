@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MdClose } from "react-icons/md";
 import "./EditItineraryModal.scss";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
 ).replace(/\/+$/, "");
+
+const MAX_VISIBLE_TOURS = 12;
+const formatTourOption = (name) => {
+  const value = String(name || "").trim();
+  if (value.length <= 80) return value;
+  return `${value.slice(0, 77)}...`;
+};
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
@@ -29,14 +36,31 @@ function EditItineraryModal({
   const [toursLoading, setToursLoading] = useState(false);
 
   const [tourId, setTourId] = useState("");
+  const [tourKeyword, setTourKeyword] = useState("");
   const [ngayThu, setNgayThu] = useState("");
   const [tieuDe, setTieuDe] = useState("");
   const [description, setDescription] = useState("");
   const [errors, setErrors] = useState({});
 
+  const matchingTours = useMemo(() => {
+    const keyword = tourKeyword.trim().toLowerCase();
+    if (!keyword) return tours;
+    return tours.filter((tour) =>
+      String(tour.ten_tour || "").toLowerCase().includes(keyword),
+    );
+  }, [tourKeyword, tours]);
+
+  const filteredTours = useMemo(
+    () => matchingTours.slice(0, MAX_VISIBLE_TOURS),
+    [matchingTours],
+  );
+
+  const hiddenToursCount = Math.max(0, matchingTours.length - filteredTours.length);
+
   useEffect(() => {
     if (!open || !itinerary) {
       setTourId("");
+      setTourKeyword("");
       setNgayThu("");
       setTieuDe("");
       setDescription("");
@@ -137,6 +161,14 @@ function EditItineraryModal({
         >
           <div className="itinerary-modal__field">
             <label className="itinerary-modal__label">Tour</label>
+            <input
+              type="text"
+              className="admin-input itinerary-modal__tour-search"
+              placeholder="Tìm nhanh tên tour..."
+              value={tourKeyword}
+              onChange={(event) => setTourKeyword(event.target.value)}
+              disabled={loading || toursLoading}
+            />
             <select
               className={`admin-select${errors.tourId ? " admin-input--invalid" : ""}`}
               value={tourId}
@@ -149,12 +181,22 @@ function EditItineraryModal({
               <option value="">
                 {toursLoading ? "Đang tải..." : "-- Chọn tour --"}
               </option>
-              {tours.map((tour) => (
+              {filteredTours.map((tour) => (
                 <option key={tour.id} value={tour.id}>
-                  {tour.ten_tour}
+                  {formatTourOption(tour.ten_tour)}
                 </option>
               ))}
+              {!toursLoading && filteredTours.length === 0 && (
+                <option value="" disabled>
+                  Không tìm thấy tour phù hợp
+                </option>
+              )}
             </select>
+            {!toursLoading && hiddenToursCount > 0 && (
+              <p className="itinerary-modal__hint">
+                Còn {hiddenToursCount} tour chưa hiển thị, hãy nhập thêm từ khóa để thu gọn danh sách.
+              </p>
+            )}
             {errors.tourId && (
               <p className="admin-field-error">{errors.tourId}</p>
             )}
