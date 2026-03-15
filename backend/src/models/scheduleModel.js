@@ -2,7 +2,12 @@ import pool from "../config/db.js";
 
 export const getAllSchedules = async () => {
 	const [rows] = await pool.execute(
-		`SELECT ts.id, ts.tour_id, t.ten_tour, ts.start_date, ts.available_slots
+		`SELECT ts.id, ts.tour_id, t.ten_tour, t.so_nguoi_toi_da, ts.start_date, ts.available_slots,
+						CASE
+							WHEN DATE(ts.start_date) > CURDATE() THEN 'Sắp khởi hành'
+							WHEN DATE(ts.start_date) = CURDATE() THEN 'Đang khởi hành'
+							ELSE 'Đã khởi hành'
+						END AS status
      FROM tour_schedules ts
      JOIN tours t ON t.id = ts.tour_id
      ORDER BY ts.start_date DESC`,
@@ -12,7 +17,12 @@ export const getAllSchedules = async () => {
 
 export const getScheduleById = async (id) => {
 	const [rows] = await pool.execute(
-		`SELECT ts.id, ts.tour_id, t.ten_tour, ts.start_date, ts.available_slots
+		`SELECT ts.id, ts.tour_id, t.ten_tour, t.so_nguoi_toi_da, ts.start_date, ts.available_slots,
+						CASE
+							WHEN DATE(ts.start_date) > CURDATE() THEN 'Sắp khởi hành'
+							WHEN DATE(ts.start_date) = CURDATE() THEN 'Đang khởi hành'
+							ELSE 'Đã khởi hành'
+						END AS status
      FROM tour_schedules ts
      JOIN tours t ON t.id = ts.tour_id
      WHERE ts.id = ? LIMIT 1`,
@@ -41,6 +51,30 @@ export const createSchedule = async ({ tour_id, start_date }) => {
 };
 
 export const updateSchedule = async (id, { start_date, available_slots }) => {
+	const [scheduleRows] = await pool.execute(
+		`SELECT ts.id, t.so_nguoi_toi_da
+		 FROM tour_schedules ts
+		 JOIN tours t ON t.id = ts.tour_id
+		 WHERE ts.id = ?
+		 LIMIT 1`,
+		[id],
+	);
+
+	const schedule = scheduleRows[0] || null;
+	if (!schedule) {
+		const err = new Error("Schedule not found");
+		err.statusCode = 404;
+		throw err;
+	}
+
+	if (Number(available_slots) > Number(schedule.so_nguoi_toi_da)) {
+		const err = new Error(
+			`Số chỗ còn lại không được vượt quá ${schedule.so_nguoi_toi_da} chỗ của tour.`
+		);
+		err.statusCode = 400;
+		throw err;
+	}
+
 	await pool.execute(
 		"UPDATE tour_schedules SET start_date = ?, available_slots = ? WHERE id = ?",
 		[start_date, available_slots, id],

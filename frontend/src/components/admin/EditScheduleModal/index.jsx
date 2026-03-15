@@ -10,33 +10,22 @@ function EditScheduleModal({
   onSubmit,
 }) {
   const [startDate, setStartDate] = useState("");
-  const [availableSlots, setAvailableSlots] = useState("");
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!open || !schedule) {
       setStartDate("");
-      setAvailableSlots("");
       setErrors({});
       return;
     }
     setStartDate(
       schedule.start_date ? String(schedule.start_date).slice(0, 10) : "",
     );
-    setAvailableSlots(String(schedule.available_slots ?? ""));
   }, [open, schedule]);
 
   function validate() {
     const errs = {};
     if (!startDate) errs.startDate = "Vui lòng chọn ngày khởi hành.";
-    if (
-      availableSlots === "" ||
-      isNaN(Number(availableSlots)) ||
-      !Number.isInteger(Number(availableSlots)) ||
-      Number(availableSlots) < 0
-    ) {
-      errs.availableSlots = "Số chỗ phải là số nguyên >= 0.";
-    }
     return errs;
   }
 
@@ -47,7 +36,7 @@ function EditScheduleModal({
       setErrors(errs);
       return;
     }
-    onSubmit({ start_date: startDate, available_slots: Number(availableSlots) });
+    onSubmit({ start_date: startDate });
   }
 
   if (!open || !schedule) return null;
@@ -91,24 +80,6 @@ function EditScheduleModal({
             />
             {errors.startDate && (
               <p className="admin-field-error">{errors.startDate}</p>
-            )}
-          </div>
-
-          <div className="schedule-modal__field">
-            <label className="schedule-modal__label">Số chỗ còn lại</label>
-            <input
-              type="number"
-              className={`admin-input${errors.availableSlots ? " admin-input--invalid" : ""}`}
-              value={availableSlots}
-              min={0}
-              onChange={(e) => {
-                setAvailableSlots(e.target.value);
-                setErrors((p) => ({ ...p, availableSlots: "" }));
-              }}
-              disabled={loading}
-            />
-            {errors.availableSlots && (
-              <p className="admin-field-error">{errors.availableSlots}</p>
             )}
           </div>
 

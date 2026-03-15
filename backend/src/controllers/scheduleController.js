@@ -15,15 +15,39 @@ export const getAllSchedulesController = asyncHandler(async (req, res) => {
 
 export const createScheduleController = asyncHandler(async (req, res) => {
 	const { tour_id, start_date } = req.body;
-	const schedule = await createSchedule({
-		tour_id: Number(tour_id),
-		start_date,
-	});
-	sendResponse(res, {
-		statusCode: 201,
-		message: "Schedule created successfully",
-		data: schedule,
-	});
+
+	try {
+		const schedule = await createSchedule({
+			tour_id: Number(tour_id),
+			start_date,
+		});
+
+		return sendResponse(res, {
+			statusCode: 201,
+			message: "Schedule created successfully",
+			data: schedule,
+		});
+	} catch (error) {
+		if (error.code === "ER_DUP_ENTRY") {
+			return sendResponse(res, {
+				statusCode: 400,
+				success: false,
+				message: "Tour này đã có lịch khởi hành vào ngày đã chọn.",
+				data: {},
+			});
+		}
+
+		if (error.statusCode) {
+			throw error;
+		}
+
+		return sendResponse(res, {
+			statusCode: 500,
+			success: false,
+			message: "Không thể tạo lịch khởi hành. Vui lòng thử lại.",
+			data: {},
+		});
+	}
 });
 
 export const updateScheduleController = asyncHandler(async (req, res) => {
@@ -42,7 +66,10 @@ export const updateScheduleController = asyncHandler(async (req, res) => {
 
 	const updated = await updateSchedule(id, {
 		start_date,
-		available_slots: Number(available_slots),
+		available_slots:
+			available_slots === undefined
+				? Number(existing.available_slots)
+				: Number(available_slots),
 	});
 	sendResponse(res, { data: updated });
 });

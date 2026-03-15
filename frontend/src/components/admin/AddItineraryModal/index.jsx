@@ -1,11 +1,26 @@
 import { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
-import { getAuthToken } from "../../../utils/authStorage";
 import "./AddItineraryModal.scss";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
 ).replace(/\/+$/, "");
+
+const defaultItineraryTemplates = [
+  {
+    title: "Ngày 1: Khởi hành và tham quan",
+    description: "Đón khách tại điểm hẹn và khởi hành đến điểm du lịch.",
+  },
+  {
+    title: "Ngày 2: Khám phá địa điểm nổi bật",
+    description:
+      "Tham quan các địa điểm nổi tiếng và trải nghiệm văn hóa địa phương.",
+  },
+  {
+    title: "Ngày 3: Kết thúc hành trình",
+    description: "Mua sắm đặc sản địa phương và kết thúc tour.",
+  },
+];
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
@@ -19,25 +34,33 @@ async function fetchJson(url, options = {}) {
   return payload;
 }
 
+function buildGeneratedItineraries(totalDays) {
+  return Array.from({ length: totalDays }, (_, index) => {
+    const dayNumber = index + 1;
+    const template = defaultItineraryTemplates[index] || {
+      title: `Ngày ${dayNumber}: Lịch trình tham quan`,
+      description: `Hoạt động tham quan và trải nghiệm trong ngày ${dayNumber}.`,
+    };
+
+    return {
+      day_number: dayNumber,
+      title: template.title,
+      description: template.description,
+    };
+  });
+}
+
 function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
   const [tours, setTours] = useState([]);
   const [toursLoading, setToursLoading] = useState(false);
   const [tourId, setTourId] = useState("");
-  const [ngayThu, setNgayThu] = useState("");
-  const [tieuDe, setTieuDe] = useState("");
-  const [description, setDescription] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [itineraries, setItineraries] = useState([]);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!open) {
       setTourId("");
-      setNgayThu("");
-      setTieuDe("");
-      setDescription("");
-      setImageUrl("");
-      setUploadingImage(false);
+      setItineraries([]);
       setErrors({});
       return;
     }
@@ -61,22 +84,28 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
 
   function validate() {
     const nextErrors = {};
+    const selectedTour = tours.find(
+      (tour) => String(tour.id) === String(tourId),
+    );
 
     if (!tourId) {
       nextErrors.tourId = "Vui lòng chọn tour.";
     }
 
-    if (
-      !ngayThu ||
-      !Number.isInteger(Number(ngayThu)) ||
-      Number(ngayThu) <= 0
-    ) {
-      nextErrors.ngayThu = "Ngày thứ phải là số nguyên > 0.";
+    if (!selectedTour) {
+      nextErrors.tourId = "Tour không hợp lệ.";
     }
 
-    if (!tieuDe.trim()) {
-      nextErrors.tieuDe = "Vui lòng nhập tiêu đề.";
+    if (itineraries.length === 0) {
+      nextErrors.itineraries =
+        "Vui lòng bấm Auto Generate Itinerary trước khi lưu.";
     }
+
+    itineraries.forEach((item, index) => {
+      if (!item.title.trim()) {
+        nextErrors[`title-${index}`] = "Vui lòng nhập tiêu đề.";
+      }
+    });
 
     return nextErrors;
   }
@@ -92,47 +121,48 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
 
     onSubmit({
       tour_id: Number(tourId),
-      ngay_thu: Number(ngayThu),
-      tieu_de: tieuDe.trim(),
-      description: description.replace(/\r\n/g, "\n"),
-      image_url: imageUrl.trim(),
+      itineraries: itineraries.map((item) => ({
+        day_number: Number(item.day_number),
+        title: item.title.trim(),
+        description: item.description.replace(/\r\n/g, "\n"),
+      })),
     });
   }
 
-  async function handleUploadFile(event) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+  function handleAutoGenerate() {
+    const selectedTour = tours.find(
+      (tour) => String(tour.id) === String(tourId),
+    );
+    const totalDays = Number(selectedTour?.so_ngay || 0);
 
-    if (!file) return;
-
-    try {
-      setUploadingImage(true);
-
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const payload = await fetchJson(
-        `${API_BASE_URL}/api/admin/itineraries/upload-image`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${getAuthToken()}`,
-          },
-          body: formData,
-        },
-      );
-
-      const uploadedUrl = payload?.data?.image_url || "";
-      setImageUrl(uploadedUrl);
-      setErrors((prev) => ({ ...prev, imageUrl: "" }));
-    } catch (error) {
+    if (!selectedTour || totalDays <= 0) {
       setErrors((prev) => ({
         ...prev,
-        imageUrl: error.message || "Upload ảnh thất bại.",
+        tourId: "Vui lòng chọn tour có số ngày hợp lệ.",
       }));
-    } finally {
-      setUploadingImage(false);
+      return;
     }
+
+    setItineraries(buildGeneratedItineraries(totalDays));
+    setErrors((prev) => ({
+      ...prev,
+      tourId: "",
+      itineraries: "",
+    }));
+  }
+
+  function handleItineraryChange(index, field, value) {
+    setItineraries((prev) =>
+      prev.map((item, currentIndex) =>
+        currentIndex === index ? { ...item, [field]: value } : item,
+      ),
+    );
+
+    setErrors((prev) => ({
+      ...prev,
+      [`${field}-${index}`]: "",
+      itineraries: "",
+    }));
   }
 
   if (!open) return null;
@@ -148,7 +178,7 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
         <div className="itinerary-modal__header">
           <div>
             <h3>Thêm lịch trình</h3>
-            <p>Tạo lịch trình tour theo từng ngày</p>
+            <p>Tạo nhiều block lịch trình theo số ngày của tour</p>
           </div>
           <button
             className="itinerary-modal__close"
@@ -173,7 +203,8 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
               value={tourId}
               onChange={(event) => {
                 setTourId(event.target.value);
-                setErrors((prev) => ({ ...prev, tourId: "" }));
+                setItineraries([]);
+                setErrors((prev) => ({ ...prev, tourId: "", itineraries: "" }));
               }}
               disabled={loading || toursLoading}
             >
@@ -182,7 +213,7 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
               </option>
               {tours.map((tour) => (
                 <option key={tour.id} value={tour.id}>
-                  {tour.ten_tour}
+                  {tour.ten_tour} ({tour.so_ngay} ngày)
                 </option>
               ))}
             </select>
@@ -191,82 +222,76 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
             )}
           </div>
 
-          <div className="itinerary-modal__field">
-            <label className="itinerary-modal__label">Ngày thứ</label>
-            <input
-              type="number"
-              className={`admin-input${errors.ngayThu ? " admin-input--invalid" : ""}`}
-              value={ngayThu}
-              min={1}
-              onChange={(event) => {
-                setNgayThu(event.target.value);
-                setErrors((prev) => ({ ...prev, ngayThu: "" }));
-              }}
-              disabled={loading}
-            />
-            {errors.ngayThu && (
-              <p className="admin-field-error">{errors.ngayThu}</p>
-            )}
+          <div className="itinerary-modal__actions">
+            <button
+              type="button"
+              className="admin-btn admin-btn--ghost"
+              onClick={handleAutoGenerate}
+              disabled={loading || toursLoading}
+            >
+              Tự động tạo lịch trình
+            </button>
           </div>
 
-          <div className="itinerary-modal__field">
-            <label className="itinerary-modal__label">Tiêu đề</label>
-            <input
-              type="text"
-              className={`admin-input${errors.tieuDe ? " admin-input--invalid" : ""}`}
-              value={tieuDe}
-              onChange={(event) => {
-                setTieuDe(event.target.value);
-                setErrors((prev) => ({ ...prev, tieuDe: "" }));
-              }}
-              disabled={loading}
-            />
-            {errors.tieuDe && (
-              <p className="admin-field-error">{errors.tieuDe}</p>
-            )}
-          </div>
+          {errors.itineraries && (
+            <p className="admin-field-error">{errors.itineraries}</p>
+          )}
 
-          <div className="itinerary-modal__field">
-            <label className="itinerary-modal__label">Mô tả lịch trình</label>
-            <textarea
-              className="admin-textarea"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              disabled={loading}
-            />
-          </div>
+          {itineraries.map((item, index) => (
+            <div className="itinerary-modal__card" key={item.day_number}>
+              <div className="itinerary-modal__card-header">
+                <h4>Block {index + 1}</h4>
+                <span>Ngày thứ {item.day_number}</span>
+              </div>
 
-          <div className="itinerary-modal__field">
-            <label className="itinerary-modal__label">Ảnh (image_url)</label>
-            <div className="itinerary-modal__image-row">
-              <input
-                type="text"
-                className="admin-input"
-                value={imageUrl}
-                onChange={(event) => {
-                  setImageUrl(event.target.value);
-                  setErrors((prev) => ({ ...prev, imageUrl: "" }));
-                }}
-                disabled={loading || uploadingImage}
-                placeholder="Nhập URL hoặc upload ảnh"
-              />
-              <label
-                className={`admin-btn admin-btn--ghost itinerary-modal__upload-btn${uploadingImage ? " is-uploading" : ""}`}
-              >
+              <div className="itinerary-modal__field">
+                <label className="itinerary-modal__label">Ngày thứ</label>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleUploadFile}
-                  disabled={loading || uploadingImage}
-                  hidden
+                  type="number"
+                  className="admin-input"
+                  value={item.day_number}
+                  readOnly
+                  disabled
                 />
-                {uploadingImage ? "Đang upload..." : "Upload ảnh"}
-              </label>
+              </div>
+
+              <div className="itinerary-modal__field">
+                <label className="itinerary-modal__label">Tiêu đề</label>
+                <input
+                  type="text"
+                  className={`admin-input${errors[`title-${index}`] ? " admin-input--invalid" : ""}`}
+                  value={item.title}
+                  onChange={(event) =>
+                    handleItineraryChange(index, "title", event.target.value)
+                  }
+                  disabled={loading}
+                />
+                {errors[`title-${index}`] && (
+                  <p className="admin-field-error">
+                    {errors[`title-${index}`]}
+                  </p>
+                )}
+              </div>
+
+              <div className="itinerary-modal__field">
+                <label className="itinerary-modal__label">
+                  Mô tả lịch trình
+                </label>
+                <textarea
+                  className="admin-textarea"
+                  value={item.description}
+                  onChange={(event) =>
+                    handleItineraryChange(
+                      index,
+                      "description",
+                      event.target.value,
+                    )
+                  }
+                  disabled={loading}
+                />
+              </div>
             </div>
-            {errors.imageUrl && (
-              <p className="admin-field-error">{errors.imageUrl}</p>
-            )}
-          </div>
+          ))}
 
           <div className="itinerary-modal__footer">
             <button
@@ -280,7 +305,7 @@ function AddItineraryModal({ open, loading = false, onClose, onSubmit }) {
             <button
               type="submit"
               className="admin-btn admin-btn--primary"
-              disabled={loading || toursLoading || uploadingImage}
+              disabled={loading || toursLoading}
             >
               {loading ? "Đang lưu..." : "Lưu"}
             </button>

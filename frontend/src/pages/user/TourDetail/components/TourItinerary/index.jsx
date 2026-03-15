@@ -1,13 +1,15 @@
 import "./TourItinerary.scss";
 
-function TourItinerary({ tour, images = [], itineraries = [] }) {
+function TourItinerary({ itineraries = [] }) {
   const items =
     Array.isArray(itineraries) && itineraries.length > 0
       ? itineraries.map((item, index) => ({
-          day: Number(item.ngay_thu) || index + 1,
-          title: item.tieu_de || `Ngày ${Number(item.ngay_thu) || index + 1}`,
+          day: Number(item.day_number ?? item.ngay_thu) || index + 1,
+          title:
+            item.title ||
+            item.tieu_de ||
+            `Ngày ${Number(item.day_number ?? item.ngay_thu) || index + 1}`,
           description: item.description || "Lịch trình đang được cập nhật.",
-          imageUrl: item.image_url || images[index] || "",
         }))
       : [];
 
@@ -22,13 +24,6 @@ function TourItinerary({ tour, images = [], itineraries = [] }) {
         )}
         {items.map((item) => (
           <article key={item.day} className="tour-detail__timeline-item">
-            <div className="tour-detail__timeline-image">
-              {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.title} />
-              ) : (
-                <div />
-              )}
-            </div>
             <div className="tour-detail__timeline-content">
               <h4>
                 Ngày {item.day}: {item.title}

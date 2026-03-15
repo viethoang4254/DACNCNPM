@@ -5,7 +5,16 @@ import "./AddScheduleModal.scss";
 
 const todayStr = () => new Date().toISOString().split("T")[0];
 
-function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
+function AddScheduleModal({
+  open,
+  loading = false,
+  onClose,
+  onSubmit,
+  initialTourId = "",
+  lockTour = false,
+  apiError = "",
+  onClearApiError,
+}) {
   const [tours, setTours] = useState([]);
   const [toursLoading, setToursLoading] = useState(false);
   const [tourId, setTourId] = useState("");
@@ -19,8 +28,9 @@ function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
       setErrors({});
       return;
     }
+    setTourId(initialTourId ? String(initialTourId) : "");
     fetchTours();
-  }, [open]);
+  }, [open, initialTourId]);
 
   async function fetchTours() {
     try {
@@ -80,26 +90,43 @@ function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
         </div>
 
         <form className="schedule-modal__body" onSubmit={handleSubmit} noValidate>
+          {apiError && (
+            <div className="schedule-modal__alert" role="alert">
+              <strong>Cảnh báo:</strong> {apiError}
+            </div>
+          )}
+
           <div className="schedule-modal__field">
             <label className="schedule-modal__label">Tour</label>
-            <select
-              className={`admin-select${errors.tourId ? " admin-input--invalid" : ""}`}
-              value={tourId}
-              onChange={(e) => {
-                setTourId(e.target.value);
-                setErrors((p) => ({ ...p, tourId: "" }));
-              }}
-              disabled={loading || toursLoading}
-            >
-              <option value="">
-                {toursLoading ? "Đang tải..." : "-- Chọn tour --"}
-              </option>
-              {tours.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.ten_tour}
+            {lockTour ? (
+              <input
+                type="text"
+                className="admin-input"
+                value={tours.find((t) => String(t.id) === String(tourId))?.ten_tour || ""}
+                disabled
+                readOnly
+              />
+            ) : (
+              <select
+                className={`admin-select${errors.tourId ? " admin-input--invalid" : ""}`}
+                value={tourId}
+                onChange={(e) => {
+                  setTourId(e.target.value);
+                  setErrors((p) => ({ ...p, tourId: "" }));
+                  onClearApiError?.();
+                }}
+                disabled={loading || toursLoading}
+              >
+                <option value="">
+                  {toursLoading ? "Đang tải..." : "-- Chọn tour --"}
                 </option>
-              ))}
-            </select>
+                {tours.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.ten_tour}
+                  </option>
+                ))}
+              </select>
+            )}
             {errors.tourId && (
               <p className="admin-field-error">{errors.tourId}</p>
             )}
@@ -115,6 +142,7 @@ function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
               onChange={(e) => {
                 setStartDate(e.target.value);
                 setErrors((p) => ({ ...p, startDate: "" }));
+                onClearApiError?.();
               }}
               disabled={loading}
             />

@@ -18,7 +18,7 @@ import TourSchedules from "./pages/admin/TourSchedules";
 import Bookings from "./pages/admin/Bookings";
 import Payments from "./pages/admin/Payments";
 import Reviews from "./pages/admin/Reviews";
-import TourItineraries from "./pages/admin/TourItineraries";
+import Itineraries from "./pages/admin/Itineraries";
 
 import { getAuthUser } from "./utils/authStorage";
 
@@ -126,7 +126,7 @@ function App() {
           <Route path="users" element={<Users />} />
           <Route path="tours" element={<AdminTours />} />
           <Route path="schedules" element={<TourSchedules />} />
-          <Route path="itineraries" element={<TourItineraries />} />
+          <Route path="itineraries" element={<Itineraries />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="payments" element={<Payments />} />
           <Route path="reviews" element={<Reviews />} />
