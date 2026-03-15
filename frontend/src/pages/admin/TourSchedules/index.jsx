@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
-import { PiPencilLineFill } from "react-icons/pi";
+import { MdVisibility } from "react-icons/md";
 
 import DataTable from "../../../components/admin/DataTable";
 import Pagination from "../../../components/admin/Pagination";
 import ConfirmModal from "../../../components/admin/ConfirmModal";
 import AddScheduleModal from "../../../components/admin/AddScheduleModal";
 import EditScheduleModal from "../../../components/admin/EditScheduleModal";
+import TourSchedulesViewModal from "../../../components/admin/TourSchedulesViewModal";
 
 import apiClient from "../../../utils/apiClient";
 import "./TourSchedules.scss";
@@ -15,7 +15,13 @@ import "./TourSchedules.scss";
 const LIMIT = 10;
 
 function TourSchedules() {
+  const duplicateScheduleMessage =
+    "Tour này đã có lịch khởi hành vào ngày đã chọn.";
+  const duplicateScheduleUxMessage =
+    "Tour này đã có lịch khởi hành vào ngày đã chọn. Vui lòng chọn ngày khác.";
+
   const [schedules, setSchedules] = useState([]);
+  const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -25,7 +31,12 @@ function TourSchedules() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [addScheduleError, setAddScheduleError] = useState("");
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selectedTour, setSelectedTour] = useState(null);
+  const [tourSchedules, setTourSchedules] = useState([]);
+  const [viewLoading, setViewLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [notification, setNotification] = useState({
@@ -47,12 +58,20 @@ function TourSchedules() {
     return d.toLocaleDateString("vi-VN");
   };
 
-  async function fetchSchedules() {
+  async function fetchBaseData() {
     try {
       setLoading(true);
       setError("");
-      const res = await apiClient.get("/api/schedules");
-      setSchedules(Array.isArray(res.data?.data) ? res.data.data : []);
+
+      const [scheduleRes, toursRes] = await Promise.all([
+        apiClient.get("/api/schedules"),
+        apiClient.get("/api/tours", {
+          params: { page: 1, limit: 300, sort: "latest" },
+        }),
+      ]);
+
+      setSchedules(Array.isArray(scheduleRes.data?.data) ? scheduleRes.data.data : []);
+      setTours(Array.isArray(toursRes.data?.data) ? toursRes.data.data : []);
     } catch (err) {
       setError(getApiMessage(err, "Không thể tải danh sách lịch khởi hành"));
     } finally {
@@ -60,8 +79,27 @@ function TourSchedules() {
     }
   }
 
+  async function fetchSchedulesByTour(tourId) {
+    try {
+      setViewLoading(true);
+      const res = await apiClient.get("/api/schedules");
+      const allSchedules = Array.isArray(res.data?.data) ? res.data.data : [];
+      const items = allSchedules
+        .filter((schedule) => Number(schedule.tour_id) === Number(tourId))
+        .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+      setTourSchedules(items);
+      return items;
+    } catch (err) {
+      openNotification("Lỗi", getApiMessage(err, "Không thể tải lịch của tour"), "danger");
+      setTourSchedules([]);
+      return [];
+    } finally {
+      setViewLoading(false);
+    }
+  }
+
   useEffect(() => {
-    fetchSchedules();
+    fetchBaseData();
   }, []);
 
   function openNotification(title, message, variant = "primary") {
@@ -71,12 +109,24 @@ function TourSchedules() {
   async function handleAddSubmit(payload) {
     try {
       setSubmitting(true);
+      setAddScheduleError("");
       await apiClient.post("/api/schedules", payload);
       setShowAddModal(false);
-      await fetchSchedules();
+      await fetchBaseData();
+
+      if (showViewModal && selectedTour) {
+        await fetchSchedulesByTour(selectedTour.id);
+      }
+
       openNotification("Thành công", "Thêm lịch khởi hành thành công", "primary");
     } catch (err) {
-      openNotification("Lỗi", getApiMessage(err, "Thêm lịch thất bại"), "danger");
+      const apiMessage = err?.response?.data?.message;
+      const friendlyMessage =
+        apiMessage === duplicateScheduleMessage
+          ? duplicateScheduleUxMessage
+          : "Không thể tạo lịch khởi hành. Vui lòng thử lại.";
+
+      setAddScheduleError(friendlyMessage);
     } finally {
       setSubmitting(false);
     }
@@ -88,8 +138,13 @@ function TourSchedules() {
       setSubmitting(true);
       await apiClient.put(`/api/schedules/${selectedSchedule.id}`, payload);
       setShowEditModal(false);
+      await fetchBaseData();
+
+      if (selectedTour) {
+        await fetchSchedulesByTour(selectedTour.id);
+      }
+
       setSelectedSchedule(null);
-      await fetchSchedules();
       openNotification("Thành công", "Cập nhật lịch thành công", "primary");
     } catch (err) {
       openNotification("Lỗi", getApiMessage(err, "Cập nhật lịch thất bại"), "danger");
@@ -104,8 +159,18 @@ function TourSchedules() {
       setSubmitting(true);
       await apiClient.delete(`/api/schedules/${selectedSchedule.id}`);
       setShowDeleteConfirm(false);
+      await fetchBaseData();
+
+      if (selectedTour) {
+        const items = await fetchSchedulesByTour(selectedTour.id);
+        if (showViewModal && items.length === 0) {
+          setShowViewModal(false);
+          setSelectedTour(null);
+          setTourSchedules([]);
+        }
+      }
+
       setSelectedSchedule(null);
-      await fetchSchedules();
       openNotification("Thành công", "Xóa lịch khởi hành thành công", "primary");
     } catch (err) {
       setShowDeleteConfirm(false);
@@ -115,14 +180,60 @@ function TourSchedules() {
     }
   }
 
-  const filteredSchedules = schedules.filter((s) => {
+  async function handleOpenView(row) {
+    setSelectedTour(row);
+    const items = await fetchSchedulesByTour(row.id);
+    setTourSchedules(items);
+    setShowViewModal(true);
+  }
+
+  const groupedTours = useMemo(() => {
+    const tourMap = new Map(tours.map((tour) => [Number(tour.id), tour]));
+    const grouped = new Map();
+
+    schedules.forEach((schedule) => {
+      const tourId = Number(schedule.tour_id);
+      const tour = tourMap.get(tourId);
+      const current = grouped.get(tourId) || {
+        id: tourId,
+        ten_tour: schedule.ten_tour || tour?.ten_tour || `Tour #${tourId}`,
+        slots: Number(tour?.so_nguoi_toi_da || 0),
+        booked_slots: 0,
+        remaining_slots: 0,
+        schedules_count: 0,
+        primaryScheduleDate: null,
+      };
+
+      const remaining = Number(schedule.available_slots || 0);
+      const totalSlots = Number(tour?.so_nguoi_toi_da || current.slots || 0);
+      const booked = Math.max(0, totalSlots - remaining);
+
+      current.slots = totalSlots;
+      current.schedules_count += 1;
+
+      if (
+        !current.primaryScheduleDate ||
+        new Date(schedule.start_date) < new Date(current.primaryScheduleDate)
+      ) {
+        current.primaryScheduleDate = schedule.start_date;
+        current.remaining_slots = remaining;
+        current.booked_slots = booked;
+      }
+
+      grouped.set(tourId, current);
+    });
+
+    return [...grouped.values()].sort((a, b) => a.id - b.id);
+  }, [schedules, tours]);
+
+  const filteredTours = groupedTours.filter((tour) => {
     const keyword = search.trim().toLowerCase();
     if (!keyword) return true;
-    return String(s.ten_tour || "").toLowerCase().includes(keyword);
+    return String(tour.ten_tour || "").toLowerCase().includes(keyword);
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredSchedules.length / LIMIT));
-  const paginatedSchedules = filteredSchedules.slice(
+  const totalPages = Math.max(1, Math.ceil(filteredTours.length / LIMIT));
+  const paginatedTours = filteredTours.slice(
     (page - 1) * LIMIT,
     page * LIMIT,
   );
@@ -133,18 +244,30 @@ function TourSchedules() {
 
   const columns = [
     { key: "id", header: "ID" },
-    { key: "ten_tour", header: "Tên Tour" },
+    { key: "ten_tour", header: "Tên tour", className: "schedule-tour-col" },
     {
-      key: "start_date",
-      header: "Ngày khởi hành",
-      render: (row) => formatDate(row.start_date),
+      key: "slots",
+      header: "Số chỗ",
+      render: (row) => <span className="slots-badge">{row.slots}</span>,
     },
     {
-      key: "available_slots",
-      header: "Slots còn lại",
+      key: "booked_slots",
+      header: "Đã đặt",
       render: (row) => (
-        <span className="slots-badge">{row.available_slots}</span>
+        <span className="schedule-stat schedule-stat--booked">{row.booked_slots}</span>
       ),
+    },
+    {
+      key: "remaining_slots",
+      header: "Còn lại",
+      render: (row) => (
+        <span className="schedule-stat schedule-stat--remaining">{row.remaining_slots}</span>
+      ),
+    },
+    {
+      key: "schedules_count",
+      header: "Số lịch khởi hành",
+      render: (row) => <span className="schedule-stat">{row.schedules_count}</span>,
     },
     {
       key: "actions",
@@ -153,27 +276,12 @@ function TourSchedules() {
         <div className="admin-icon-actions">
           <button
             className="admin-icon-btn"
-            onClick={() => {
-              setSelectedSchedule(row);
-              setShowEditModal(true);
-            }}
-            disabled={submitting}
+            onClick={() => handleOpenView(row)}
+            disabled={submitting || viewLoading}
             type="button"
-            title="Sửa"
+            title="Xem lịch khởi hành"
           >
-            <PiPencilLineFill />
-          </button>
-          <button
-            className="admin-icon-btn admin-icon-btn--danger"
-            onClick={() => {
-              setSelectedSchedule(row);
-              setShowDeleteConfirm(true);
-            }}
-            disabled={submitting}
-            type="button"
-            title="Xóa"
-          >
-            <MdDelete />
+            <MdVisibility />
           </button>
         </div>
       ),
@@ -183,16 +291,20 @@ function TourSchedules() {
   return (
     <div className="admin-card admin-page-schedules">
       <div className="admin-toolbar">
-        <h3>Lịch khởi hành</h3>
+        <h3>Quản lý lịch khởi hành</h3>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="admin-page-schedules__actions">
           <span className="admin-toolbar__meta">
-            {filteredSchedules.length} lịch
+            {filteredTours.length} tour
           </span>
 
           <button
             className="admin-btn admin-btn--primary"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setSelectedTour(null);
+              setAddScheduleError("");
+              setShowAddModal(true);
+            }}
             disabled={submitting}
           >
             <FaPlus /> Thêm lịch khởi hành
@@ -220,18 +332,60 @@ function TourSchedules() {
       ) : (
         <DataTable
           columns={columns}
-          data={paginatedSchedules}
-          emptyText="Không tìm thấy lịch khởi hành"
+          data={paginatedTours}
+          emptyText="Không tìm thấy tour có lịch khởi hành"
         />
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
+      <TourSchedulesViewModal
+        open={showViewModal}
+        tour={selectedTour}
+        schedules={tourSchedules}
+        loading={submitting || viewLoading}
+        onClose={() => {
+          if (submitting || viewLoading) return;
+          setShowViewModal(false);
+          setSelectedTour(null);
+          setTourSchedules([]);
+        }}
+        onAdd={() => {
+          setAddScheduleError("");
+          setShowAddModal(true);
+        }}
+        onEdit={(schedule) => {
+          setSelectedSchedule({
+            ...schedule,
+            ten_tour: selectedTour?.ten_tour || schedule.ten_tour,
+            max_slots:
+              schedule.so_nguoi_toi_da ||
+              selectedTour?.slots ||
+              tours.find((tour) => Number(tour.id) === Number(schedule.tour_id))?.so_nguoi_toi_da ||
+              0,
+          });
+          setShowEditModal(true);
+        }}
+        onDelete={(schedule) => {
+          setSelectedSchedule({
+            ...schedule,
+            ten_tour: selectedTour?.ten_tour || schedule.ten_tour,
+          });
+          setShowDeleteConfirm(true);
+        }}
+        formatDate={formatDate}
+      />
+
       <AddScheduleModal
         open={showAddModal}
         loading={submitting}
+        initialTourId={selectedTour?.id || ""}
+        lockTour={Boolean(selectedTour)}
+        apiError={addScheduleError}
+        onClearApiError={() => setAddScheduleError("")}
         onClose={() => {
           if (submitting) return;
+          setAddScheduleError("");
           setShowAddModal(false);
         }}
         onSubmit={handleAddSubmit}
@@ -254,7 +408,7 @@ function TourSchedules() {
         title="Xóa lịch khởi hành"
         message={`Bạn có chắc muốn xóa lịch khởi hành${
           selectedSchedule
-            ? ` của "${selectedSchedule.ten_tour}"`
+            ? ` ngày ${formatDate(selectedSchedule.start_date)} của "${selectedSchedule.ten_tour}"`
             : ""
         } không?`}
         confirmText="Xác nhận xóa"

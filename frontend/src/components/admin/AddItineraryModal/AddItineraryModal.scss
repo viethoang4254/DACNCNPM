@@ -66,6 +66,40 @@
   gap: 6px;
 }
 
+.itinerary-modal__actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.itinerary-modal__card {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.itinerary-modal__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #0f172a;
+  }
+
+  span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2563eb;
+  }
+}
+
 .itinerary-modal__label {
   font-size: 0.8rem;
   font-weight: 600;
@@ -79,25 +113,10 @@
   margin-top: 4px;
 }
 
-.itinerary-modal__image-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-}
-
-.itinerary-modal__upload-btn {
-  height: 40px;
-}
-
-.itinerary-modal__upload-btn.is-uploading {
-  pointer-events: none;
-  opacity: 0.7;
-}
-
 @media (max-width: 640px) {
-  .itinerary-modal__image-row {
-    grid-template-columns: 1fr;
+  .itinerary-modal__card-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .itinerary-modal__footer {

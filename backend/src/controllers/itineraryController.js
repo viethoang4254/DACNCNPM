@@ -1,23 +1,132 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import { optimizeUploadedImages, removeUploadedFiles } from "../middlewares/uploadMiddleware.js";
 import { sendResponse } from "../utils/response.js";
 import {
-  createItinerary,
-  deleteItineraryById,
-  getItinerariesByTourId,
-  getItineraryById,
+  deleteTourItinerariesByTourId,
+  getAdminItineraryTours,
+  getItineraryDetailByTourId,
   getTourByIdForItinerary,
-  updateItineraryById,
+  replaceTourItineraries,
 } from "../models/itineraryModel.js";
 
 const isDuplicateItineraryError = (error) => error?.code === "ER_DUP_ENTRY";
 
-const mapUploadedPath = (file) => {
-  const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
-  return `${baseUrl}/uploads/${file.filename}`;
-};
+const normalizeItineraryPayload = (itineraries) =>
+  itineraries
+    .map((item) => ({
+      day_number: Number(item.day_number),
+      title: String(item.title || "").trim(),
+      description: typeof item.description === "string" ? item.description : "",
+    }))
+    .sort((a, b) => a.day_number - b.day_number);
 
-export const getTourItinerariesController = asyncHandler(async (req, res) => {
+export const getAdminItinerariesController = asyncHandler(async (req, res) => {
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 10);
+  const search = String(req.query.search || "").trim();
+
+  const result = await getAdminItineraryTours({ page, limit, search });
+
+  return sendResponse(res, {
+    message: "Admin itineraries fetched successfully",
+    data: result.tours,
+    pagination: {
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / result.limit) || 1,
+    },
+  });
+});
+
+export const getAdminItineraryByTourController = asyncHandler(async (req, res) => {
+  const tourId = Number(req.params.tourId);
+  const detail = await getItineraryDetailByTourId(tourId);
+
+  if (!detail) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Tour not found",
+      data: {},
+    });
+  }
+
+  return sendResponse(res, {
+    message: "Tour itinerary detail fetched successfully",
+    data: detail,
+  });
+});
+
+export const createAdminItinerariesController = asyncHandler(async (req, res) => {
+  const tourId = Number(req.body.tour_id);
+  const itineraries = normalizeItineraryPayload(Array.isArray(req.body.itineraries) ? req.body.itineraries : []);
+
+  const tour = await getTourByIdForItinerary(tourId);
+  if (!tour) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Tour not found",
+      data: {},
+    });
+  }
+
+  try {
+    const detail = await replaceTourItineraries(tourId, itineraries);
+
+    return sendResponse(res, {
+      statusCode: 201,
+      message: "Itineraries created successfully",
+      data: detail,
+    });
+  } catch (error) {
+    if (isDuplicateItineraryError(error)) {
+      return sendResponse(res, {
+        statusCode: 409,
+        success: false,
+        message: "Duplicate day_number in itinerary list",
+        data: {},
+      });
+    }
+    throw error;
+  }
+});
+
+export const updateAdminItinerariesController = asyncHandler(async (req, res) => {
+  const tourId = Number(req.params.tourId);
+  const itineraries = normalizeItineraryPayload(Array.isArray(req.body.itineraries) ? req.body.itineraries : []);
+
+  const tour = await getTourByIdForItinerary(tourId);
+  if (!tour) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Tour not found",
+      data: {},
+    });
+  }
+
+  try {
+    const detail = await replaceTourItineraries(tourId, itineraries);
+
+    return sendResponse(res, {
+      message: "Itineraries updated successfully",
+      data: detail,
+    });
+  } catch (error) {
+    if (isDuplicateItineraryError(error)) {
+      return sendResponse(res, {
+        statusCode: 409,
+        success: false,
+        message: "Duplicate day_number in itinerary list",
+        data: {},
+      });
+    }
+    throw error;
+  }
+});
+
+export const deleteAdminItinerariesController = asyncHandler(async (req, res) => {
   const tourId = Number(req.params.tourId);
   const tour = await getTourByIdForItinerary(tourId);
 
@@ -30,157 +139,10 @@ export const getTourItinerariesController = asyncHandler(async (req, res) => {
     });
   }
 
-  const itineraries = await getItinerariesByTourId(tourId);
+  await deleteTourItinerariesByTourId(tourId);
 
   return sendResponse(res, {
-    message: "Tour itineraries fetched successfully",
-    data: itineraries,
-  });
-});
-
-export const createItineraryController = asyncHandler(async (req, res) => {
-  const payload = {
-    tour_id: Number(req.body.tour_id),
-    ngay_thu: Number(req.body.ngay_thu),
-    tieu_de: req.body.tieu_de,
-    description: req.body.description,
-    image_url: req.body.image_url,
-  };
-
-  const tour = await getTourByIdForItinerary(payload.tour_id);
-  if (!tour) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Tour not found",
-      data: {},
-    });
-  }
-
-  try {
-    const itinerary = await createItinerary(payload);
-
-    return sendResponse(res, {
-      statusCode: 201,
-      message: "Itinerary created successfully",
-      data: itinerary,
-    });
-  } catch (error) {
-    if (isDuplicateItineraryError(error)) {
-      return sendResponse(res, {
-        statusCode: 409,
-        success: false,
-        message: "Itinerary day already exists for this tour",
-        data: {},
-      });
-    }
-    throw error;
-  }
-});
-
-export const updateItineraryController = asyncHandler(async (req, res) => {
-  const id = Number(req.params.id);
-  const existing = await getItineraryById(id);
-
-  if (!existing) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Itinerary not found",
-      data: {},
-    });
-  }
-
-  const payload = {
-    tour_id: Number(req.body.tour_id),
-    ngay_thu: Number(req.body.ngay_thu),
-    tieu_de: req.body.tieu_de,
-    description: req.body.description,
-    image_url: req.body.image_url,
-  };
-
-  const tour = await getTourByIdForItinerary(payload.tour_id);
-  if (!tour) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Tour not found",
-      data: {},
-    });
-  }
-
-  try {
-    const itinerary = await updateItineraryById(id, payload);
-
-    return sendResponse(res, {
-      message: "Itinerary updated successfully",
-      data: itinerary,
-    });
-  } catch (error) {
-    if (isDuplicateItineraryError(error)) {
-      return sendResponse(res, {
-        statusCode: 409,
-        success: false,
-        message: "Itinerary day already exists for this tour",
-        data: {},
-      });
-    }
-    throw error;
-  }
-});
-
-export const deleteItineraryController = asyncHandler(async (req, res) => {
-  const id = Number(req.params.id);
-  const deleted = await deleteItineraryById(id);
-
-  if (!deleted) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Itinerary not found",
-      data: {},
-    });
-  }
-
-  return sendResponse(res, {
-    message: "Itinerary deleted successfully",
+    message: "Itineraries deleted successfully",
     data: {},
   });
-});
-
-export const uploadItineraryImageController = asyncHandler(async (req, res) => {
-  if (!req.file) {
-    return sendResponse(res, {
-      statusCode: 400,
-      success: false,
-      message: "Image file is required",
-      data: {},
-    });
-  }
-
-  let optimizedFiles = [];
-
-  try {
-    optimizedFiles = await optimizeUploadedImages([req.file]);
-
-    if (optimizedFiles.length === 0) {
-      return sendResponse(res, {
-        statusCode: 400,
-        success: false,
-        message: "Image file is required",
-        data: {},
-      });
-    }
-
-    return sendResponse(res, {
-      statusCode: 201,
-      message: "Itinerary image uploaded successfully",
-      data: {
-        image_url: mapUploadedPath(optimizedFiles[0]),
-      },
-    });
-  } catch (error) {
-    await removeUploadedFiles(optimizedFiles);
-    throw error;
-  }
 });

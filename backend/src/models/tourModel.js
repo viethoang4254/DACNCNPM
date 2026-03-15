@@ -503,7 +503,16 @@ export const setTourCoverImageById = async (imageId) => {
 
 export const getTourSchedules = async (tourId) => {
   const [rows] = await pool.execute(
-    "SELECT id, tour_id, start_date, available_slots FROM tour_schedules WHERE tour_id = ? ORDER BY start_date ASC",
+    `SELECT id, tour_id, start_date, available_slots,
+            (SELECT so_nguoi_toi_da FROM tours WHERE id = tour_id LIMIT 1) AS so_nguoi_toi_da,
+            CASE
+              WHEN DATE(start_date) > CURDATE() THEN 'Sắp khởi hành'
+              WHEN DATE(start_date) = CURDATE() THEN 'Đang khởi hành'
+              ELSE 'Đã khởi hành'
+            END AS status
+     FROM tour_schedules
+     WHERE tour_id = ? AND DATE(start_date) >= CURDATE()
+     ORDER BY start_date ASC`,
     [tourId]
   );
   return rows;
@@ -511,13 +520,41 @@ export const getTourSchedules = async (tourId) => {
 
 export const getScheduleById = async (id) => {
   const [rows] = await pool.execute(
-    "SELECT id, tour_id, start_date, available_slots FROM tour_schedules WHERE id = ? LIMIT 1",
+    `SELECT ts.id, ts.tour_id, ts.start_date, ts.available_slots, t.so_nguoi_toi_da,
+            CASE
+              WHEN DATE(ts.start_date) > CURDATE() THEN 'Sắp khởi hành'
+              WHEN DATE(ts.start_date) = CURDATE() THEN 'Đang khởi hành'
+              ELSE 'Đã khởi hành'
+            END AS status
+     FROM tour_schedules ts
+     JOIN tours t ON t.id = ts.tour_id
+     WHERE ts.id = ? LIMIT 1`,
     [id]
   );
   return rows[0] || null;
 };
 
 export const createTourSchedule = async ({ tour_id, start_date, available_slots }) => {
+  const [tourRows] = await pool.execute(
+    "SELECT so_nguoi_toi_da FROM tours WHERE id = ? LIMIT 1",
+    [tour_id]
+  );
+
+  const tour = tourRows[0] || null;
+  if (!tour) {
+    const err = new Error("Tour not found");
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (Number(available_slots) > Number(tour.so_nguoi_toi_da)) {
+    const err = new Error(
+      `Số chỗ còn lại không được vượt quá ${tour.so_nguoi_toi_da} chỗ của tour.`
+    );
+    err.statusCode = 400;
+    throw err;
+  }
+
   const [result] = await pool.execute(
     "INSERT INTO tour_schedules (tour_id, start_date, available_slots) VALUES (?, ?, ?)",
     [tour_id, start_date, available_slots]
@@ -527,6 +564,21 @@ export const createTourSchedule = async ({ tour_id, start_date, available_slots 
 };
 
 export const updateTourSchedule = async (id, { start_date, available_slots }) => {
+  const existing = await getScheduleById(id);
+  if (!existing) {
+    const err = new Error("Schedule not found");
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (Number(available_slots) > Number(existing.so_nguoi_toi_da)) {
+    const err = new Error(
+      `Số chỗ còn lại không được vượt quá ${existing.so_nguoi_toi_da} chỗ của tour.`
+    );
+    err.statusCode = 400;
+    throw err;
+  }
+
   await pool.execute("UPDATE tour_schedules SET start_date = ?, available_slots = ? WHERE id = ?", [start_date, available_slots, id]);
   return getScheduleById(id);
 };

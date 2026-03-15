@@ -11,26 +11,25 @@ import {
 } from "../models/bookingModel.js";
 
 export const createBookingController = asyncHandler(async (req, res) => {
-  const { tour_id, schedule_id, so_nguoi } = req.body;
+  const { schedule_id } = req.body;
+  const quantity = Number(req.body.quantity ?? req.body.so_nguoi ?? 1);
+
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    return sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: "Số lượng khách không hợp lệ",
+      data: {},
+    });
+  }
 
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    const [[tour]] = await connection.execute("SELECT id, gia FROM tours WHERE id = ? LIMIT 1", [tour_id]);
-    if (!tour) {
-      await connection.rollback();
-      return sendResponse(res, {
-        statusCode: 404,
-        success: false,
-        message: "Tour not found",
-        data: {},
-      });
-    }
-
     const [[schedule]] = await connection.execute(
-      "SELECT id, tour_id, available_slots FROM tour_schedules WHERE id = ? AND tour_id = ? LIMIT 1 FOR UPDATE",
-      [schedule_id, tour_id]
+      "SELECT id, tour_id, start_date, available_slots FROM tour_schedules WHERE id = ? LIMIT 1 FOR UPDATE",
+      [schedule_id]
     );
 
     if (!schedule) {
@@ -43,34 +42,68 @@ export const createBookingController = asyncHandler(async (req, res) => {
       });
     }
 
-    if (schedule.available_slots < so_nguoi) {
+    const today = new Date().toISOString().slice(0, 10);
+    const scheduleDate = String(schedule.start_date).slice(0, 10);
+
+    if (scheduleDate < today) {
       await connection.rollback();
       return sendResponse(res, {
         statusCode: 400,
         success: false,
-        message: "Not enough available slots",
+        message: "Lịch khởi hành đã qua",
         data: {},
       });
     }
 
-    const tong_tien = Number(tour.gia) * Number(so_nguoi);
+    const [[tour]] = await connection.execute("SELECT id, gia FROM tours WHERE id = ? LIMIT 1", [schedule.tour_id]);
+    if (!tour) {
+      await connection.rollback();
+      return sendResponse(res, {
+        statusCode: 404,
+        success: false,
+        message: "Tour not found",
+        data: {},
+      });
+    }
+
+    if (schedule.available_slots < quantity) {
+      await connection.rollback();
+      return sendResponse(res, {
+        statusCode: 400,
+        success: false,
+        message: "Không đủ chỗ cho lịch khởi hành này",
+        data: {},
+      });
+    }
+
+    const tong_tien = Number(tour.gia) * quantity;
 
     const bookingId = await createBookingRecord(
       {
         user_id: req.user.id,
-        tour_id,
+        tour_id: schedule.tour_id,
         schedule_id,
-        so_nguoi,
+        so_nguoi: quantity,
         tong_tien,
         trang_thai: "pending",
       },
       connection
     );
 
-    await connection.execute("UPDATE tour_schedules SET available_slots = available_slots - ? WHERE id = ?", [
-      so_nguoi,
-      schedule_id,
-    ]);
+    const [updateResult] = await connection.execute(
+      "UPDATE tour_schedules SET available_slots = available_slots - ? WHERE id = ? AND available_slots >= ?",
+      [quantity, schedule_id, quantity]
+    );
+
+    if (updateResult.affectedRows === 0) {
+      await connection.rollback();
+      return sendResponse(res, {
+        statusCode: 400,
+        success: false,
+        message: "Không đủ chỗ cho lịch khởi hành này",
+        data: {},
+      });
+    }
 
     await connection.commit();
 

@@ -109,10 +109,7 @@ function TourDetailPage() {
           : [];
 
         const nextItineraries = Array.isArray(itineraryJson?.data)
-          ? itineraryJson.data.map((item) => ({
-              ...item,
-              image_url: resolveImageUrl(item.image_url),
-            }))
+          ? itineraryJson.data
           : [];
 
         setTour(nextTour);
@@ -203,11 +200,7 @@ function TourDetailPage() {
 
           {activeTab === "overview" && <TourOverview tour={tour} />}
           {activeTab === "itinerary" && (
-            <TourItinerary
-              tour={tour}
-              images={images}
-              itineraries={itineraries}
-            />
+            <TourItinerary tour={tour} itineraries={itineraries} />
           )}
           {activeTab === "reviews" && <TourReviews reviews={reviews} />}
         </section>

@@ -19,9 +19,23 @@ router.use(authMiddleware);
 router.post(
   "/",
   [
-    body("tour_id").isInt({ gt: 0 }).withMessage("tour_id must be a positive integer"),
     body("schedule_id").isInt({ gt: 0 }).withMessage("schedule_id must be a positive integer"),
-    body("so_nguoi").isInt({ gt: 0 }).withMessage("so_nguoi must be a positive integer"),
+    body("quantity")
+      .optional()
+      .isInt({ gt: 0 })
+      .withMessage("quantity must be a positive integer"),
+    body("so_nguoi")
+      .optional()
+      .isInt({ gt: 0 })
+      .withMessage("so_nguoi must be a positive integer"),
+    body()
+      .custom((_, { req }) => {
+        if (req.body.quantity !== undefined || req.body.so_nguoi !== undefined) {
+          return true;
+        }
+        throw new Error("quantity is required");
+      })
+      .withMessage("quantity is required"),
   ],
   validationMiddleware,
   createBookingController

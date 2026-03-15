@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
-import { getAuthToken } from "../../../utils/authStorage";
 import "./EditItineraryModal.scss";
 
 const API_BASE_URL = (
@@ -33,8 +32,6 @@ function EditItineraryModal({
   const [ngayThu, setNgayThu] = useState("");
   const [tieuDe, setTieuDe] = useState("");
   const [description, setDescription] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -43,8 +40,6 @@ function EditItineraryModal({
       setNgayThu("");
       setTieuDe("");
       setDescription("");
-      setImageUrl("");
-      setUploadingImage(false);
       setErrors({});
       return;
     }
@@ -53,7 +48,6 @@ function EditItineraryModal({
     setNgayThu(String(itinerary.ngay_thu ?? ""));
     setTieuDe(itinerary.tieu_de || "");
     setDescription(itinerary.description || "");
-    setImageUrl(itinerary.image_url || "");
     fetchTours();
   }, [open, itinerary]);
 
@@ -107,44 +101,7 @@ function EditItineraryModal({
       ngay_thu: Number(ngayThu),
       tieu_de: tieuDe.trim(),
       description: description.replace(/\r\n/g, "\n"),
-      image_url: imageUrl.trim(),
     });
-  }
-
-  async function handleUploadFile(event) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) return;
-
-    try {
-      setUploadingImage(true);
-
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const payload = await fetchJson(
-        `${API_BASE_URL}/api/admin/itineraries/upload-image`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${getAuthToken()}`,
-          },
-          body: formData,
-        },
-      );
-
-      const uploadedUrl = payload?.data?.image_url || "";
-      setImageUrl(uploadedUrl);
-      setErrors((prev) => ({ ...prev, imageUrl: "" }));
-    } catch (error) {
-      setErrors((prev) => ({
-        ...prev,
-        imageUrl: error.message || "Upload ảnh thất bại.",
-      }));
-    } finally {
-      setUploadingImage(false);
-    }
   }
 
   if (!open || !itinerary) return null;
@@ -248,38 +205,6 @@ function EditItineraryModal({
             />
           </div>
 
-          <div className="itinerary-modal__field">
-            <label className="itinerary-modal__label">Ảnh (image_url)</label>
-            <div className="itinerary-modal__image-row">
-              <input
-                type="text"
-                className="admin-input"
-                value={imageUrl}
-                onChange={(event) => {
-                  setImageUrl(event.target.value);
-                  setErrors((prev) => ({ ...prev, imageUrl: "" }));
-                }}
-                disabled={loading || uploadingImage}
-                placeholder="Nhập URL hoặc upload ảnh"
-              />
-              <label
-                className={`admin-btn admin-btn--ghost itinerary-modal__upload-btn${uploadingImage ? " is-uploading" : ""}`}
-              >
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleUploadFile}
-                  disabled={loading || uploadingImage}
-                  hidden
-                />
-                {uploadingImage ? "Đang upload..." : "Upload ảnh"}
-              </label>
-            </div>
-            {errors.imageUrl && (
-              <p className="admin-field-error">{errors.imageUrl}</p>
-            )}
-          </div>
-
           <div className="itinerary-modal__footer">
             <button
               type="button"
@@ -292,7 +217,7 @@ function EditItineraryModal({
             <button
               type="submit"
               className="admin-btn admin-btn--primary"
-              disabled={loading || toursLoading || uploadingImage}
+              disabled={loading || toursLoading}
             >
               {loading ? "Đang lưu..." : "Lưu"}
             </button>
