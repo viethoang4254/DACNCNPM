@@ -322,7 +322,7 @@ function Registry() {
         </div>
 
         <div className="registry-card__right">
-          <h2>Đăng ký tài khoản</h2>
+          <h2>ĐĂNG KÝ</h2>
           <form className="registry-form" onSubmit={handleSubmit} noValidate>
             <label htmlFor="full-name">Họ và tên</label>
             <input

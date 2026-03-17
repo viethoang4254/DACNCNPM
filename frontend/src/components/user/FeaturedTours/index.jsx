@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import { NavLink } from "react-router-dom";
 import TourCard from "../TourCard";
 import { normalizeTour } from "../../../utils/tourUtils";
 import "./FeaturedTours.scss";
@@ -58,11 +59,18 @@ function FeaturedTours({
       )}
 
       {!isLoading && !error && (
-        <div className="featured-tours__grid">
-          {displayTours.map((tour) => (
-            <TourCard key={tour.id} tour={tour} />
-          ))}
-        </div>
+        <>
+          <div className="featured-tours__grid">
+            {displayTours.map((tour) => (
+              <TourCard key={tour.id} tour={tour} />
+            ))}
+          </div>
+          <div className="featured-tours__more-wrap">
+            <NavLink to="/tours" className="featured-tours__more-btn">
+              xem thêm &gt;&gt;
+            </NavLink>
+          </div>
+        </>
       )}
     </section>
   );

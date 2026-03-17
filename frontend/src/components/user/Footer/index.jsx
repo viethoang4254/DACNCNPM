@@ -6,7 +6,7 @@ import {
 } from "react-icons/fa";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { HiOutlineMapPin } from "react-icons/hi2";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import "./Footer.scss";
 
 function Footer() {
@@ -14,10 +14,10 @@ function Footer() {
     <footer className="footer">
       <div className="footer__container">
         <div className="footer__col">
-          <h3>BestPrice Travel</h3>
+          <h3>VietXanh Travel</h3>
           <p>
-            Chuyen cung cap tour trong nuoc voi lich trinh toi uu, gia hop ly va
-            trai nghiem dang nho.
+            Chuyên cung cấp tour trong nước với lịch trình tối ưu, giá cả hợp lý
+            và trải nghiệm đáng nhớ.
           </p>
         </div>
 
@@ -25,16 +25,16 @@ function Footer() {
           <h4>Liên kết</h4>
           <ul>
             <li>
-              <a href="#">Trang chu</a>
+              <NavLink to="/">Home</NavLink>
             </li>
             <li>
-              <a href="#">Tour noi bat</a>
+              <NavLink to="/tours">Tour</NavLink>
             </li>
             <li>
-              <a href="#">Khuyen mai</a>
+              <NavLink to="/about">About</NavLink>
             </li>
             <li>
-              <a href="#">Lien he</a>
+              <NavLink to="/contact">Contact</NavLink>
             </li>
           </ul>
         </div>
@@ -49,7 +49,7 @@ function Footer() {
               <FaPhoneAlt /> 1900 6868
             </li>
             <li>
-              <MdOutlineMailOutline /> support@bestpricetravel.vn
+              <MdOutlineMailOutline /> support@vietxanhtravel.vn
             </li>
           </ul>
         </div>
@@ -57,21 +57,21 @@ function Footer() {
         <div className="footer__col">
           <h4>Social</h4>
           <div className="footer__socials">
-            <Link href="#" aria-label="Facebook">
+            <a href="#" aria-label="Facebook">
               <FaFacebookF />
-            </Link>
-            <Link href="#" aria-label="Instagram">
+            </a>
+            <a href="#" aria-label="Instagram">
               <FaInstagram />
-            </Link>
-            <Link href="#" aria-label="Youtube">
+            </a>
+            <a href="#" aria-label="Youtube">
               <FaYoutube />
-            </Link>
+            </a>
           </div>
         </div>
       </div>
 
       <div className="footer__bottom">
-        <p>Copyright 2026 DACN Travel. All rights reserved.</p>
+        <p>Copyright 2026 VietXanh Travel. All rights reserved.</p>
       </div>
     </footer>
   );
