@@ -8,6 +8,7 @@ import TourOverview from "./components/TourOverview/index.jsx";
 import TourItinerary from "./components/TourItinerary/index.jsx";
 import TourReviews from "./components/TourReviews/index.jsx";
 import SimilarTours from "./components/SimilarTours/index.jsx";
+import { saveTourView } from "../../../services/historyService";
 import "./TourDetail.scss";
 
 const API_BASE_URL =
@@ -41,6 +42,8 @@ function TourDetailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    saveTourView(Number(id)).catch(() => null);
+
     let ignore = false;
 
     async function fetchDetail() {

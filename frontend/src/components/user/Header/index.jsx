@@ -1,4 +1,10 @@
-import { FaRegUser } from "react-icons/fa";
+import {
+  FaClipboardList,
+  FaHistory,
+  FaRegIdCard,
+  FaRegUser,
+  FaSignOutAlt,
+} from "react-icons/fa";
 import { MdOutlineTravelExplore } from "react-icons/md";
 import { NavLink } from "react-router-dom";
 import { useEffect, useRef } from "react";
@@ -11,7 +17,6 @@ function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const authUser = getAuthUser();
-  const dashboardPath = authUser?.role === "admin" ? "/admin" : "/customer";
 
   const handleLogout = () => {
     clearAuthSession();
@@ -155,21 +160,58 @@ function Header() {
                   <p className="account-menu__title">
                     Xin chào, {authUser.ho_ten}
                   </p>
-                  {/* <NavLink to={dashboardPath} className="account__btn-login">
-                    {authUser.role === "admin"
-                      ? "Vào trang quản trị"
-                      : "Vào trang khách hàng"}
-                  </NavLink> */}
+                  <NavLink to="/customer" className="account__btn-login">
+                    <span
+                      className="account__menu-item-icon"
+                      aria-hidden="true"
+                    >
+                      <FaRegIdCard />
+                    </span>
+                    Thông tin cá nhân
+                  </NavLink>
+                  <NavLink to="/customer" className="account__btn-login">
+                    <span
+                      className="account__menu-item-icon"
+                      aria-hidden="true"
+                    >
+                      <FaClipboardList />
+                    </span>
+                    Lịch sử đặt tour
+                  </NavLink>
+                  <NavLink to="/tour-history" className="account__btn-login">
+                    <span
+                      className="account__menu-item-icon"
+                      aria-hidden="true"
+                    >
+                      <FaHistory />
+                    </span>
+                    Tour đã xem
+                  </NavLink>
                   <button
                     type="button"
                     className="account__btn-register"
                     onClick={handleLogout}
                   >
+                    <span
+                      className="account__menu-item-icon"
+                      aria-hidden="true"
+                    >
+                      <FaSignOutAlt />
+                    </span>
                     Đăng xuất
                   </button>
                 </>
               ) : (
                 <>
+                  <NavLink to="/tour-history" className="account__btn-login">
+                    <span
+                      className="account__menu-item-icon"
+                      aria-hidden="true"
+                    >
+                      <FaHistory />
+                    </span>
+                    Tour đã xem
+                  </NavLink>
                   <NavLink to="/login" className="account__btn-login">
                     Đăng Nhập
                   </NavLink>
