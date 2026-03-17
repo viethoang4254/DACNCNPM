@@ -160,3 +160,25 @@ CREATE TABLE reviews (
     ON UPDATE CASCADE,
   CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE tour_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  tour_id INT NOT NULL,
+  viewed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_tour_history_user_tour (user_id, tour_id),
+  INDEX idx_tour_history_user_id (user_id),
+  INDEX idx_tour_history_tour_id (tour_id),
+  INDEX idx_tour_history_viewed_at (viewed_at),
+  INDEX idx_tour_history_user_tour_viewed (user_id, tour_id, viewed_at),
+  CONSTRAINT fk_tour_history_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_tour_history_tour
+    FOREIGN KEY (tour_id)
+    REFERENCES tours(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

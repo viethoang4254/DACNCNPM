@@ -7,6 +7,7 @@ function toTourCardModel(item) {
     id: item.id,
     name: item.name || item.ten_tour,
     location: item.location || item.tinh_thanh,
+    transport: item.transport || item.phuong_tien || "",
     price: item.price ?? item.gia ?? 0,
     days: item.days || item.so_ngay || 1,
     image:
@@ -16,9 +17,16 @@ function toTourCardModel(item) {
   };
 }
 
-function PopularTours({ fetchTours, tours: toursProp, isLoading: isLoadingProp, error: errorProp }) {
+function PopularTours({
+  fetchTours,
+  tours: toursProp,
+  isLoading: isLoadingProp,
+  error: errorProp,
+}) {
   const [tours, setTours] = useState(Array.isArray(toursProp) ? toursProp : []);
-  const [isLoading, setIsLoading] = useState(typeof isLoadingProp === "boolean" ? isLoadingProp : true);
+  const [isLoading, setIsLoading] = useState(
+    typeof isLoadingProp === "boolean" ? isLoadingProp : true,
+  );
   const [error, setError] = useState(errorProp || "");
 
   const usesExternalData = Array.isArray(toursProp);

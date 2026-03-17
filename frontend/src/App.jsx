@@ -7,6 +7,7 @@ import Login from "./pages/user/Login";
 import Register from "./pages/user/Register";
 import Tours from "./pages/user/Tours";
 import TourDetail from "./pages/user/TourDetail";
+import TourHistory from "./pages/user/TourHistory";
 import About from "./pages/user/About";
 import Contact from "./pages/user/Contact";
 import CheckoutPage from "./components/user/CheckoutPage";
@@ -96,6 +97,14 @@ function App() {
           element={
             <UserRoute>
               <TourDetail />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/tour-history"
+          element={
+            <UserRoute>
+              <TourHistory />
             </UserRoute>
           }
         />
