@@ -159,7 +159,7 @@ function Login() {
         </div>
 
         <div className="auth-card__right">
-          <h2>Đăng nhập tài khoản</h2>
+          <h2>ĐĂNG NHẬP</h2>
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
             <label htmlFor="login-email">Email</label>
             <input

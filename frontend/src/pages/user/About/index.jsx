@@ -6,6 +6,10 @@ import {
   FaUsers,
   FaMapMarkedAlt,
   FaStar,
+  FaCompass,
+  FaHeadset,
+  FaSuitcaseRolling,
+  FaCameraRetro,
 } from "react-icons/fa";
 import "./About.scss";
 
@@ -37,30 +41,34 @@ const stats = [
   { value: "4.9/5", label: "Đánh giá khách hàng", icon: FaStar },
 ];
 
-const teamMembers = [
+const travelExperienceStations = [
   {
-    name: "Nguyễn Minh Anh",
-    role: "CEO & Founder",
-    image:
-      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80",
+    title: "Chạm cảm hứng",
+    subtitle: "Khám phá điểm đến",
+    icon: FaCompass,
+    description:
+      "Bạn chọn phong cách du lịch yêu thích, ngân sách và thời gian. Hệ thống gợi ý hành trình phù hợp trong vài phút.",
   },
   {
-    name: "Trần Quốc Bảo",
-    role: "Giám đốc vận hành tour",
-    image:
-      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80",
+    title: "Chốt lịch nhanh",
+    subtitle: "Tư vấn 1-1",
+    icon: FaHeadset,
+    description:
+      "Đội ngũ tư vấn tối ưu lịch trình theo nhu cầu thực tế, xác nhận dịch vụ và gửi lịch trình chi tiết rõ ràng.",
   },
   {
-    name: "Lê Thu Phương",
-    role: "Trưởng nhóm chăm sóc khách hàng",
-    image:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=80",
+    title: "Lên đường",
+    subtitle: "Bắt đầu hành trình",
+    icon: FaSuitcaseRolling,
+    description:
+      "Từ lúc khởi hành đến khi kết thúc tour, bạn luôn có hỗ trợ đồng hành để chuyến đi mượt mà và an tâm.",
   },
   {
-    name: "Phạm Đức Hoàng",
-    role: "Travel Designer",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+    title: "Giữ trọn kỷ niệm",
+    subtitle: "Sau chuyến đi",
+    icon: FaCameraRetro,
+    description:
+      "Tổng hợp album, đánh giá trải nghiệm và đề xuất hành trình kế tiếp dựa trên sở thích bạn đã thể hiện.",
   },
 ];
 
@@ -70,7 +78,7 @@ function About() {
       <section className="about-page__banner">
         <div className="about-page__banner-overlay" />
         <div className="about-page__container about-page__banner-content">
-          <p className="about-page__eyebrow">BestPrice Travel Vietnam</p>
+          <p className="about-page__eyebrow">VietXanh Travel Vietnam</p>
           <h1>Về Chúng Tôi</h1>
           <p>
             Chúng tôi xây dựng những chuyến đi trong nước chỉn chu, linh hoạt và
@@ -89,7 +97,7 @@ function About() {
         <div className="about-intro__content">
           <h2>Chúng tôi là ai?</h2>
           <p>
-            BestPrice Travel là đơn vị cung cấp dịch vụ đặt tour du lịch trong
+            VietXanh Travel là đơn vị cung cấp dịch vụ đặt tour du lịch trong
             nước, tập trung vào trải nghiệm thực tế, lịch trình hợp lý và chi
             phí tối ưu. Từ những chuyến đi ngắn ngày cuối tuần đến các hành
             trình khám phá dài ngày, chúng tôi luôn đặt sự an tâm và hài lòng
@@ -138,21 +146,35 @@ function About() {
         </div>
       </section>
 
-      <section className="about-page__container about-team">
+      <section className="about-page__container about-experience">
         <div className="about-page__section-head">
-          <h2>Đội ngũ của chúng tôi</h2>
+          <h2>Bản đồ trải nghiệm khách hàng</h2>
         </div>
-        <div className="about-team__grid">
-          {teamMembers.map((member) => (
-            <article key={member.name} className="about-team__card">
-              <img src={member.image} alt={member.name} loading="lazy" />
-              <div className="about-team__body">
-                <h3>{member.name}</h3>
-                <p>{member.role}</p>
-              </div>
-            </article>
-          ))}
+        <div className="about-experience__rail" aria-hidden="true" />
+        <div className="about-experience__grid">
+          {travelExperienceStations.map((station, index) => {
+            const Icon = station.icon;
+            return (
+              <article key={station.title} className="about-experience__card">
+                <div className="about-experience__index">0{index + 1}</div>
+                <div className="about-experience__icon-wrap">
+                  <Icon className="about-experience__icon" />
+                </div>
+                <div className="about-experience__body">
+                  <p className="about-experience__subtitle">
+                    {station.subtitle}
+                  </p>
+                  <h3>{station.title}</h3>
+                  <p>{station.description}</p>
+                </div>
+              </article>
+            );
+          })}
         </div>
+        <blockquote className="about-experience__quote">
+          "Không chỉ là một chuyến đi, đó là hành trình được thiết kế để bạn
+          thật sự tận hưởng từng khoảnh khắc."
+        </blockquote>
       </section>
     </main>
   );
