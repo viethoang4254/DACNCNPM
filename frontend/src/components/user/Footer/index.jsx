@@ -43,10 +43,10 @@ function Footer() {
           <h4>Liên hệ</h4>
           <ul className="footer__contact-list">
             <li>
-              <HiOutlineMapPin /> 23 Nguyen Van Linh, Da Nang
+              <HiOutlineMapPin /> 484 Trần Cao Vân,Thanh Khê, TP.Đà Nẵng
             </li>
             <li>
-              <FaPhoneAlt /> 1900 6868
+              <FaPhoneAlt /> 0905884000
             </li>
             <li>
               <MdOutlineMailOutline /> support@vietxanhtravel.vn

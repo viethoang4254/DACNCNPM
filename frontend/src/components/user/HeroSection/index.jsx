@@ -23,7 +23,7 @@ function HeroSection() {
       <div className="home__hero-overlay" />
       <div className="home__hero-content">
         <p className="home__hero-eyebrow">Khám phá vẻ đẹp Việt Nam</p>
-        <h1>Từ núi rừng hùng vì đến biển xanh nhiệt đới.</h1>
+        <h1>Từ núi rừng hùng vĩ đến biển xanh nhiệt đới.</h1>
         <p className="home__hero-sub">
           Lên kế hoạch và bắt đầu hành trình của bạn ngày hôm nay
         </p>
