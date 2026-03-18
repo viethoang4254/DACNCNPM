@@ -141,6 +141,14 @@ function App() {
           }
         />
         <Route
+          path="/payment-success/:bookingId"
+          element={
+            <UserRoute>
+              <PaymentSuccess />
+            </UserRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <AdminRoute>

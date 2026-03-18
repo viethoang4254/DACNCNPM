@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { getAuthToken } from "../../../utils/authStorage";
 import "./PaymentSuccess.scss";
 
@@ -43,12 +43,16 @@ function formatDate(value) {
 }
 
 function PaymentSuccess() {
+  const { bookingId: bookingIdParam } = useParams();
   const { state } = useLocation();
   const searchParams = useMemo(
     () => new URLSearchParams(window.location.search),
     [],
   );
-  const bookingIdFromUrl = Number(searchParams.get("bookingId") || 0);
+  const bookingIdFromQuery = Number(searchParams.get("bookingId") || 0);
+  const bookingIdFromPath = Number(bookingIdParam || 0);
+  const bookingIdFromUrl = bookingIdFromPath || bookingIdFromQuery;
+  const paymentId = Number(state?.paymentId || searchParams.get("paymentId") || 0);
 
   const [booking, setBooking] = useState(state?.booking || null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,8 +110,8 @@ function PaymentSuccess() {
   return (
     <main className="payment-success-page">
       <section className="payment-success-page__card">
-        <p className="payment-success-page__tag">Payment Success</p>
-        <h1>Thanh toán đã được tạo thành công</h1>
+        <p className="payment-success-page__tag">Payment Pending</p>
+        <h1>Yêu cầu thanh toán đã được gửi</h1>
         <p>
           Đơn của bạn đang ở trạng thái chờ xử lý. Chúng tôi sẽ xác nhận trong
           thời gian sớm nhất.
@@ -121,6 +125,10 @@ function PaymentSuccess() {
             <div>
               <span>Mã booking</span>
               <strong>BOOKING#{booking.id}</strong>
+            </div>
+            <div>
+              <span>Mã thanh toán</span>
+              <strong>{paymentId > 0 ? `PAYMENT#${paymentId}` : "Đang xử lý"}</strong>
             </div>
             <div>
               <span>Tổng thanh toán</span>
