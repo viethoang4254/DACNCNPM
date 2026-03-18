@@ -3,6 +3,7 @@ import { body, param } from "express-validator";
 import {
   createUserController,
   deleteUserController,
+  getCurrentUserController,
   getUserByIdController,
   getUsersController,
   updateUserController,
@@ -17,6 +18,8 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
+router.get("/me", getCurrentUserController);
+
 router.put(
   "/profile",
   [
@@ -25,6 +28,16 @@ router.put(
   ],
   validationMiddleware,
   updateProfileController
+);
+
+router.put(
+  "/change-password",
+  [
+    body("oldPassword").notEmpty().withMessage("oldPassword is required"),
+    body("newPassword").isLength({ min: 6 }).withMessage("newPassword must be at least 6 characters"),
+  ],
+  validationMiddleware,
+  updatePasswordController
 );
 
 router.put(

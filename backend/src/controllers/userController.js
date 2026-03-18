@@ -72,6 +72,25 @@ export const getUserByIdController = asyncHandler(async (req, res) => {
   });
 });
 
+export const getCurrentUserController = asyncHandler(async (req, res) => {
+  const user = await getUserById(req.user.id);
+  if (!user) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "User not found",
+      data: {},
+    });
+  }
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Current user fetched successfully",
+    data: user,
+  });
+});
+
 export const updateProfileController = asyncHandler(async (req, res) => {
   const { ho_ten, so_dien_thoai } = req.body;
   const user = await updateUserProfile(req.user.id, { ho_ten, so_dien_thoai });
@@ -85,7 +104,8 @@ export const updateProfileController = asyncHandler(async (req, res) => {
 });
 
 export const updatePasswordController = asyncHandler(async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
+  const currentPassword = req.body.currentPassword || req.body.oldPassword;
+  const { newPassword } = req.body;
   const user = await getUserByIdWithPassword(req.user.id);
 
   if (!user) {

@@ -1,0 +1,158 @@
+.booking-history {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.booking-history__head h1 {
+  margin: 0;
+  font-size: 2.7rem;
+  color: #0d2140;
+}
+
+.booking-history__head p {
+  margin-top: 6px;
+  font-size: 1.45rem;
+  color: #5a6f8c;
+}
+
+.booking-history__message {
+  font-size: 1.45rem;
+  color: #516a88;
+}
+
+.booking-history__message--error {
+  color: #c62828;
+}
+
+.booking-history__empty {
+  border: 1px dashed #c8d7ea;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  background: #f8fbff;
+}
+
+.booking-history__empty p {
+  margin: 0;
+  font-size: 1.45rem;
+  color: #274462;
+}
+
+.booking-history__empty a {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 1.35rem;
+  color: #0f5cb3;
+  font-weight: 600;
+}
+
+.booking-history__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.booking-history__card {
+  border: 1px solid #e3ebf7;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 230px 1fr;
+}
+
+.booking-history__card img {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  object-fit: cover;
+}
+
+.booking-history__content {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.booking-history__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.booking-history__row h3 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: #142b4c;
+}
+
+.booking-history__content p {
+  margin: 0;
+  color: #4e6482;
+  font-size: 1.35rem;
+}
+
+.booking-history__content strong {
+  color: #15365f;
+}
+
+.status-badge {
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-badge--pending {
+  background: #fff1dc;
+  color: #ad6f00;
+}
+
+.status-badge--confirmed {
+  background: #e8faef;
+  color: #228348;
+}
+
+.status-badge--cancelled {
+  background: #ffe8e8;
+  color: #c73838;
+}
+
+.booking-history__actions {
+  margin-top: 8px;
+}
+
+.booking-history__actions a {
+  color: #0f5cb3;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .booking-history__card {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-history__card img {
+    height: 180px;
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 600px) {
+  .booking-history__head h1 {
+    font-size: 2.2rem;
+  }
+
+  .booking-history__content {
+    padding: 12px;
+  }
+
+  .booking-history__row {
+    flex-wrap: wrap;
+  }
+}
