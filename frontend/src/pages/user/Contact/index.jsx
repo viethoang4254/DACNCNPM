@@ -105,7 +105,7 @@ function Contact() {
         <div className="contact-page__container contact-page__banner-content">
           <h1>Liên Hệ Với Chúng Tôi</h1>
           <p>
-            Đội ngũ BestPrice Travel luôn sẵn sàng hỗ trợ bạn lên kế hoạch cho
+            Đội ngũ VietXanh Travel luôn sẵn sàng hỗ trợ bạn lên kế hoạch cho
             hành trình khám phá Việt Nam trọn vẹn nhất.
           </p>
         </div>
@@ -208,7 +208,7 @@ function Contact() {
                 <FaMapMarkerAlt />
               </div>
               <h3>Địa chỉ</h3>
-              <p>23 Nguyễn Văn Linh, Hải Châu, Đà Nẵng</p>
+              <p>484 Trần Cao Vân, Thanh Khê, Đà Nẵng</p>
             </article>
 
             <article className="contact-info-card">
@@ -216,7 +216,7 @@ function Contact() {
                 <FaPhoneAlt />
               </div>
               <h3>Số điện thoại</h3>
-              <p>1900 6868</p>
+              <p>0905884000</p>
             </article>
 
             <article className="contact-info-card">
@@ -224,7 +224,7 @@ function Contact() {
                 <FaEnvelope />
               </div>
               <h3>Email</h3>
-              <p>support@bestpricetravel.vn</p>
+              <p>support@vietxanhtravel.vn</p>
             </article>
           </div>
 

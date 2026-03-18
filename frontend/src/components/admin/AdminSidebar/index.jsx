@@ -33,7 +33,7 @@ function AdminSidebar() {
           </div>
           <div>
             <h2>Tour Admin</h2>
-            <p>BestPrice Travel</p>
+            <p>VietXanh Travel</p>
           </div>
         </div>
       </div>
