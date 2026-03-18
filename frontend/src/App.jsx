@@ -22,6 +22,10 @@ import Bookings from "./pages/admin/Bookings";
 import Payments from "./pages/admin/Payments";
 import Reviews from "./pages/admin/Reviews";
 import Itineraries from "./pages/admin/Itineraries";
+import UserLayout from "./components/user/UserLayout";
+import InfoUser from "./pages/user/InfoUser";
+import UserBookingHistory from "./pages/user/BookingHistory";
+import ChangePassword from "./pages/user/ChangePassword";
 
 import { getAuthUser } from "./utils/authStorage";
 
@@ -37,6 +41,20 @@ function AdminRoute({ children }) {
 function UserRoute({ children }) {
   const user = getAuthUser();
   if (user?.role === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return children;
+}
+
+function CustomerAuthRoute({ children }) {
+  const user = getAuthUser();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role === "admin") {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -64,10 +82,22 @@ function App() {
           path="/customer"
           element={
             <UserRoute>
-              <Home />
+              <Navigate to="/info-user" replace />
             </UserRoute>
           }
         />
+        <Route
+          path="/info-user"
+          element={
+            <CustomerAuthRoute>
+              <UserLayout />
+            </CustomerAuthRoute>
+          }
+        >
+          <Route index element={<InfoUser />} />
+          <Route path="bookings" element={<UserBookingHistory />} />
+          <Route path="change-password" element={<ChangePassword />} />
+        </Route>
         <Route
           path="/login"
           element={

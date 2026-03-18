@@ -1,5 +1,14 @@
 import apiClient from "../utils/apiClient";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+const resolveImageUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+};
+
 export const getUsers = async () => {
   const response = await apiClient.get("/api/users");
   return Array.isArray(response.data?.data) ? response.data.data : [];
@@ -22,3 +31,28 @@ export const deleteUser = async (userId) => {
 
 export const getApiMessage = (error, fallback) =>
   error?.response?.data?.data?.errors?.[0]?.msg || error?.response?.data?.message || fallback;
+
+export const getCurrentUserProfile = async () => {
+  const response = await apiClient.get("/api/users/me");
+  return response.data?.data || null;
+};
+
+export const updateCurrentUserProfile = async (payload) => {
+  const response = await apiClient.put("/api/users/profile", payload);
+  return response.data?.data || null;
+};
+
+export const changeUserPassword = async (payload) => {
+  const response = await apiClient.put("/api/users/change-password", payload);
+  return response.data?.data || null;
+};
+
+export const getMyBookings = async () => {
+  const response = await apiClient.get("/api/bookings/my");
+  const list = Array.isArray(response.data?.data) ? response.data.data : [];
+
+  return list.map((item) => ({
+    ...item,
+    image: resolveImageUrl(item.image || ""),
+  }));
+};

@@ -160,7 +160,7 @@ function Header() {
                   <p className="account-menu__title">
                     Xin chào, {authUser.ho_ten}
                   </p>
-                  <NavLink to="/customer" className="account__btn-login">
+                  <NavLink to="/info-user" className="account__btn-login">
                     <span
                       className="account__menu-item-icon"
                       aria-hidden="true"
@@ -169,7 +169,7 @@ function Header() {
                     </span>
                     Thông tin cá nhân
                   </NavLink>
-                  <NavLink to="/customer" className="account__btn-login">
+                  <NavLink to="/info-user/bookings" className="account__btn-login">
                     <span
                       className="account__menu-item-icon"
                       aria-hidden="true"
