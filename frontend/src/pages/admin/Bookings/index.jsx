@@ -12,6 +12,12 @@ const bookingStatusLabels = {
   cancelled: "Đã hủy",
 };
 
+const paymentStatusLabels = {
+  pending: "Chờ xác nhận",
+  paid: "Đã thanh toán",
+  failed: "Thất bại",
+};
+
 function Bookings() {
   const [bookings, setBookings]           = useState([]);
   const [selectedBooking, setSelected]    = useState(null);
@@ -70,6 +76,18 @@ function Bookings() {
           {bookingStatusLabels[row.trang_thai] || row.trang_thai}
         </span>
       ),
+    },
+    {
+      key: "payment_status",
+      header: "Thanh toán",
+      render: (row) => {
+        const normalized = row.payment_status || "pending";
+        return (
+          <span className={`status-pill status-pill--${normalized}`}>
+            {paymentStatusLabels[normalized] || normalized}
+          </span>
+        );
+      },
     },
     {
       key: "actions",
@@ -144,6 +162,16 @@ function Bookings() {
               <span>
                 <span className={`status-pill status-pill--${selectedBooking.trang_thai}`}>
                   {bookingStatusLabels[selectedBooking.trang_thai] || selectedBooking.trang_thai}
+                </span>
+              </span>
+            </div>
+            <div className="admin-detail-item">
+              <label>Thanh toán</label>
+              <span>
+                <span className={`status-pill status-pill--${selectedBooking.payment_status || "pending"}`}>
+                  {paymentStatusLabels[selectedBooking.payment_status || "pending"] ||
+                    selectedBooking.payment_status ||
+                    "pending"}
                 </span>
               </span>
             </div>
