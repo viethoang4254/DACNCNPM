@@ -2,6 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { sendResponse } from "../utils/response.js";
 import {
 	getAllSchedules,
+	getWarningSchedules,
 	getScheduleById,
 	createSchedule,
 	updateSchedule,
@@ -13,22 +14,51 @@ export const getAllSchedulesController = asyncHandler(async (req, res) => {
 	sendResponse(res, { data: schedules });
 });
 
+export const getWarningSchedulesController = asyncHandler(async (req, res) => {
+	const schedules = await getWarningSchedules();
+	sendResponse(res, { data: schedules });
+});
+
 export const createScheduleController = asyncHandler(async (req, res) => {
 	const { tour_id, start_date } = req.body;
-	const schedule = await createSchedule({
-		tour_id: Number(tour_id),
-		start_date,
-	});
-	sendResponse(res, {
-		statusCode: 201,
-		message: "Schedule created successfully",
-		data: schedule,
-	});
+
+	try {
+		const schedule = await createSchedule({
+			tour_id: Number(tour_id),
+			start_date,
+		});
+
+		return sendResponse(res, {
+			statusCode: 201,
+			message: "Schedule created successfully",
+			data: schedule,
+		});
+	} catch (error) {
+		if (error.code === "ER_DUP_ENTRY") {
+			return sendResponse(res, {
+				statusCode: 400,
+				success: false,
+				message: "Tour này đã có lịch khởi hành vào ngày đã chọn.",
+				data: {},
+			});
+		}
+
+		if (error.statusCode) {
+			throw error;
+		}
+
+		return sendResponse(res, {
+			statusCode: 500,
+			success: false,
+			message: "Không thể tạo lịch khởi hành. Vui lòng thử lại.",
+			data: {},
+		});
+	}
 });
 
 export const updateScheduleController = asyncHandler(async (req, res) => {
 	const id = Number(req.params.id);
-	const { start_date, available_slots } = req.body;
+	const { start_date } = req.body;
 
 	const existing = await getScheduleById(id);
 	if (!existing) {
@@ -42,7 +72,6 @@ export const updateScheduleController = asyncHandler(async (req, res) => {
 
 	const updated = await updateSchedule(id, {
 		start_date,
-		available_slots: Number(available_slots),
 	});
 	sendResponse(res, { data: updated });
 });

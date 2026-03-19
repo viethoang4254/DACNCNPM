@@ -1,11 +1,22 @@
 import { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
 import apiClient from "../../../utils/apiClient";
+import { toDateKey } from "../../../utils/dateOnly";
+import TourSearchDropdown from "../TourSearchDropdown";
 import "./AddScheduleModal.scss";
 
-const todayStr = () => new Date().toISOString().split("T")[0];
+const todayStr = () => toDateKey(new Date());
 
-function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
+function AddScheduleModal({
+  open,
+  loading = false,
+  onClose,
+  onSubmit,
+  initialTourId = "",
+  lockTour = false,
+  apiError = "",
+  onClearApiError,
+}) {
   const [tours, setTours] = useState([]);
   const [toursLoading, setToursLoading] = useState(false);
   const [tourId, setTourId] = useState("");
@@ -19,8 +30,9 @@ function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
       setErrors({});
       return;
     }
+    setTourId(initialTourId ? String(initialTourId) : "");
     fetchTours();
-  }, [open]);
+  }, [open, initialTourId]);
 
   async function fetchTours() {
     try {
@@ -58,9 +70,7 @@ function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
   return (
     <div
       className="admin-modal__backdrop"
-      onClick={(e) =>
-        e.target === e.currentTarget && !loading && onClose()
-      }
+      onClick={(e) => e.target === e.currentTarget && !loading && onClose()}
     >
       <div className="schedule-modal">
         <div className="schedule-modal__header">
@@ -79,27 +89,45 @@ function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
           </button>
         </div>
 
-        <form className="schedule-modal__body" onSubmit={handleSubmit} noValidate>
+        <form
+          className="schedule-modal__body"
+          onSubmit={handleSubmit}
+          noValidate
+        >
+          {apiError && (
+            <div className="schedule-modal__alert" role="alert">
+              <strong>Cảnh báo:</strong> {apiError}
+            </div>
+          )}
+
           <div className="schedule-modal__field">
             <label className="schedule-modal__label">Tour</label>
-            <select
-              className={`admin-select${errors.tourId ? " admin-input--invalid" : ""}`}
-              value={tourId}
-              onChange={(e) => {
-                setTourId(e.target.value);
-                setErrors((p) => ({ ...p, tourId: "" }));
-              }}
-              disabled={loading || toursLoading}
-            >
-              <option value="">
-                {toursLoading ? "Đang tải..." : "-- Chọn tour --"}
-              </option>
-              {tours.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.ten_tour}
-                </option>
-              ))}
-            </select>
+            {lockTour ? (
+              <input
+                type="text"
+                className="admin-input"
+                value={
+                  tours.find((t) => String(t.id) === String(tourId))
+                    ?.ten_tour || ""
+                }
+                disabled
+                readOnly
+              />
+            ) : (
+              <TourSearchDropdown
+                tours={tours}
+                selectedTourId={tourId}
+                disabled={loading || toursLoading}
+                invalid={Boolean(errors.tourId)}
+                placeholder="Tìm nhanh tên tour..."
+                emptyLabel={toursLoading ? "Đang tải..." : "-- Chọn tour --"}
+                onSelectTour={(tour) => {
+                  setTourId(tour?.id ? String(tour.id) : "");
+                  setErrors((p) => ({ ...p, tourId: "" }));
+                  onClearApiError?.();
+                }}
+              />
+            )}
             {errors.tourId && (
               <p className="admin-field-error">{errors.tourId}</p>
             )}
@@ -115,6 +143,7 @@ function AddScheduleModal({ open, loading = false, onClose, onSubmit }) {
               onChange={(e) => {
                 setStartDate(e.target.value);
                 setErrors((p) => ({ ...p, startDate: "" }));
+                onClearApiError?.();
               }}
               disabled={loading}
             />

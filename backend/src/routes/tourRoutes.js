@@ -10,6 +10,7 @@ import {
   filterToursController,
   getFeaturedToursController,
   getLatestToursController,
+  getRecommendToursController,
   getTourByIdController,
   getTourImagesController,
   getTourItinerariesController,
@@ -84,6 +85,8 @@ router.get(
 router.get(
   "/search",
   [
+    query("page").optional().isInt({ gt: 0 }).withMessage("page must be a positive integer"),
+    query("limit").optional().isInt({ gt: 0 }).withMessage("limit must be a positive integer"),
     query("destination").optional().isString().withMessage("destination must be a string"),
     query("date").optional().isISO8601().withMessage("date must be a valid date"),
     query("guests").optional().isInt({ gt: 0 }).withMessage("guests must be a positive integer"),
@@ -96,6 +99,12 @@ router.get(
 router.get("/filter", validationMiddleware, filterToursController);
 router.get("/featured", getFeaturedToursController);
 router.get("/latest", getLatestToursController);
+router.get(
+  "/recommend/:userId",
+  [param("userId").isInt({ gt: 0 }).withMessage("userId must be a positive integer")],
+  validationMiddleware,
+  getRecommendToursController
+);
 router.get(
   "/similar/:id",
   [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],

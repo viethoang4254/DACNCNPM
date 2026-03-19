@@ -7,8 +7,8 @@
     gap: 12px;
   }
 
-  .header .header__container .header__logo img {
-    width: 156px;
+  .header .header__container .header__logo {
+    max-width: 240px;
   }
 
   .header .header__container .header__nav .header__nav-list .header__nav-item {

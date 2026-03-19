@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { saveAuthSession } from "../../../utils/authStorage";
 import "./Login.scss";
 
@@ -22,6 +22,11 @@ const validateEmail = (value) => {
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath =
+    typeof location?.state?.from === "string" && location.state.from.trim()
+      ? location.state.from
+      : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -101,7 +106,7 @@ function Login() {
       }
 
       if (user.role === "customer") {
-        navigate("/", { replace: true });
+        navigate(redirectPath, { replace: true });
         return;
       }
 
@@ -145,7 +150,7 @@ function Login() {
     <main className="auth-page auth-page--login">
       <section className="auth-card">
         <div className="auth-card__left">
-          <p className="auth-card__eyebrow">BestPrice Travel</p>
+          <p className="auth-card__eyebrow">VietXanh Travel</p>
           <h1>Chào mừng bạn trở lại</h1>
           <p>
             Đăng nhập để quản lý lịch đặt tour, theo dõi ưu đãi và nhận thông
@@ -154,7 +159,7 @@ function Login() {
         </div>
 
         <div className="auth-card__right">
-          <h2>Đăng nhập tài khoản</h2>
+          <h2>ĐĂNG NHẬP</h2>
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
             <label htmlFor="login-email">Email</label>
             <input

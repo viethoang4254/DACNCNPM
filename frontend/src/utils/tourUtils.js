@@ -11,6 +11,7 @@ export function normalizeTour(item) {
     id: item.id,
     name: item.ten_tour || item.name || "Tour du lịch",
     location: item.tinh_thanh || item.location || "Việt Nam",
+    transport: item.phuong_tien || item.transport || "",
     days: Number(item.so_ngay || item.days || 1),
     price: Number(item.gia || item.price || 0),
     image: item.hinh_anh || item.image || FALLBACK_IMAGE,

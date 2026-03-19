@@ -27,6 +27,7 @@ import {
 import { getToursService } from "../services/tourService.js";
 import { getReviewsByTourId } from "../models/reviewModel.js";
 import { getItinerariesByTourId } from "../models/itineraryModel.js";
+import { getRecommendedToursByUserId } from "../models/historyModel.js";
 
 const parsePaging = (req) => {
   const page = Number(req.query.page || 1);
@@ -225,16 +226,29 @@ export const searchToursController = asyncHandler(async (req, res) => {
   const destination = req.query.destination?.trim() || "";
   const date = req.query.date?.trim() || "";
   const guests = req.query.guests !== undefined ? Number(req.query.guests) : undefined;
+  const page = Math.max(1, Number(req.query.page || 1));
+  const limit = Math.max(1, Number(req.query.limit || 8));
 
   if (destination || date || guests !== undefined) {
     const result = await searchToursByCriteria({ destination, date, guests });
+    const total = result.tours.length;
+    const offset = (page - 1) * limit;
+    const pagedTours = result.tours.slice(offset, offset + limit);
 
     return res.status(200).json({
       success: true,
       message: result.message,
-      tours: result.tours,
-      total: result.tours.length,
-      data: result.tours,
+      tours: pagedTours,
+      total,
+      page,
+      limit,
+      data: pagedTours,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
       usedNearestDate: result.usedNearestDate,
     });
   }
@@ -309,6 +323,18 @@ export const getSimilarToursController = asyncHandler(async (req, res) => {
     statusCode: 200,
     success: true,
     message: "Similar tours fetched successfully",
+    data: tours,
+  });
+});
+
+export const getRecommendToursController = asyncHandler(async (req, res) => {
+  const userId = Number(req.params.userId);
+  const tours = await getRecommendedToursByUserId(userId, Number(req.query.limit || 6));
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Recommended tours fetched successfully",
     data: tours,
   });
 });

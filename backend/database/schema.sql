@@ -1,10 +1,13 @@
-CREATE DATABASE IF NOT EXISTS booking_tour
+SET NAMES utf8mb4;
+
+DROP DATABASE IF EXISTS booking_tours;
+CREATE DATABASE booking_tours
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE booking_tour;
+USE booking_tours;
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ho_ten VARCHAR(150) NOT NULL,
   email VARCHAR(191) NOT NULL,
@@ -17,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   INDEX idx_users_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS tours (
+CREATE TABLE tours (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ten_tour VARCHAR(255) NOT NULL,
   mo_ta TEXT,
@@ -37,7 +40,7 @@ CREATE TABLE IF NOT EXISTS tours (
   CONSTRAINT chk_tours_gia CHECK (gia >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS tour_images (
+CREATE TABLE tour_images (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tour_id INT NOT NULL,
   image_url VARCHAR(255) NOT NULL,
@@ -49,58 +52,49 @@ CREATE TABLE IF NOT EXISTS tour_images (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS tour_schedules (
+CREATE TABLE tour_schedules (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tour_id INT NOT NULL,
   start_date DATE NOT NULL,
+  max_slots INT NOT NULL,
+  booked_slots INT NOT NULL DEFAULT 0,
   available_slots INT NOT NULL,
+  status ENUM('open', 'warning', 'guaranteed', 'full', 'cancelled', 'completed') NOT NULL DEFAULT 'open',
+  min_required_ratio DECIMAL(3,2) NOT NULL DEFAULT 0.50,
   INDEX idx_tour_schedules_tour_id (tour_id),
   INDEX idx_tour_schedules_start_date (start_date),
+  INDEX idx_tour_schedules_status (status),
   CONSTRAINT uq_tour_schedule UNIQUE (tour_id, start_date),
   CONSTRAINT fk_tour_schedules_tour
     FOREIGN KEY (tour_id)
     REFERENCES tours(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
+  CONSTRAINT chk_tour_schedules_max_slots CHECK (max_slots > 0),
+  CONSTRAINT chk_tour_schedules_booked_slots CHECK (booked_slots >= 0),
   CONSTRAINT chk_tour_schedules_slots CHECK (available_slots >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS tour_itineraries (
+CREATE TABLE tour_itineraries (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tour_id INT NOT NULL,
-  ngay_thu INT NOT NULL,
-  tieu_de VARCHAR(255) NOT NULL,
+  day_number INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
   description TEXT,
-  image_url VARCHAR(255),
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_tour_itineraries_tour_id (tour_id),
-  INDEX idx_tour_itineraries_ngay_thu (ngay_thu),
-  CONSTRAINT uq_tour_itineraries_tour_day UNIQUE (tour_id, ngay_thu),
+  INDEX idx_tour_itineraries_day_number (day_number),
+  CONSTRAINT uq_tour_itineraries_tour_day UNIQUE (tour_id, day_number),
   CONSTRAINT fk_tour_itineraries_tour
     FOREIGN KEY (tour_id)
     REFERENCES tours(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT chk_tour_itineraries_ngay_thu CHECK (ngay_thu > 0)
+  CONSTRAINT chk_tour_itineraries_day_number CHECK (day_number > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-SET @has_old_itinerary_desc_col := (
-  SELECT COUNT(*)
-  FROM INFORMATION_SCHEMA.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'tour_itineraries'
-    AND COLUMN_NAME = 'mo_ta'
-);
-SET @rename_itinerary_desc_sql := IF(
-  @has_old_itinerary_desc_col > 0,
-  'ALTER TABLE tour_itineraries CHANGE COLUMN mo_ta description TEXT NULL',
-  'SELECT 1'
-);
-PREPARE rename_itinerary_desc_stmt FROM @rename_itinerary_desc_sql;
-EXECUTE rename_itinerary_desc_stmt;
-DEALLOCATE PREPARE rename_itinerary_desc_stmt;
-
-CREATE TABLE IF NOT EXISTS bookings (
+CREATE TABLE bookings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   tour_id INT NOT NULL,
@@ -132,7 +126,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   CONSTRAINT chk_bookings_total CHECK (tong_tien >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS payments (
+CREATE TABLE payments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   booking_id INT NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
@@ -150,7 +144,7 @@ CREATE TABLE IF NOT EXISTS payments (
   CONSTRAINT chk_payments_amount CHECK (amount >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS reviews (
+CREATE TABLE reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   tour_id INT NOT NULL,
@@ -172,4 +166,26 @@ CREATE TABLE IF NOT EXISTS reviews (
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE tour_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  tour_id INT NOT NULL,
+  viewed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_tour_history_user_tour (user_id, tour_id),
+  INDEX idx_tour_history_user_id (user_id),
+  INDEX idx_tour_history_tour_id (tour_id),
+  INDEX idx_tour_history_viewed_at (viewed_at),
+  INDEX idx_tour_history_user_tour_viewed (user_id, tour_id, viewed_at),
+  CONSTRAINT fk_tour_history_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_tour_history_tour
+    FOREIGN KEY (tour_id)
+    REFERENCES tours(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

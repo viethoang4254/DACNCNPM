@@ -6,21 +6,26 @@ import "./AdminHeader.scss";
 
 const titleMap = {
   "/admin/dashboard": { label: "Bảng điều khiển", sub: "Tổng quan hệ thống" },
-  "/admin/users":     { label: "Người dùng", sub: "Quản lý tài khoản người dùng" },
-  "/admin/tours":     { label: "Tour", sub: "Danh sách tour du lịch" },
-  "/admin/bookings":  { label: "Đặt tour", sub: "Quản lý đơn đặt tour" },
-  "/admin/payments":  { label: "Thanh toán", sub: "Thống kê thanh toán" },
-  "/admin/reviews":   { label: "Đánh giá", sub: "Quản lý đánh giá" },
+  "/admin/users": { label: "Người dùng", sub: "Quản lý tài khoản người dùng" },
+  "/admin/tours": { label: "Tour", sub: "Danh sách tour du lịch" },
+  "/admin/schedules": {
+    label: "Lịch khởi hành",
+    sub: "Quản lý lịch khởi hành",
+  },
+  "/admin/itineraries": { label: "Lịch trình", sub: "Quản lý lịch trình" },
+  "/admin/bookings": { label: "Đặt tour", sub: "Quản lý đơn đặt tour" },
+  "/admin/payments": { label: "Thanh toán", sub: "Thống kê thanh toán" },
+  "/admin/reviews": { label: "Đánh giá", sub: "Quản lý đánh giá" },
 };
 
 function AdminHeader() {
-  const location  = useLocation();
-  const navigate  = useNavigate();
-  const user      = getAuthUser();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const user = getAuthUser();
 
   const page = useMemo(
     () => titleMap[location.pathname] || { label: "Quản trị", sub: "" },
-    [location.pathname]
+    [location.pathname],
   );
 
   const initials = (user?.ho_ten || "A")
@@ -51,7 +56,11 @@ function AdminHeader() {
             <span>{user?.email || ""}</span>
           </div>
         </div>
-        <button type="button" className="admin-btn admin-btn--ghost" onClick={handleLogout}>
+        <button
+          type="button"
+          className="admin-btn admin-btn--ghost"
+          onClick={handleLogout}
+        >
           <FaSignOutAlt />
           Đăng xuất
         </button>

@@ -116,12 +116,10 @@ function ToursPage() {
         urlState.tinh_thanh ||
         urlState.price ||
         urlState.duration ||
-        urlState.sort !== "newest" ||
-        urlState.page > 1,
+        urlState.sort !== "newest",
       ),
     [
       urlState.duration,
-      urlState.page,
       urlState.price,
       urlState.search,
       urlState.sort,
@@ -167,6 +165,8 @@ function ToursPage() {
             destination: urlState.destination || undefined,
             date: urlState.date || undefined,
             guests: urlState.guests || undefined,
+            page: urlState.page,
+            limit: PAGE_LIMIT,
           });
         } else {
           const params = buildApiParams(urlState);
@@ -301,7 +301,7 @@ function ToursPage() {
   function handlePageChange(nextPage) {
     updateUrlQuery(
       { page: nextPage },
-      { resetPage: false, dropHomeSearch: true },
+      { resetPage: false, dropHomeSearch: false },
     );
   }
 
@@ -350,7 +350,7 @@ function ToursPage() {
         <main className="tours-page__main">
           <div className="tours-page__main-scroll" ref={scrollContainerRef}>
             <div className="tours-page__toolbar">
-              <p className="tours-page__result-count">
+              {/* <p className="tours-page__result-count">
                 {isLoading && allTours.length === 0 ? (
                   "Đang tải..."
                 ) : (
@@ -360,7 +360,8 @@ function ToursPage() {
                       : "Không tìm thấy tour nào"}
                   </>
                 )}
-              </p>
+              </p> */}
+              <div></div>
               <div className="tours-page__sort-wrap">
                 <label htmlFor="sort-select" className="tours-page__sort-label">
                   Sắp xếp:

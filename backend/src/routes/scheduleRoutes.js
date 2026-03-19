@@ -5,6 +5,7 @@ import adminMiddleware from "../middlewares/adminMiddleware.js";
 import validationMiddleware from "../middlewares/validateMiddleware.js";
 import {
 	getAllSchedulesController,
+	getWarningSchedulesController,
 	createScheduleController,
 	updateScheduleController,
 	deleteScheduleController,
@@ -25,12 +26,10 @@ const updateValidation = [
 	body("start_date")
 		.isISO8601()
 		.withMessage("start_date must be a valid ISO8601 date"),
-	body("available_slots")
-		.isInt({ min: 0 })
-		.withMessage("available_slots must be an integer >= 0"),
 ];
 
 router.get("/", getAllSchedulesController);
+router.get("/warning", getWarningSchedulesController);
 
 router.post(
 	"/",
