@@ -7,6 +7,7 @@ export const getBookingById = async (id) => {
             u.ho_ten AS user_name, u.email AS user_email,
             t.ten_tour, t.gia, t.tinh_thanh,
             DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
+            s.status AS schedule_status,
             p.status AS payment_status,
             ti.image_url AS image
      FROM bookings b
@@ -32,6 +33,7 @@ export const getBookingsByUserId = async (userId) => {
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai, b.created_at,
             t.ten_tour, t.gia, t.tinh_thanh,
             DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
+            s.status AS schedule_status,
             p.status AS payment_status,
             ti.image_url AS image
      FROM bookings b
@@ -57,6 +59,7 @@ export const getAllBookings = async () => {
             u.ho_ten AS user_name, u.email AS user_email,
             t.ten_tour, t.gia, t.tinh_thanh,
             DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
+            s.status AS schedule_status,
             p.status AS payment_status,
             ti.image_url AS image
      FROM bookings b
