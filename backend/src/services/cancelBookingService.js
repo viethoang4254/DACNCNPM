@@ -5,12 +5,14 @@ import { getScheduleDaysLeft } from "./scheduleStatusService.js";
  * Calculate refund percentage based on days remaining until tour start
  * Rules:
  * - >= 7 days: 100%
- * - 3-6 days: 50%
- * - < 3 days: 0% (no refund)
+ * - 3-6 days: 70%
+ * - 1-2 days: 30%
+ * - < 24h: 0% (no refund)
  */
 export const calculateRefundPercentage = (daysLeft) => {
   if (daysLeft >= 7) return 100;
-  if (daysLeft >= 3) return 50;
+  if (daysLeft >= 3) return 70;
+  if (daysLeft >= 1) return 30;
   return 0;
 };
 
@@ -48,11 +50,11 @@ export const validateCancel = async (booking) => {
     return { valid: false, error: "Invalid schedule date" };
   }
 
-  // Cannot cancel if less than 1 day remaining
-  if (daysLeft < 1) {
-    return { 
-      valid: false, 
-      error: `Cannot cancel within 24 hours of tour departure (${daysLeft} days left)` 
+  // Cannot cancel if departure date already passed
+  if (daysLeft < 0) {
+    return {
+      valid: false,
+      error: `Cannot cancel after departure date (${daysLeft} days left)`,
     };
   }
 
@@ -74,7 +76,8 @@ export const getCancelPreview = async (booking) => {
     refundAmount,
     message: 
       refundPercentage === 100 ? "Refund 100% - Full refund" :
-      refundPercentage === 50 ? "Refund 50% - Partial refund" :
+      refundPercentage === 70 ? "Refund 70% - Partial refund" :
+      refundPercentage === 30 ? "Refund 30% - Partial refund" :
       "Refund 0% - No refund available"
   };
 };
