@@ -1,0 +1,32 @@
+.tour-detail__timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.tour-detail__timeline-empty {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.tour-detail__timeline-item {
+  display: block;
+  border: 1px solid #e8eef6;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.tour-detail__timeline-content h4 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #2563eb;
+}
+
+.tour-detail__timeline-description {
+  margin: 0;
+  font-size: 1.35rem;
+  white-space: pre-line;
+}

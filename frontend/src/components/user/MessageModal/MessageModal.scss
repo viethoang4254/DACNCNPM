@@ -1,0 +1,76 @@
+.message-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.message-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 18, 37, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.message-modal__dialog {
+  position: relative;
+  width: min(100%, 420px);
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e4ecf8;
+  box-shadow: 0 18px 42px rgba(8, 24, 52, 0.3);
+  padding: 22px 22px 18px;
+  text-align: center;
+}
+
+.message-modal__dialog h3 {
+  margin: 0;
+  font-size: 2rem;
+  color: #0e2242;
+}
+
+.message-modal__dialog p {
+  margin: 10px 0 0;
+  font-size: 1.45rem;
+  color: #4a5f7c;
+  line-height: 1.55;
+}
+
+.message-modal__icon {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 2.3rem;
+  font-weight: 700;
+}
+
+.message-modal__dialog button {
+  margin-top: 18px;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #fff;
+  background: #0f2d53;
+  cursor: pointer;
+}
+
+.message-modal__dialog--success .message-modal__icon {
+  background: #e9f9ee;
+  color: #1f9d48;
+}
+
+.message-modal__dialog--error .message-modal__icon {
+  background: #ffeaea;
+  color: #d02525;
+}
+
+.message-modal__dialog--error button {
+  background: #c93b2e;
+}
