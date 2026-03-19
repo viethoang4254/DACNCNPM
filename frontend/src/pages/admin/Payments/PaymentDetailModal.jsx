@@ -99,7 +99,9 @@ function PaymentDetailModal({
               <div className="admin-detail-item">
                 <label>Trạng thái</label>
                 <span>
-                  <span className={`status-pill status-pill--${payment.status}`}>
+                  <span
+                    className={`status-pill status-pill--${payment.status}`}
+                  >
                     {statusLabelMap[payment.status] || payment.status}
                   </span>
                 </span>
@@ -113,7 +115,12 @@ function PaymentDetailModal({
         </div>
 
         <div className="payment-detail-modal__footer">
-          <button type="button" className="admin-btn" onClick={onClose} disabled={loading}>
+          <button
+            type="button"
+            className="admin-btn"
+            onClick={onClose}
+            disabled={loading}
+          >
             Đóng
           </button>
 
@@ -125,7 +132,9 @@ function PaymentDetailModal({
                 disabled={loading}
                 onClick={() => onReject(payment)}
               >
-                {loading ? <span className="admin-inline-spinner" aria-hidden="true" /> : null}
+                {loading ? (
+                  <span className="admin-inline-spinner" aria-hidden="true" />
+                ) : null}
                 {loading ? "Đang xử lý..." : "Từ chối"}
               </button>
               <button
@@ -134,7 +143,9 @@ function PaymentDetailModal({
                 disabled={loading}
                 onClick={() => onConfirm(payment)}
               >
-                {loading ? <span className="admin-inline-spinner" aria-hidden="true" /> : null}
+                {loading ? (
+                  <span className="admin-inline-spinner" aria-hidden="true" />
+                ) : null}
                 {loading ? "Đang xử lý..." : "Xác nhận"}
               </button>
             </>

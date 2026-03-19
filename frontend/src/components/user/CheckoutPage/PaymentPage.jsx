@@ -155,7 +155,10 @@ function PaymentPage() {
           setSelectedMethod(foundPayment?.method || "");
           setCustomerForm({
             ho_ten:
-              normalized.customer.ho_ten || authUser?.ho_ten || authUser?.name || "",
+              normalized.customer.ho_ten ||
+              authUser?.ho_ten ||
+              authUser?.name ||
+              "",
             email: normalized.customer.email || authUser?.email || "",
             so_dien_thoai:
               normalized.customer.so_dien_thoai ||
@@ -239,7 +242,9 @@ function PaymentPage() {
       await apiClient.put(`/api/payments/${nextPaymentId}/user-confirm`);
       setPaymentId(nextPaymentId);
 
-      toast.success("Đã gửi yêu cầu xác nhận thanh toán. Vui lòng chờ admin duyệt.");
+      toast.success(
+        "Đã gửi yêu cầu xác nhận thanh toán. Vui lòng chờ admin duyệt.",
+      );
 
       navigate(`/payment-success/${booking.id}?paymentId=${nextPaymentId}`, {
         replace: true,
@@ -283,7 +288,9 @@ function PaymentPage() {
   if (error) {
     return (
       <main className="checkout-page">
-        <div className="checkout-page__state checkout-page__state--error">{error}</div>
+        <div className="checkout-page__state checkout-page__state--error">
+          {error}
+        </div>
       </main>
     );
   }
@@ -316,7 +323,9 @@ function PaymentPage() {
 
             <div className="checkout-page__payment-total">
               <span>Tổng tiền</span>
-              <strong>{Number(booking?.tong_tien || 0).toLocaleString("vi-VN")}đ</strong>
+              <strong>
+                {Number(booking?.tong_tien || 0).toLocaleString("vi-VN")}đ
+              </strong>
             </div>
 
             <button

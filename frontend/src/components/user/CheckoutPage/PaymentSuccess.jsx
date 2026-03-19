@@ -52,7 +52,9 @@ function PaymentSuccess() {
   const bookingIdFromQuery = Number(searchParams.get("bookingId") || 0);
   const bookingIdFromPath = Number(bookingIdParam || 0);
   const bookingIdFromUrl = bookingIdFromPath || bookingIdFromQuery;
-  const paymentId = Number(state?.paymentId || searchParams.get("paymentId") || 0);
+  const paymentId = Number(
+    state?.paymentId || searchParams.get("paymentId") || 0,
+  );
 
   const [booking, setBooking] = useState(state?.booking || null);
   const [isLoading, setIsLoading] = useState(false);
@@ -117,8 +119,16 @@ function PaymentSuccess() {
           thời gian sớm nhất.
         </p>
 
-        {isLoading && <p className="payment-success-page__hint">Đang tải thông tin booking...</p>}
-        {error && <p className="payment-success-page__hint payment-success-page__hint--error">{error}</p>}
+        {isLoading && (
+          <p className="payment-success-page__hint">
+            Đang tải thông tin booking...
+          </p>
+        )}
+        {error && (
+          <p className="payment-success-page__hint payment-success-page__hint--error">
+            {error}
+          </p>
+        )}
 
         {booking?.id ? (
           <div className="payment-success-page__meta">
@@ -128,7 +138,9 @@ function PaymentSuccess() {
             </div>
             <div>
               <span>Mã thanh toán</span>
-              <strong>{paymentId > 0 ? `PAYMENT#${paymentId}` : "Đang xử lý"}</strong>
+              <strong>
+                {paymentId > 0 ? `PAYMENT#${paymentId}` : "Đang xử lý"}
+              </strong>
             </div>
             <div>
               <span>Tổng thanh toán</span>
@@ -146,10 +158,16 @@ function PaymentSuccess() {
         ) : null}
 
         <div className="payment-success-page__actions">
-          <Link to="/" className="payment-success-page__btn payment-success-page__btn--solid">
+          <Link
+            to="/"
+            className="payment-success-page__btn payment-success-page__btn--solid"
+          >
             Về trang chủ
           </Link>
-          <Link to="/tours" className="payment-success-page__btn payment-success-page__btn--ghost">
+          <Link
+            to="/tours"
+            className="payment-success-page__btn payment-success-page__btn--ghost"
+          >
             Quay về trang Tours
           </Link>
         </div>
