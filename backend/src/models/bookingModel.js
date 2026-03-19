@@ -6,7 +6,7 @@ export const getBookingById = async (id) => {
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai, b.created_at,
             u.ho_ten AS user_name, u.email AS user_email,
             t.ten_tour, t.gia, t.tinh_thanh,
-            s.start_date,
+            DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
             p.status AS payment_status,
             ti.image_url AS image
      FROM bookings b
@@ -31,7 +31,7 @@ export const getBookingsByUserId = async (userId) => {
   const [rows] = await pool.execute(
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai, b.created_at,
             t.ten_tour, t.gia, t.tinh_thanh,
-            s.start_date,
+            DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
             p.status AS payment_status,
             ti.image_url AS image
      FROM bookings b
@@ -56,7 +56,7 @@ export const getAllBookings = async () => {
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai, b.created_at,
             u.ho_ten AS user_name, u.email AS user_email,
             t.ten_tour, t.gia, t.tinh_thanh,
-            s.start_date,
+            DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
             p.status AS payment_status,
             ti.image_url AS image
      FROM bookings b
@@ -108,6 +108,18 @@ export const expirePendingBookings = async (expireMinutes, connection = pool) =>
     [cutoff]
   );
   return Number(result?.affectedRows || 0);
+};
+
+export const getExpiredPendingScheduleIds = async (expireMinutes, connection = pool) => {
+  const cutoff = getBookingPendingCutoff(expireMinutes);
+  const [rows] = await connection.execute(
+    "SELECT DISTINCT schedule_id FROM bookings WHERE trang_thai = 'pending' AND created_at <= ?",
+    [cutoff]
+  );
+
+  return rows
+    .map((item) => Number(item.schedule_id))
+    .filter((id) => Number.isInteger(id) && id > 0);
 };
 
 export const expirePendingBookingById = async (id, expireMinutes, connection = pool) => {

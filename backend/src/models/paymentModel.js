@@ -12,7 +12,7 @@ const paymentSelectQuery = `SELECT p.id, p.booking_id, p.amount, p.method, p.sta
         b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai AS booking_status,
         u.ho_ten AS user_name, u.email AS user_email, u.so_dien_thoai AS user_phone,
         t.ten_tour,
-        s.start_date
+        DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date
  FROM payments p
  INNER JOIN bookings b ON b.id = p.booking_id
  INNER JOIN users u ON u.id = b.user_id

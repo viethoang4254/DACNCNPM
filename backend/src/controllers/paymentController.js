@@ -2,7 +2,6 @@ import asyncHandler from "../utils/asyncHandler.js";
 import pool from "../config/db.js";
 import { sendResponse } from "../utils/response.js";
 import {
-  expirePendingBookings,
   getBookingById,
 } from "../models/bookingModel.js";
 import {
@@ -12,13 +11,15 @@ import {
   getPaymentById,
 } from "../models/paymentModel.js";
 import { getPendingExpireMinutes } from "../utils/bookingExpiration.js";
+import { expirePendingBookingsAndSyncSchedules } from "../services/bookingMaintenanceService.js";
+import { refreshScheduleOccupancyAndStatusById } from "../services/scheduleStatusService.js";
 
 const PENDING_EXPIRE_MINUTES = getPendingExpireMinutes();
 
 export const createPaymentController = asyncHandler(async (req, res) => {
   const { booking_id, method, amount, status } = req.body;
 
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
 
   const booking = await getBookingById(booking_id);
   if (!booking) {
@@ -96,7 +97,7 @@ export const createPaymentController = asyncHandler(async (req, res) => {
 });
 
 export const getPaymentByBookingIdController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
   const bookingId = Number(req.params.bookingId);
   const payment = await getPaymentByBookingId(bookingId);
 
@@ -127,7 +128,7 @@ export const getPaymentByBookingIdController = asyncHandler(async (req, res) => 
 });
 
 export const getPaymentsController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
   const payments = await getAllPayments();
 
   return sendResponse(res, {
@@ -139,7 +140,7 @@ export const getPaymentsController = asyncHandler(async (req, res) => {
 });
 
 export const userConfirmPaymentController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
   const paymentId = Number(req.params.id);
 
   const payment = await getPaymentById(paymentId);
@@ -179,7 +180,7 @@ export const userConfirmPaymentController = asyncHandler(async (req, res) => {
 });
 
 export const confirmPaymentController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
   const paymentId = Number(req.params.id);
   const connection = await pool.getConnection();
 
@@ -227,40 +228,12 @@ export const confirmPaymentController = asyncHandler(async (req, res) => {
       });
     }
 
-    const [[schedule]] = await connection.execute(
-      "SELECT id, available_slots FROM tour_schedules WHERE id = ? LIMIT 1 FOR UPDATE",
-      [payment.schedule_id]
-    );
-
-    if (!schedule) {
-      await connection.rollback();
-      return sendResponse(res, {
-        statusCode: 404,
-        success: false,
-        message: "Schedule not found",
-        data: {},
-      });
-    }
-
-    if (Number(schedule.available_slots) < Number(payment.so_nguoi)) {
-      await connection.rollback();
-      return sendResponse(res, {
-        statusCode: 400,
-        success: false,
-        message: "Không đủ chỗ cho lịch khởi hành này",
-        data: {},
-      });
-    }
-
-    await connection.execute(
-      "UPDATE tour_schedules SET available_slots = available_slots - ? WHERE id = ?",
-      [payment.so_nguoi, payment.schedule_id]
-    );
-
     await connection.execute("UPDATE payments SET status = 'paid' WHERE id = ?", [paymentId]);
     await connection.execute("UPDATE bookings SET trang_thai = 'confirmed' WHERE id = ?", [payment.booking_id]);
 
     await connection.commit();
+
+    await refreshScheduleOccupancyAndStatusById(payment.schedule_id);
 
     const updated = await getPaymentById(paymentId);
     return sendResponse(res, {
@@ -278,7 +251,7 @@ export const confirmPaymentController = asyncHandler(async (req, res) => {
 });
 
 export const rejectPaymentController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
   const paymentId = Number(req.params.id);
   const connection = await pool.getConnection();
 
@@ -287,7 +260,7 @@ export const rejectPaymentController = asyncHandler(async (req, res) => {
 
     const [[payment]] = await connection.execute(
       `SELECT p.id, p.booking_id, p.status,
-              b.trang_thai, b.id AS booking_id_ref
+              b.trang_thai, b.id AS booking_id_ref, b.schedule_id
        FROM payments p
        INNER JOIN bookings b ON b.id = p.booking_id
        WHERE p.id = ?
@@ -320,6 +293,8 @@ export const rejectPaymentController = asyncHandler(async (req, res) => {
     await connection.execute("UPDATE bookings SET trang_thai = 'cancelled' WHERE id = ?", [payment.booking_id]);
 
     await connection.commit();
+
+    await refreshScheduleOccupancyAndStatusById(payment.schedule_id);
 
     const updated = await getPaymentById(paymentId);
     return sendResponse(res, {

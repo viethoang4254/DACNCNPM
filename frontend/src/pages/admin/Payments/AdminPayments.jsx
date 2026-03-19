@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { LuEye } from "react-icons/lu";
 import { toast } from "react-toastify";
 import DataTable from "../../../components/admin/DataTable";
 import Pagination from "../../../components/admin/Pagination";
 import apiClient from "../../../utils/apiClient";
+import { formatDateVi } from "../../../utils/dateOnly";
 import PaymentDetailModal from "./PaymentDetailModal";
 import "./Payments.scss";
 
@@ -19,10 +21,7 @@ function formatCurrency(value) {
 }
 
 function formatDate(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("vi-VN");
+  return formatDateVi(value, "-");
 }
 
 function AdminPayments() {
@@ -87,15 +86,19 @@ function AdminPayments() {
     },
     {
       key: "actions",
-      header: "Action",
+      header: "Thao tác",
       render: (row) => (
-        <button
-          type="button"
-          className="admin-btn admin-btn--ghost"
-          onClick={() => setSelectedPayment(row)}
-        >
-          Xem
-        </button>
+        <div className="admin-icon-actions">
+          <button
+            type="button"
+            className="admin-icon-btn"
+            onClick={() => setSelectedPayment(row)}
+            title="Xem chi tiết thanh toán"
+            aria-label={`Xem chi tiết thanh toán #${row.id}`}
+          >
+            <LuEye aria-hidden="true" />
+          </button>
+        </div>
       ),
     },
   ];

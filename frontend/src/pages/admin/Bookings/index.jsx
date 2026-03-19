@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { LuEye } from "react-icons/lu";
+import BookingViewModal from "../../../components/admin/BookingViewModal";
 import DataTable from "../../../components/admin/DataTable";
 import Pagination from "../../../components/admin/Pagination";
 import apiClient from "../../../utils/apiClient";
+import { formatDateVi } from "../../../utils/dateOnly";
 import "./Bookings.scss";
 
 const LIMIT = 10;
@@ -20,7 +23,7 @@ const paymentStatusLabels = {
 
 function Bookings() {
   const [bookings, setBookings] = useState([]);
-  const [selectedBooking, setSelected] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -62,14 +65,20 @@ function Bookings() {
   const columns = [
     { key: "id", header: "ID" },
     { key: "user_name", header: "Người dùng" },
-    { key: "ten_tour", header: "Tour" },
+    {
+      key: "ten_tour",
+      header: "Tour",
+      className: "booking-col-tour",
+      render: (row) => (
+        <span className="booking-tour-name" title={row.ten_tour || "-"}>
+          {row.ten_tour || "-"}
+        </span>
+      ),
+    },
     {
       key: "start_date",
       header: "Ngày đi",
-      render: (row) =>
-        row.start_date
-          ? new Date(row.start_date).toLocaleDateString("vi-VN")
-          : "—",
+      render: (row) => formatDateVi(row.start_date, "—"),
     },
     { key: "so_nguoi", header: "Số khách" },
     {
@@ -100,17 +109,20 @@ function Bookings() {
     },
     {
       key: "actions",
-      header: "",
+      header: "Thao tác",
+      className: "booking-col-actions",
       render: (row) => (
-        <button
-          type="button"
-          className={`admin-btn admin-btn--ghost`}
-          onClick={() =>
-            setSelected((prev) => (prev?.id === row.id ? null : row))
-          }
-        >
-          {selectedBooking?.id === row.id ? "Đóng" : "Xem"}
-        </button>
+        <div className="admin-icon-actions">
+          <button
+            type="button"
+            className="admin-icon-btn"
+            onClick={() => setSelectedBooking(row)}
+            title="Xem chi tiết"
+            aria-label={`Xem chi tiết đơn đặt #${row.id}`}
+          >
+            <LuEye aria-hidden="true" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -141,89 +153,12 @@ function Bookings() {
         />
       </div>
 
-      {selectedBooking && (
-        <div className="admin-card">
-          <div className="admin-toolbar">
-            <h3>Đơn đặt #{selectedBooking.id}</h3>
-            <button
-              type="button"
-              className="admin-btn"
-              onClick={() => setSelected(null)}
-            >
-              ✕ Đóng
-            </button>
-          </div>
-          <div className="admin-detail-grid">
-            <div className="admin-detail-item">
-              <label>Người dùng</label>
-              <span>{selectedBooking.user_name}</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Email</label>
-              <span>{selectedBooking.user_email || "—"}</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Tour</label>
-              <span>{selectedBooking.ten_tour}</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Ngày khởi hành</label>
-              <span>
-                {selectedBooking.start_date
-                  ? new Date(selectedBooking.start_date).toLocaleDateString(
-                      "vi-VN",
-                    )
-                  : "—"}
-              </span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Số người</label>
-              <span>{selectedBooking.so_nguoi}</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Tổng tiền</label>
-              <span>
-                {Number(selectedBooking.tong_tien).toLocaleString("vi-VN")} ₫
-              </span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Trạng thái</label>
-              <span>
-                <span
-                  className={`status-pill status-pill--${selectedBooking.trang_thai}`}
-                >
-                  {bookingStatusLabels[selectedBooking.trang_thai] ||
-                    selectedBooking.trang_thai}
-                </span>
-              </span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Thanh toán</label>
-              <span>
-                <span
-                  className={`status-pill status-pill--${selectedBooking.payment_status || "pending"}`}
-                >
-                  {paymentStatusLabels[
-                    selectedBooking.payment_status || "pending"
-                  ] ||
-                    selectedBooking.payment_status ||
-                    "pending"}
-                </span>
-              </span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Ngày đặt</label>
-              <span>
-                {selectedBooking.created_at
-                  ? new Date(selectedBooking.created_at).toLocaleDateString(
-                      "vi-VN",
-                    )
-                  : "—"}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      <BookingViewModal
+        booking={selectedBooking}
+        onClose={() => setSelectedBooking(null)}
+        bookingStatusLabels={bookingStatusLabels}
+        paymentStatusLabels={paymentStatusLabels}
+      />
     </div>
   );
 }

@@ -56,15 +56,22 @@ CREATE TABLE tour_schedules (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tour_id INT NOT NULL,
   start_date DATE NOT NULL,
+  max_slots INT NOT NULL,
+  booked_slots INT NOT NULL DEFAULT 0,
   available_slots INT NOT NULL,
+  status ENUM('open', 'warning', 'guaranteed', 'full', 'cancelled', 'completed') NOT NULL DEFAULT 'open',
+  min_required_ratio DECIMAL(3,2) NOT NULL DEFAULT 0.50,
   INDEX idx_tour_schedules_tour_id (tour_id),
   INDEX idx_tour_schedules_start_date (start_date),
+  INDEX idx_tour_schedules_status (status),
   CONSTRAINT uq_tour_schedule UNIQUE (tour_id, start_date),
   CONSTRAINT fk_tour_schedules_tour
     FOREIGN KEY (tour_id)
     REFERENCES tours(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
+  CONSTRAINT chk_tour_schedules_max_slots CHECK (max_slots > 0),
+  CONSTRAINT chk_tour_schedules_booked_slots CHECK (booked_slots >= 0),
   CONSTRAINT chk_tour_schedules_slots CHECK (available_slots >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

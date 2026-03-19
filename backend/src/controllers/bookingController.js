@@ -4,18 +4,19 @@ import { sendResponse } from "../utils/response.js";
 import {
   createBookingRecord,
   deleteBookingById,
-  expirePendingBookings,
   getAllBookings,
   getBookingById,
   getBookingsByUserId,
   updateBookingStatus,
 } from "../models/bookingModel.js";
 import { getPendingExpireMinutes } from "../utils/bookingExpiration.js";
+import { refreshScheduleOccupancyAndStatusById } from "../services/scheduleStatusService.js";
+import { expirePendingBookingsAndSyncSchedules } from "../services/bookingMaintenanceService.js";
 
 const PENDING_EXPIRE_MINUTES = getPendingExpireMinutes();
 
 export const createBookingController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
 
   const { schedule_id } = req.body;
   const quantity = Number(req.body.quantity ?? req.body.so_nguoi ?? 1);
@@ -34,7 +35,15 @@ export const createBookingController = asyncHandler(async (req, res) => {
     await connection.beginTransaction();
 
     const [[schedule]] = await connection.execute(
-      "SELECT id, tour_id, start_date, available_slots FROM tour_schedules WHERE id = ? LIMIT 1 FOR UPDATE",
+      `SELECT ts.id,
+              ts.tour_id,
+              ts.start_date,
+              COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) AS max_slots
+       FROM tour_schedules ts
+       JOIN tours t ON t.id = ts.tour_id
+       WHERE ts.id = ?
+       LIMIT 1
+       FOR UPDATE`,
       [schedule_id]
     );
 
@@ -72,7 +81,17 @@ export const createBookingController = asyncHandler(async (req, res) => {
       });
     }
 
-    if (schedule.available_slots < quantity) {
+    const [[occupied]] = await connection.execute(
+      "SELECT COALESCE(SUM(so_nguoi), 0) AS confirmed_booked FROM bookings WHERE schedule_id = ? AND trang_thai = 'confirmed'",
+      [schedule_id]
+    );
+
+    const availableSlots = Math.max(
+      Number(schedule.max_slots || 0) - Number(occupied?.confirmed_booked || 0),
+      0,
+    );
+
+    if (availableSlots < quantity) {
       await connection.rollback();
       return sendResponse(res, {
         statusCode: 400,
@@ -98,6 +117,8 @@ export const createBookingController = asyncHandler(async (req, res) => {
 
     await connection.commit();
 
+    await refreshScheduleOccupancyAndStatusById(schedule_id);
+
     const createdBooking = await getBookingById(bookingId);
 
     return sendResponse(res, {
@@ -118,7 +139,7 @@ export const createBookingController = asyncHandler(async (req, res) => {
 });
 
 export const getMyBookingsController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
   const bookings = await getBookingsByUserId(req.user.id);
 
   return sendResponse(res, {
@@ -130,7 +151,7 @@ export const getMyBookingsController = asyncHandler(async (req, res) => {
 });
 
 export const getBookingsController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
   const bookings = await getAllBookings();
 
   return sendResponse(res, {
@@ -142,7 +163,7 @@ export const getBookingsController = asyncHandler(async (req, res) => {
 });
 
 export const getBookingByIdController = asyncHandler(async (req, res) => {
-  await expirePendingBookings(PENDING_EXPIRE_MINUTES);
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
   const booking = await getBookingById(Number(req.params.id));
   if (!booking) {
     return sendResponse(res, {
@@ -193,30 +214,8 @@ export const updateBookingStatusController = asyncHandler(async (req, res) => {
     });
   }
 
-  if (booking.trang_thai === "pending" && trang_thai === "confirmed") {
-    const [updateResult] = await pool.execute(
-      "UPDATE tour_schedules SET available_slots = available_slots - ? WHERE id = ? AND available_slots >= ?",
-      [booking.so_nguoi, booking.schedule_id, booking.so_nguoi]
-    );
-
-    if (updateResult.affectedRows === 0) {
-      return sendResponse(res, {
-        statusCode: 400,
-        success: false,
-        message: "Không đủ chỗ cho lịch khởi hành này",
-        data: {},
-      });
-    }
-  }
-
-  if (booking.trang_thai === "confirmed" && trang_thai === "cancelled") {
-    await pool.execute("UPDATE tour_schedules SET available_slots = available_slots + ? WHERE id = ?", [
-      booking.so_nguoi,
-      booking.schedule_id,
-    ]);
-  }
-
   await updateBookingStatus(id, trang_thai);
+  await refreshScheduleOccupancyAndStatusById(booking.schedule_id);
 
   return sendResponse(res, {
     statusCode: 200,
@@ -248,14 +247,8 @@ export const deleteBookingController = asyncHandler(async (req, res) => {
     });
   }
 
-  if (booking.trang_thai === "confirmed") {
-    await pool.execute("UPDATE tour_schedules SET available_slots = available_slots + ? WHERE id = ?", [
-      booking.so_nguoi,
-      booking.schedule_id,
-    ]);
-  }
-
   await deleteBookingById(id);
+  await refreshScheduleOccupancyAndStatusById(booking.schedule_id);
 
   return sendResponse(res, {
     statusCode: 200,

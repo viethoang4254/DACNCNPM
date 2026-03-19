@@ -503,16 +503,26 @@ export const setTourCoverImageById = async (imageId) => {
 
 export const getTourSchedules = async (tourId) => {
   const [rows] = await pool.execute(
-    `SELECT id, tour_id, start_date, available_slots,
-            (SELECT so_nguoi_toi_da FROM tours WHERE id = tour_id LIMIT 1) AS so_nguoi_toi_da,
+    `SELECT ts.id,
+            ts.tour_id,
+            ts.start_date,
+            GREATEST(
+              COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) -
+              COALESCE(SUM(CASE WHEN b.trang_thai = 'confirmed' THEN b.so_nguoi ELSE 0 END), 0),
+              0
+            ) AS available_slots,
+            t.so_nguoi_toi_da,
             CASE
-              WHEN DATE(start_date) > CURDATE() THEN 'Sắp khởi hành'
-              WHEN DATE(start_date) = CURDATE() THEN 'Đang khởi hành'
+              WHEN DATE(ts.start_date) > CURDATE() THEN 'Sắp khởi hành'
+              WHEN DATE(ts.start_date) = CURDATE() THEN 'Đang khởi hành'
               ELSE 'Đã khởi hành'
             END AS status
-     FROM tour_schedules
-     WHERE tour_id = ? AND DATE(start_date) >= CURDATE()
-     ORDER BY start_date ASC`,
+     FROM tour_schedules ts
+     JOIN tours t ON t.id = ts.tour_id
+     LEFT JOIN bookings b ON b.schedule_id = ts.id
+     WHERE ts.tour_id = ? AND DATE(ts.start_date) >= CURDATE()
+     GROUP BY ts.id, ts.tour_id, ts.start_date, ts.max_slots, t.so_nguoi_toi_da
+     ORDER BY ts.start_date ASC`,
     [tourId]
   );
   return rows;
