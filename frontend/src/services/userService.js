@@ -56,3 +56,23 @@ export const getMyBookings = async () => {
     image: resolveImageUrl(item.image || ""),
   }));
 };
+
+/**
+ * Get cancel preview - shows refund amount before confirming
+ * @param {number} bookingId
+ * @returns {Promise} { bookingId, tourName, startDate, originalAmount, daysLeft, refundPercentage, refundAmount, message }
+ */
+export const getCancelPreview = async (bookingId) => {
+  const response = await apiClient.get(`/api/bookings/${bookingId}/cancel-preview`);
+  return response.data?.data || null;
+};
+
+/**
+ * Cancel booking with auto-refund
+ * @param {number} bookingId
+ * @returns {Promise} { bookingId, tourName, refundAmount, refundPercentage, refundStatus, cancelledAt, booking }
+ */
+export const cancelBooking = async (bookingId) => {
+  const response = await apiClient.post(`/api/bookings/${bookingId}/cancel`);
+  return response.data?.data || null;
+};

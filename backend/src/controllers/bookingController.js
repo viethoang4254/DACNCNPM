@@ -7,11 +7,17 @@ import {
   getAllBookings,
   getBookingById,
   getBookingsByUserId,
+  getBookingForCancel,
   updateBookingStatus,
 } from "../models/bookingModel.js";
 import { getPendingExpireMinutes } from "../utils/bookingExpiration.js";
 import { refreshScheduleOccupancyAndStatusById } from "../services/scheduleStatusService.js";
 import { expirePendingBookingsAndSyncSchedules } from "../services/bookingMaintenanceService.js";
+import { 
+  cancelBookingService, 
+  getCancelPreview, 
+  validateCancel 
+} from "../services/cancelBookingService.js";
 
 const PENDING_EXPIRE_MINUTES = getPendingExpireMinutes();
 
@@ -256,4 +262,116 @@ export const deleteBookingController = asyncHandler(async (req, res) => {
     message: "Booking deleted successfully",
     data: {},
   });
+});
+
+/**
+ * GET /api/bookings/:id/cancel-preview
+ * Preview refund amount before cancelling
+ */
+export const cancelPreviewController = asyncHandler(async (req, res) => {
+  const bookingId = Number(req.params.id);
+  const userId = req.user.id;
+
+  const booking = await getBookingForCancel(bookingId, userId);
+
+  if (!booking) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Booking not found or not yours",
+      data: {},
+    });
+  }
+
+  // Validate if can cancel
+  const validation = await validateCancel(booking);
+  if (!validation.valid) {
+    return sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: validation.error,
+      data: {},
+    });
+  }
+
+  // Get cancel preview
+  const preview = await getCancelPreview(booking);
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Cancel preview retrieved successfully",
+    data: {
+      bookingId: booking.id,
+      tourName: booking.ten_tour,
+      startDate: booking.start_date,
+      originalAmount: booking.tong_tien,
+      ...preview,
+    },
+  });
+});
+
+/**
+ * POST /api/bookings/:id/cancel
+ * Execute booking cancellation with auto-refund calculation
+ */
+export const cancelBookingController = asyncHandler(async (req, res) => {
+  const bookingId = Number(req.params.id);
+  const userId = req.user.id;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Get booking with details
+    const booking = await getBookingForCancel(bookingId, userId, connection);
+
+    if (!booking) {
+      await connection.rollback();
+      return sendResponse(res, {
+        statusCode: 404,
+        success: false,
+        message: "Booking not found or not yours",
+        data: {},
+      });
+    }
+
+    // Execute cancellation service
+    const cancelResult = await cancelBookingService(bookingId, userId, connection);
+
+    if (!cancelResult.success) {
+      await connection.rollback();
+      return sendResponse(res, {
+        statusCode: 400,
+        success: false,
+        message: cancelResult.error,
+        data: {},
+      });
+    }
+
+    await connection.commit();
+
+    // Fetch updated booking
+    const updatedBooking = await getBookingById(bookingId);
+
+    return sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Booking cancelled successfully",
+      data: {
+        bookingId,
+        tourName: booking.ten_tour,
+        refundAmount: cancelResult.refundAmount,
+        refundPercentage: cancelResult.refundPercentage,
+        refundStatus: cancelResult.refundStatus,
+        cancelledAt: cancelResult.cancelledAt,
+        booking: updatedBooking,
+      },
+    });
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 });

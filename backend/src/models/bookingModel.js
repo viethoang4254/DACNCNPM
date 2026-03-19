@@ -133,3 +133,53 @@ export const expirePendingBookingById = async (id, expireMinutes, connection = p
   );
   return Number(result?.affectedRows || 0);
 };
+
+/**
+ * Get booking details with cancel preview info
+ */
+export const getBookingForCancel = async (id, userId, connection = pool) => {
+  const [rows] = await connection.execute(
+    `SELECT b.id, b.user_id, b.schedule_id, b.tour_id, b.so_nguoi, b.tong_tien, 
+            b.trang_thai, b.cancelled_at, s.start_date, s.max_slots, s.booked_slots,
+            s.min_required_ratio, p.status AS payment_status,
+            t.ten_tour, t.gia
+     FROM bookings b
+     INNER JOIN tour_schedules s ON s.id = b.schedule_id
+     INNER JOIN tours t ON t.id = b.tour_id
+     LEFT JOIN payments p ON p.booking_id = b.id
+     WHERE b.id = ? AND b.user_id = ?
+     LIMIT 1`,
+    [id, userId]
+  );
+  return rows[0] || null;
+};
+
+/**
+ * Get bookings with cancel status info for user history
+ */
+export const getBookingsByUserIdWithCancelInfo = async (userId, connection = pool) => {
+  const [rows] = await connection.execute(
+    `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, 
+            b.trang_thai, b.created_at, b.cancelled_at, b.refund_amount, 
+            b.refund_status, b.cancelled_by,
+            t.ten_tour, t.gia, t.tinh_thanh,
+            DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
+            s.status AS schedule_status,
+            p.status AS payment_status,
+            ti.image_url AS image
+     FROM bookings b
+     INNER JOIN tours t ON t.id = b.tour_id
+     INNER JOIN tour_schedules s ON s.id = b.schedule_id
+     LEFT JOIN payments p ON p.booking_id = b.id
+     LEFT JOIN (
+       SELECT tour_id, MIN(id) AS first_image_id
+       FROM tour_images
+       GROUP BY tour_id
+     ) tif ON tif.tour_id = t.id
+     LEFT JOIN tour_images ti ON ti.id = tif.first_image_id
+     WHERE b.user_id = ?
+     ORDER BY b.created_at DESC`,
+    [userId]
+  );
+  return rows;
+};
