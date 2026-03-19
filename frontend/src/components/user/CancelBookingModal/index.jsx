@@ -87,8 +87,9 @@ function CancelBookingModal({ booking, onCancel, onSuccess }) {
               </p>
               <ul>
                 <li>Còn ≥7 ngày: Hoàn 100%</li>
-                <li>Còn 3-6 ngày: Hoàn 50%</li>
-                <li>Còn &lt;3 ngày: Hoàn 0%</li>
+                <li>Còn 3-6 ngày: Hoàn 70%</li>
+                <li>Còn 1-2 ngày: Hoàn 30%</li>
+                <li>Còn &lt;24 giờ: Hoàn 0%</li>
               </ul>
             </div>
 

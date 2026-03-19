@@ -69,7 +69,7 @@ const canCancelBooking = (booking) => {
     };
   }
 
-  // Check time remaining (need at least 1 day)
+  // Check time remaining (only block after departure date)
   const daysLeft = getDaysRemaining(booking.start_date);
   if (daysLeft === null) {
     return {
@@ -78,10 +78,10 @@ const canCancelBooking = (booking) => {
     };
   }
 
-  if (daysLeft < 1) {
+  if (daysLeft < 0) {
     return {
       canCancel: false,
-      reason: "Không thể hủy trong vòng 24 giờ trước khởi hành",
+      reason: "Không thể hủy sau ngày khởi hành",
     };
   }
 
@@ -275,8 +275,11 @@ function BookingHistory() {
                   )}
 
                   <div className="booking-history__actions">
-                    <Link to={`/tours/${booking.tour_id}`}>
-                      Xem chi tiết tour
+                    <Link
+                      to={`/tours/${booking.tour_id}`}
+                      className="booking-history__detail-btn"
+                    >
+                      Xem chi tiết
                     </Link>
                     {cancelability.canCancel ? (
                       <button

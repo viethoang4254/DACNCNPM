@@ -119,17 +119,11 @@
 }
 
 .booking-history__days-left {
-  font-size: 1.35rem !important;
-  color: #856404 !important;
-  padding: 6px 10px;
-  background: #fff8e1;
-  border-radius: 4px;
-  display: inline-block;
-  margin-top: 4px;
+  font-size: 1.35rem;
+  color: #856404;
 
   &.days-left--urgent {
-    background: #fff3cd;
-    color: #c53f2a !important;
+    color: #c53f2a;
   }
 }
 
@@ -174,10 +168,22 @@
   flex-wrap: wrap;
 }
 
-.booking-history__actions a {
-  color: #0f5cb3;
+.booking-history__detail-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: #0f5cb3;
+  color: #fff;
+  border-radius: 6px;
   font-size: 1.35rem;
   font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #0b4a91;
+  }
 }
 
 .booking-history__cancel-btn {
@@ -236,7 +242,7 @@
     flex-direction: column;
   }
 
-  .booking-history__actions a,
+  .booking-history__detail-btn,
   .booking-history__cancel-btn {
     width: 100%;
     text-align: center;
