@@ -234,8 +234,7 @@ function TourSchedules() {
 
       if (
         !current.primaryScheduleDate ||
-        toDateKey(schedule.start_date) <
-          toDateKey(current.primaryScheduleDate)
+        toDateKey(schedule.start_date) < toDateKey(current.primaryScheduleDate)
       ) {
         current.primaryScheduleDate = schedule.start_date;
         current.remaining_slots = remaining;
@@ -261,7 +260,7 @@ function TourSchedules() {
       schedules.some(
         (schedule) =>
           Number(schedule.tour_id) === Number(tour.id) &&
-            toDateKey(schedule.start_date) === startDateFilter,
+          toDateKey(schedule.start_date) === startDateFilter,
       );
 
     return matchesKeyword && matchesDate;

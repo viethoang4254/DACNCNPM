@@ -43,9 +43,7 @@ function EditScheduleModal({
   return (
     <div
       className="admin-modal__backdrop"
-      onClick={(e) =>
-        e.target === e.currentTarget && !loading && onClose()
-      }
+      onClick={(e) => e.target === e.currentTarget && !loading && onClose()}
     >
       <div className="schedule-modal">
         <div className="schedule-modal__header">
@@ -64,7 +62,11 @@ function EditScheduleModal({
           </button>
         </div>
 
-        <form className="schedule-modal__body" onSubmit={handleSubmit} noValidate>
+        <form
+          className="schedule-modal__body"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <div className="schedule-modal__field">
             <label className="schedule-modal__label">Ngày khởi hành</label>
             <input
