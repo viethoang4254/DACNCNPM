@@ -92,8 +92,24 @@ function BookingHistory() {
       {!isLoading && !error && hasData && (
         <div className="booking-history__list">
           {visibleBookings.map((booking) => {
-            const status = STATUS_MAP[booking.trang_thai] || {
-              label: booking.trang_thai || "Không rõ",
+            const bookingStatusKey = String(booking.trang_thai || "").toLowerCase();
+            const scheduleStatusKey = String(
+              booking.schedule_status || "",
+            ).toLowerCase();
+            const isScheduleCancelled =
+              scheduleStatusKey === "cancelled" || scheduleStatusKey === "canceled";
+            const effectiveStatusKey =
+              isScheduleCancelled ? "cancelled" : bookingStatusKey;
+
+            const cancellationReason =
+              effectiveStatusKey === "cancelled"
+                ? isScheduleCancelled
+                  ? "Lý do hủy: Lịch khởi hành không đủ số lượng khách tối thiểu."
+                  : "Lý do hủy: Đơn đặt tour đã bị hủy."
+                : "";
+
+            const status = STATUS_MAP[effectiveStatusKey] || {
+              label: effectiveStatusKey || "Không rõ",
               className: "pending",
             };
 
@@ -132,6 +148,12 @@ function BookingHistory() {
                     Tổng tiền:{" "}
                     <strong>{formatCurrency(booking.tong_tien)}</strong>
                   </p>
+
+                  {cancellationReason && (
+                    <p className="booking-history__cancel-reason">
+                      {cancellationReason}
+                    </p>
+                  )}
 
                   <div className="booking-history__actions">
                     <Link to={`/tours/${booking.tour_id}`}>

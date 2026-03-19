@@ -87,6 +87,8 @@
   margin: 0;
   font-size: 1.75rem;
   color: #142b4c;
+  flex: 1;
+  min-width: 0;
 }
 
 .booking-history__content p {
@@ -99,12 +101,19 @@
   color: #15365f;
 }
 
+.booking-history__cancel-reason {
+  margin-top: 2px;
+  color: #c73838;
+  font-weight: 600;
+}
+
 .status-badge {
   border-radius: 999px;
   padding: 5px 10px;
   font-size: 1.2rem;
   font-weight: 700;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-badge--pending {
