@@ -104,6 +104,7 @@ function AdminTours() {
       });
 
       const nextTours = Array.isArray(res.data?.data) ? res.data.data : [];
+
       setTours(nextTours);
       setImageTour((prev) => {
         if (!prev) return prev;

@@ -169,7 +169,7 @@ function Header() {
                     </span>
                     Thông tin cá nhân
                   </NavLink>
-                  <NavLink to="/info-user/bookings" className="account__btn-login">
+                  {/* <NavLink to="/info-user/bookings" className="account__btn-login">
                     <span
                       className="account__menu-item-icon"
                       aria-hidden="true"
@@ -177,7 +177,7 @@ function Header() {
                       <FaClipboardList />
                     </span>
                     Lịch sử đặt tour
-                  </NavLink>
+                  </NavLink> */}
                   <NavLink to="/tour-history" className="account__btn-login">
                     <span
                       className="account__menu-item-icon"

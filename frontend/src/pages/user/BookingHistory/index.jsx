@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  getApiMessage,
-  getMyBookings,
-} from "../../../services/userService";
+import { getApiMessage, getMyBookings } from "../../../services/userService";
 import "./BookingHistory.scss";
 
 const STATUS_MAP = {
@@ -59,7 +56,15 @@ function BookingHistory() {
     };
   }, []);
 
-  const hasData = useMemo(() => bookings.length > 0, [bookings.length]);
+  const visibleBookings = useMemo(
+    () => bookings.filter((booking) => Boolean(booking.payment_status)),
+    [bookings],
+  );
+
+  const hasData = useMemo(
+    () => visibleBookings.length > 0,
+    [visibleBookings.length],
+  );
 
   return (
     <section className="booking-history">
@@ -68,7 +73,9 @@ function BookingHistory() {
         <p>Theo dõi trạng thái các đơn đặt tour gần đây của bạn.</p>
       </div>
 
-      {isLoading && <p className="booking-history__message">Đang tải dữ liệu...</p>}
+      {isLoading && (
+        <p className="booking-history__message">Đang tải dữ liệu...</p>
+      )}
       {!isLoading && error && (
         <p className="booking-history__message booking-history__message--error">
           {error}
@@ -77,14 +84,14 @@ function BookingHistory() {
 
       {!isLoading && !error && !hasData && (
         <div className="booking-history__empty">
-          <p>Bạn chưa có đơn đặt tour nào.</p>
+          <p>Bạn chưa có đơn đặt tour nào đã gửi yêu cầu thanh toán.</p>
           <Link to="/tours">Khám phá tour ngay</Link>
         </div>
       )}
 
       {!isLoading && !error && hasData && (
         <div className="booking-history__list">
-          {bookings.map((booking) => {
+          {visibleBookings.map((booking) => {
             const status = STATUS_MAP[booking.trang_thai] || {
               label: booking.trang_thai || "Không rõ",
               className: "pending",
@@ -103,26 +110,33 @@ function BookingHistory() {
                 <div className="booking-history__content">
                   <div className="booking-history__row">
                     <h3>{booking.ten_tour || `Tour #${booking.tour_id}`}</h3>
-                    <span className={`status-badge status-badge--${status.className}`}>
+                    <span
+                      className={`status-badge status-badge--${status.className}`}
+                    >
                       {status.label}
                     </span>
                   </div>
 
                   <p>
-                    Điểm đến: <strong>{booking.tinh_thanh || "Đang cập nhật"}</strong>
+                    Điểm đến:{" "}
+                    <strong>{booking.tinh_thanh || "Đang cập nhật"}</strong>
                   </p>
                   <p>
-                    Ngày khởi hành: <strong>{formatDate(booking.start_date)}</strong>
+                    Ngày khởi hành:{" "}
+                    <strong>{formatDate(booking.start_date)}</strong>
                   </p>
                   <p>
                     Số người: <strong>{booking.so_nguoi || 0}</strong>
                   </p>
                   <p>
-                    Tổng tiền: <strong>{formatCurrency(booking.tong_tien)}</strong>
+                    Tổng tiền:{" "}
+                    <strong>{formatCurrency(booking.tong_tien)}</strong>
                   </p>
 
                   <div className="booking-history__actions">
-                    <Link to={`/tours/${booking.tour_id}`}>Xem chi tiết tour</Link>
+                    <Link to={`/tours/${booking.tour_id}`}>
+                      Xem chi tiết tour
+                    </Link>
                   </div>
                 </div>
               </article>

@@ -10,6 +10,7 @@ import EditScheduleModal from "../../../components/admin/EditScheduleModal";
 import TourSchedulesViewModal from "../../../components/admin/TourSchedulesViewModal";
 
 import apiClient from "../../../utils/apiClient";
+import { formatDateVi, toDateKey } from "../../../utils/dateOnly";
 import "./TourSchedules.scss";
 
 const LIMIT = 10;
@@ -27,6 +28,7 @@ function TourSchedules() {
   const [submitting, setSubmitting] = useState(false);
 
   const [search, setSearch] = useState("");
+  const [startDateFilter, setStartDateFilter] = useState("");
   const [page, setPage] = useState(1);
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -51,12 +53,7 @@ function TourSchedules() {
     err?.response?.data?.message ||
     fallback;
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString("vi-VN");
-  };
+  const formatDate = (dateStr) => formatDateVi(dateStr);
 
   async function fetchBaseData() {
     try {
@@ -70,7 +67,9 @@ function TourSchedules() {
         }),
       ]);
 
-      setSchedules(Array.isArray(scheduleRes.data?.data) ? scheduleRes.data.data : []);
+      setSchedules(
+        Array.isArray(scheduleRes.data?.data) ? scheduleRes.data.data : [],
+      );
       setTours(Array.isArray(toursRes.data?.data) ? toursRes.data.data : []);
     } catch (err) {
       setError(getApiMessage(err, "Không thể tải danh sách lịch khởi hành"));
@@ -86,11 +85,17 @@ function TourSchedules() {
       const allSchedules = Array.isArray(res.data?.data) ? res.data.data : [];
       const items = allSchedules
         .filter((schedule) => Number(schedule.tour_id) === Number(tourId))
-        .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+        .sort((a, b) =>
+          toDateKey(a.start_date).localeCompare(toDateKey(b.start_date)),
+        );
       setTourSchedules(items);
       return items;
     } catch (err) {
-      openNotification("Lỗi", getApiMessage(err, "Không thể tải lịch của tour"), "danger");
+      openNotification(
+        "Lỗi",
+        getApiMessage(err, "Không thể tải lịch của tour"),
+        "danger",
+      );
       setTourSchedules([]);
       return [];
     } finally {
@@ -118,7 +123,11 @@ function TourSchedules() {
         await fetchSchedulesByTour(selectedTour.id);
       }
 
-      openNotification("Thành công", "Thêm lịch khởi hành thành công", "primary");
+      openNotification(
+        "Thành công",
+        "Thêm lịch khởi hành thành công",
+        "primary",
+      );
     } catch (err) {
       const apiMessage = err?.response?.data?.message;
       const friendlyMessage =
@@ -147,7 +156,11 @@ function TourSchedules() {
       setSelectedSchedule(null);
       openNotification("Thành công", "Cập nhật lịch thành công", "primary");
     } catch (err) {
-      openNotification("Lỗi", getApiMessage(err, "Cập nhật lịch thất bại"), "danger");
+      openNotification(
+        "Lỗi",
+        getApiMessage(err, "Cập nhật lịch thất bại"),
+        "danger",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -171,10 +184,18 @@ function TourSchedules() {
       }
 
       setSelectedSchedule(null);
-      openNotification("Thành công", "Xóa lịch khởi hành thành công", "primary");
+      openNotification(
+        "Thành công",
+        "Xóa lịch khởi hành thành công",
+        "primary",
+      );
     } catch (err) {
       setShowDeleteConfirm(false);
-      openNotification("Lỗi", getApiMessage(err, "Xóa lịch thất bại"), "danger");
+      openNotification(
+        "Lỗi",
+        getApiMessage(err, "Xóa lịch thất bại"),
+        "danger",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -213,7 +234,8 @@ function TourSchedules() {
 
       if (
         !current.primaryScheduleDate ||
-        new Date(schedule.start_date) < new Date(current.primaryScheduleDate)
+        toDateKey(schedule.start_date) <
+          toDateKey(current.primaryScheduleDate)
       ) {
         current.primaryScheduleDate = schedule.start_date;
         current.remaining_slots = remaining;
@@ -228,15 +250,25 @@ function TourSchedules() {
 
   const filteredTours = groupedTours.filter((tour) => {
     const keyword = search.trim().toLowerCase();
-    if (!keyword) return true;
-    return String(tour.ten_tour || "").toLowerCase().includes(keyword);
+    const matchesKeyword =
+      !keyword ||
+      String(tour.ten_tour || "")
+        .toLowerCase()
+        .includes(keyword);
+
+    const matchesDate =
+      !startDateFilter ||
+      schedules.some(
+        (schedule) =>
+          Number(schedule.tour_id) === Number(tour.id) &&
+            toDateKey(schedule.start_date) === startDateFilter,
+      );
+
+    return matchesKeyword && matchesDate;
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredTours.length / LIMIT));
-  const paginatedTours = filteredTours.slice(
-    (page - 1) * LIMIT,
-    page * LIMIT,
-  );
+  const paginatedTours = filteredTours.slice((page - 1) * LIMIT, page * LIMIT);
 
   useEffect(() => {
     if (page > totalPages) setPage(1);
@@ -254,20 +286,26 @@ function TourSchedules() {
       key: "booked_slots",
       header: "Đã đặt",
       render: (row) => (
-        <span className="schedule-stat schedule-stat--booked">{row.booked_slots}</span>
+        <span className="schedule-stat schedule-stat--booked">
+          {row.booked_slots}
+        </span>
       ),
     },
     {
       key: "remaining_slots",
       header: "Còn lại",
       render: (row) => (
-        <span className="schedule-stat schedule-stat--remaining">{row.remaining_slots}</span>
+        <span className="schedule-stat schedule-stat--remaining">
+          {row.remaining_slots}
+        </span>
       ),
     },
     {
       key: "schedules_count",
       header: "Số lịch khởi hành",
-      render: (row) => <span className="schedule-stat">{row.schedules_count}</span>,
+      render: (row) => (
+        <span className="schedule-stat">{row.schedules_count}</span>
+      ),
     },
     {
       key: "actions",
@@ -322,6 +360,17 @@ function TourSchedules() {
               }}
             />
           </div>
+
+          <input
+            type="date"
+            className="admin-input admin-page-schedules__date-input"
+            value={startDateFilter}
+            onChange={(e) => {
+              setStartDateFilter(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Lọc theo ngày khởi hành"
+          />
         </div>
       </div>
 
@@ -361,7 +410,8 @@ function TourSchedules() {
             max_slots:
               schedule.so_nguoi_toi_da ||
               selectedTour?.slots ||
-              tours.find((tour) => Number(tour.id) === Number(schedule.tour_id))?.so_nguoi_toi_da ||
+              tours.find((tour) => Number(tour.id) === Number(schedule.tour_id))
+                ?.so_nguoi_toi_da ||
               0,
           });
           setShowEditModal(true);

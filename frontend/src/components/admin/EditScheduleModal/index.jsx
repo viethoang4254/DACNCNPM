@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
+import { toDateKey } from "../../../utils/dateOnly";
 import "./EditScheduleModal.scss";
 
 function EditScheduleModal({
@@ -18,9 +19,7 @@ function EditScheduleModal({
       setErrors({});
       return;
     }
-    setStartDate(
-      schedule.start_date ? String(schedule.start_date).slice(0, 10) : "",
-    );
+    setStartDate(toDateKey(schedule.start_date));
   }, [open, schedule]);
 
   function validate() {

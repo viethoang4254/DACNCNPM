@@ -8,11 +8,65 @@ function formatCurrency(value) {
   return Number(value || 0).toLocaleString("vi-VN");
 }
 
-function formatDate(value) {
+function toLocalDateKey(value) {
   if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("vi-VN");
+
+  if (typeof value === "string") {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return `${match[1]}-${match[2]}-${match[3]}`;
+    }
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function formatDate(value) {
+  const key = toLocalDateKey(value);
+  if (!key) return typeof value === "string" ? value : "";
+
+  const [year, month, day] = key.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function getDaysLeft(value) {
+  const key = toLocalDateKey(value);
+  if (!key) return null;
+
+  const parts = key.split("-").map(Number);
+  if (parts.length !== 3 || parts.some((item) => !Number.isInteger(item))) {
+    return null;
+  }
+
+  const [year, month, day] = parts;
+  const startDate = new Date(year, month - 1, day);
+  if (Number.isNaN(startDate.getTime())) return null;
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  return Math.floor(
+    (startDate.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
+  );
+}
+
+function isScheduleBookable(schedule) {
+  if (!schedule) return false;
+
+  const availableSlots = Number(schedule.available_slots || 0);
+  const daysLeft = getDaysLeft(schedule.start_date);
+
+  if (daysLeft !== null && daysLeft <= 0) {
+    return false;
+  }
+
+  return availableSlots > 0;
 }
 
 function BookingCard({ tour, schedules = [] }) {
@@ -36,15 +90,18 @@ function BookingCard({ tour, schedules = [] }) {
     [scheduleOptions, selectedScheduleId],
   );
 
-  const isSelectedScheduleAvailable = Number(selectedSchedule?.available_slots || 0) > 0;
-  const canBook = Boolean(selectedScheduleId) && isSelectedScheduleAvailable && !submitting;
+  const isSelectedScheduleAvailable = isScheduleBookable(selectedSchedule);
+  const canBook =
+    Boolean(selectedScheduleId) && isSelectedScheduleAvailable && !submitting;
 
   useEffect(() => {
     if (scheduleOptions.length > 0) {
-      const firstAvailable = scheduleOptions.find(
-        (schedule) => Number(schedule.available_slots || 0) > 0,
+      const firstAvailable = scheduleOptions.find((schedule) =>
+        isScheduleBookable(schedule),
       );
-      setSelectedScheduleId(String(firstAvailable?.id || scheduleOptions[0].id));
+      setSelectedScheduleId(
+        String(firstAvailable?.id || scheduleOptions[0].id),
+      );
     } else {
       setSelectedScheduleId("");
     }
@@ -52,15 +109,22 @@ function BookingCard({ tour, schedules = [] }) {
 
   useEffect(() => {
     if (!selectedSchedule) return;
-    const maxPeople = Math.max(1, Number(selectedSchedule.available_slots || 1));
+    const maxPeople = isScheduleBookable(selectedSchedule)
+      ? Math.max(1, Number(selectedSchedule.available_slots || 1))
+      : 1;
     setPeople((prev) => Math.min(prev, maxPeople));
   }, [selectedSchedule]);
 
-  const totalPrice = useMemo(() => Number(tour?.gia || 0) * people, [tour?.gia, people]);
+  const totalPrice = useMemo(
+    () => Number(tour?.gia || 0) * people,
+    [tour?.gia, people],
+  );
 
   const getScheduleLabel = (schedule) => {
     const available = Number(schedule?.available_slots || 0);
-    const slotText = available > 0 ? `Còn ${available} chỗ` : "Hết chỗ";
+    const slotText = isScheduleBookable(schedule)
+      ? `Còn ${available} chỗ`
+      : "Hết chỗ";
     return `${formatDate(schedule.start_date)} (${slotText})`;
   };
 
@@ -72,7 +136,7 @@ function BookingCard({ tour, schedules = [] }) {
 
     if (!isSelectedScheduleAvailable) {
       setMessage({
-        text: "Lịch này đã hết chỗ. Vui lòng chọn lịch khác.",
+        text: "Lịch này đã tới ngày khởi hành hoặc đã hết chỗ. Vui lòng chọn lịch khác.",
         type: "error",
       });
       return;
@@ -154,7 +218,7 @@ function BookingCard({ tour, schedules = [] }) {
               <option
                 key={schedule.id}
                 value={schedule.id}
-                disabled={Number(schedule.available_slots || 0) === 0}
+                disabled={!isScheduleBookable(schedule)}
               >
                 {getScheduleLabel(schedule)}
               </option>
@@ -166,14 +230,19 @@ function BookingCard({ tour, schedules = [] }) {
       <div className="tour-detail__field">
         <span>Số người</span>
         <div className="tour-detail__counter">
-          <button type="button" onClick={() => setPeople((prev) => Math.max(1, prev - 1))}>
+          <button
+            type="button"
+            onClick={() => setPeople((prev) => Math.max(1, prev - 1))}
+          >
             -
           </button>
           <strong>{people}</strong>
           <button
             type="button"
             onClick={() => {
-              const maxPeople = Math.max(1, Number(selectedSchedule?.available_slots || 1));
+              const maxPeople = isScheduleBookable(selectedSchedule)
+                ? Math.max(1, Number(selectedSchedule?.available_slots || 1))
+                : 1;
               setPeople((prev) => Math.min(maxPeople, prev + 1));
             }}
           >
@@ -188,12 +257,19 @@ function BookingCard({ tour, schedules = [] }) {
       </div>
 
       {message.text && (
-        <p className={`tour-detail__booking-message tour-detail__booking-message--${message.type}`}>
+        <p
+          className={`tour-detail__booking-message tour-detail__booking-message--${message.type}`}
+        >
           {message.text}
         </p>
       )}
 
-      <button type="button" className="tour-detail__book-btn" disabled={!canBook} onClick={handleBookNow}>
+      <button
+        type="button"
+        className="tour-detail__book-btn"
+        disabled={!canBook}
+        onClick={handleBookNow}
+      >
         {submitting ? "Đang xử lý..." : "Đặt ngay"}
       </button>
     </aside>
