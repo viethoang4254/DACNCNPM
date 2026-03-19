@@ -1,3 +1,6 @@
+UPDATE tour_schedules
+SET available_slots = GREATEST(max_slots - booked_slots, 0)
+WHERE id >= 1;
 ALTER TABLE tour_schedules
   ADD COLUMN max_slots INT NOT NULL AFTER start_date,
   ADD COLUMN booked_slots INT NOT NULL DEFAULT 0 AFTER max_slots,
@@ -13,6 +16,3 @@ SET
     COALESCE(ts.max_slots, t.so_nguoi_toi_da),
     GREATEST(COALESCE(ts.max_slots, t.so_nguoi_toi_da) - COALESCE(ts.available_slots, 0), 0)
   );
-
-UPDATE tour_schedules
-SET available_slots = GREATEST(max_slots - booked_slots, 0);

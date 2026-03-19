@@ -5,7 +5,11 @@ import { FaBell, FaCircle, FaTimesCircle } from "react-icons/fa";
 import DataTable from "../../../components/admin/DataTable";
 import TourSchedulesViewModal from "../../../components/admin/TourSchedulesViewModal";
 import apiClient from "../../../utils/apiClient";
-import { formatDateVi, getDaysLeftFromDateKey, toDateKey } from "../../../utils/dateOnly";
+import {
+  formatDateVi,
+  getDaysLeftFromDateKey,
+  toDateKey,
+} from "../../../utils/dateOnly";
 import "./AdminWarnings.scss";
 
 const MIN_RATIO = 0.5;
@@ -118,9 +122,7 @@ function AdminWarnings() {
     [normalizedRows],
   );
 
-  const totalAlerts =
-    warningSchedules.length +
-    criticalSchedules.length;
+  const totalAlerts = warningSchedules.length + criticalSchedules.length;
 
   const dataMap = {
     critical: criticalSchedules,
@@ -214,7 +216,11 @@ function AdminWarnings() {
 
       {!loading && !error ? (
         <div className="admin-page-warnings__sections">
-          <div className="admin-page-warnings__tabs" role="tablist" aria-label="Bộ lọc cảnh báo lịch khởi hành">
+          <div
+            className="admin-page-warnings__tabs"
+            role="tablist"
+            aria-label="Bộ lọc cảnh báo lịch khởi hành"
+          >
             <button
               type="button"
               className={`admin-page-warnings__tab ${activeTab === "critical" ? "is-active" : ""}`}
