@@ -7,6 +7,8 @@ import {
   getBookingsController,
   getMyBookingsController,
   updateBookingStatusController,
+  cancelPreviewController,
+  cancelBookingController,
 } from "../controllers/bookingController.js";
 import adminMiddleware from "../middlewares/adminMiddleware.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
@@ -56,6 +58,22 @@ router.patch(
   ],
   validationMiddleware,
   updateBookingStatusController
+);
+
+// Cancel preview endpoint - get refund preview before confirming
+router.get(
+  "/:id/cancel-preview",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  cancelPreviewController
+);
+
+// Cancel booking endpoint - execute cancellation
+router.post(
+  "/:id/cancel",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  cancelBookingController
 );
 
 router.get(
