@@ -2,6 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { sendResponse } from "../utils/response.js";
 import {
 	getAllSchedules,
+	getWarningSchedules,
 	getScheduleById,
 	createSchedule,
 	updateSchedule,
@@ -10,6 +11,11 @@ import {
 
 export const getAllSchedulesController = asyncHandler(async (req, res) => {
 	const schedules = await getAllSchedules();
+	sendResponse(res, { data: schedules });
+});
+
+export const getWarningSchedulesController = asyncHandler(async (req, res) => {
+	const schedules = await getWarningSchedules();
 	sendResponse(res, { data: schedules });
 });
 
@@ -52,7 +58,7 @@ export const createScheduleController = asyncHandler(async (req, res) => {
 
 export const updateScheduleController = asyncHandler(async (req, res) => {
 	const id = Number(req.params.id);
-	const { start_date, available_slots } = req.body;
+	const { start_date } = req.body;
 
 	const existing = await getScheduleById(id);
 	if (!existing) {
@@ -66,10 +72,6 @@ export const updateScheduleController = asyncHandler(async (req, res) => {
 
 	const updated = await updateSchedule(id, {
 		start_date,
-		available_slots:
-			available_slots === undefined
-				? Number(existing.available_slots)
-				: Number(available_slots),
 	});
 	sendResponse(res, { data: updated });
 });

@@ -46,7 +46,9 @@ function EditItineraryModal({
     const keyword = tourKeyword.trim().toLowerCase();
     if (!keyword) return tours;
     return tours.filter((tour) =>
-      String(tour.ten_tour || "").toLowerCase().includes(keyword),
+      String(tour.ten_tour || "")
+        .toLowerCase()
+        .includes(keyword),
     );
   }, [tourKeyword, tours]);
 
@@ -55,7 +57,10 @@ function EditItineraryModal({
     [matchingTours],
   );
 
-  const hiddenToursCount = Math.max(0, matchingTours.length - filteredTours.length);
+  const hiddenToursCount = Math.max(
+    0,
+    matchingTours.length - filteredTours.length,
+  );
 
   useEffect(() => {
     if (!open || !itinerary) {
@@ -194,7 +199,8 @@ function EditItineraryModal({
             </select>
             {!toursLoading && hiddenToursCount > 0 && (
               <p className="itinerary-modal__hint">
-                Còn {hiddenToursCount} tour chưa hiển thị, hãy nhập thêm từ khóa để thu gọn danh sách.
+                Còn {hiddenToursCount} tour chưa hiển thị, hãy nhập thêm từ khóa
+                để thu gọn danh sách.
               </p>
             )}
             {errors.tourId && (

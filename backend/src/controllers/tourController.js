@@ -27,6 +27,7 @@ import {
 import { getToursService } from "../services/tourService.js";
 import { getReviewsByTourId } from "../models/reviewModel.js";
 import { getItinerariesByTourId } from "../models/itineraryModel.js";
+import { getRecommendedToursByUserId } from "../models/historyModel.js";
 
 const parsePaging = (req) => {
   const page = Number(req.query.page || 1);
@@ -322,6 +323,18 @@ export const getSimilarToursController = asyncHandler(async (req, res) => {
     statusCode: 200,
     success: true,
     message: "Similar tours fetched successfully",
+    data: tours,
+  });
+});
+
+export const getRecommendToursController = asyncHandler(async (req, res) => {
+  const userId = Number(req.params.userId);
+  const tours = await getRecommendedToursByUserId(userId, Number(req.query.limit || 6));
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Recommended tours fetched successfully",
     data: tours,
   });
 });

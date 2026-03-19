@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
+import { toDateKey } from "../../../utils/dateOnly";
 import "./EditScheduleModal.scss";
 
 function EditScheduleModal({
@@ -18,9 +19,7 @@ function EditScheduleModal({
       setErrors({});
       return;
     }
-    setStartDate(
-      schedule.start_date ? String(schedule.start_date).slice(0, 10) : "",
-    );
+    setStartDate(toDateKey(schedule.start_date));
   }, [open, schedule]);
 
   function validate() {
@@ -44,9 +43,7 @@ function EditScheduleModal({
   return (
     <div
       className="admin-modal__backdrop"
-      onClick={(e) =>
-        e.target === e.currentTarget && !loading && onClose()
-      }
+      onClick={(e) => e.target === e.currentTarget && !loading && onClose()}
     >
       <div className="schedule-modal">
         <div className="schedule-modal__header">
@@ -65,7 +62,11 @@ function EditScheduleModal({
           </button>
         </div>
 
-        <form className="schedule-modal__body" onSubmit={handleSubmit} noValidate>
+        <form
+          className="schedule-modal__body"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <div className="schedule-modal__field">
             <label className="schedule-modal__label">Ngày khởi hành</label>
             <input

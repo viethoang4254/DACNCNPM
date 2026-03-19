@@ -8,6 +8,10 @@
   gap: 10px;
 }
 
+.admin-page-schedules__date-input {
+  width: 180px;
+}
+
 .schedule-tour-col {
   min-width: 260px;
 }
@@ -53,5 +57,9 @@
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-end;
+  }
+
+  .admin-page-schedules__date-input {
+    width: 100%;
   }
 }
