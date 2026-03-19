@@ -1,0 +1,33 @@
+.trending-destinations__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+
+  h2 {
+    font-size: clamp(2.4rem, 4vw, 3.6rem);
+    color: var(--color-heading);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+}
+
+.trending-destinations__sub {
+  font-size: 1.45rem;
+  color: #627289;
+}
+
+.trending-destinations__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}

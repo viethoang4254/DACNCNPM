@@ -1,0 +1,65 @@
+.admin-page-schedules {
+  // inherits layout from .admin-card defined in AdminBase.scss
+}
+
+.admin-page-schedules__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-page-schedules__date-input {
+  width: 180px;
+}
+
+.schedule-tour-col {
+  min-width: 260px;
+}
+
+.slots-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #dbeafe;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+.schedule-stat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.schedule-stat--booked {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.schedule-stat--remaining {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+@media (max-width: 640px) {
+  .admin-page-schedules__actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .admin-page-schedules__date-input {
+    width: 100%;
+  }
+}
