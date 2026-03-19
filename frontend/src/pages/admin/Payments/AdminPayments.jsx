@@ -40,7 +40,9 @@ function AdminPayments() {
       const res = await apiClient.get("/api/payments");
       setPayments(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
-      setError(err?.response?.data?.message || "Không thể tải danh sách thanh toán");
+      setError(
+        err?.response?.data?.message || "Không thể tải danh sách thanh toán",
+      );
     } finally {
       setLoading(false);
     }
@@ -106,7 +108,9 @@ function AdminPayments() {
       setSelectedPayment(null);
       await fetchPayments();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Không thể xác nhận thanh toán");
+      toast.error(
+        err?.response?.data?.message || "Không thể xác nhận thanh toán",
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -120,7 +124,9 @@ function AdminPayments() {
       setSelectedPayment(null);
       await fetchPayments();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Không thể từ chối thanh toán");
+      toast.error(
+        err?.response?.data?.message || "Không thể từ chối thanh toán",
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -138,7 +144,12 @@ function AdminPayments() {
       {loading ? (
         <p className="admin-state">Đang tải thanh toán...</p>
       ) : (
-        <DataTable columns={columns} data={paginated} emptyText="Không có thanh toán" keyField="id" />
+        <DataTable
+          columns={columns}
+          data={paginated}
+          emptyText="Không có thanh toán"
+          keyField="id"
+        />
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
