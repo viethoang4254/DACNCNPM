@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
 import apiClient from "../../../utils/apiClient";
+import { toDateKey } from "../../../utils/dateOnly";
 import TourSearchDropdown from "../TourSearchDropdown";
 import "./AddScheduleModal.scss";
 
-const todayStr = () => new Date().toISOString().split("T")[0];
+const todayStr = () => toDateKey(new Date());
 
 function AddScheduleModal({
   open,

@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { LuEye } from "react-icons/lu";
+import BookingViewModal from "../../../components/admin/BookingViewModal";
 import DataTable from "../../../components/admin/DataTable";
 import Pagination from "../../../components/admin/Pagination";
 import apiClient from "../../../utils/apiClient";
+import { formatDateVi } from "../../../utils/dateOnly";
 import "./Bookings.scss";
 
 const LIMIT = 10;
@@ -12,12 +15,18 @@ const bookingStatusLabels = {
   cancelled: "Đã hủy",
 };
 
+const paymentStatusLabels = {
+  pending: "Chờ xác nhận",
+  paid: "Đã thanh toán",
+  failed: "Thất bại",
+};
+
 function Bookings() {
-  const [bookings, setBookings]           = useState([]);
-  const [selectedBooking, setSelected]    = useState(null);
-  const [page, setPage]                   = useState(1);
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState("");
+  const [bookings, setBookings] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -29,13 +38,17 @@ function Bookings() {
         setBookings(Array.isArray(res.data?.data) ? res.data.data : []);
       } catch (err) {
         if (!active) return;
-        setError(err?.response?.data?.message || "Không thể tải danh sách đặt tour");
+        setError(
+          err?.response?.data?.message || "Không thể tải danh sách đặt tour",
+        );
       } finally {
         if (active) setLoading(false);
       }
     }
     fetchBookings();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   const visibleBookings = useMemo(
@@ -44,19 +57,30 @@ function Bookings() {
   );
 
   const totalPages = Math.max(1, Math.ceil(visibleBookings.length / LIMIT));
-  const paginated  = useMemo(() => visibleBookings.slice((page - 1) * LIMIT, page * LIMIT), [visibleBookings, page]);
+  const paginated = useMemo(
+    () => visibleBookings.slice((page - 1) * LIMIT, page * LIMIT),
+    [visibleBookings, page],
+  );
 
   const columns = [
-    { key: "id",        header: "ID" },
+    { key: "id", header: "ID" },
     { key: "user_name", header: "Người dùng" },
-    { key: "ten_tour",  header: "Tour" },
+    {
+      key: "ten_tour",
+      header: "Tour",
+      className: "booking-col-tour",
+      render: (row) => (
+        <span className="booking-tour-name" title={row.ten_tour || "-"}>
+          {row.ten_tour || "-"}
+        </span>
+      ),
+    },
     {
       key: "start_date",
       header: "Ngày đi",
-      render: (row) =>
-        row.start_date ? new Date(row.start_date).toLocaleDateString("vi-VN") : "—",
+      render: (row) => formatDateVi(row.start_date, "—"),
     },
-    { key: "so_nguoi",  header: "Số khách" },
+    { key: "so_nguoi", header: "Số khách" },
     {
       key: "tong_tien",
       header: "Tổng tiền",
@@ -72,16 +96,33 @@ function Bookings() {
       ),
     },
     {
+      key: "payment_status",
+      header: "Thanh toán",
+      render: (row) => {
+        const normalized = row.payment_status || "pending";
+        return (
+          <span className={`status-pill status-pill--${normalized}`}>
+            {paymentStatusLabels[normalized] || normalized}
+          </span>
+        );
+      },
+    },
+    {
       key: "actions",
-      header: "",
+      header: "Thao tác",
+      className: "booking-col-actions",
       render: (row) => (
-        <button
-          type="button"
-          className={`admin-btn admin-btn--ghost`}
-          onClick={() => setSelected((prev) => (prev?.id === row.id ? null : row))}
-        >
-          {selectedBooking?.id === row.id ? "Đóng" : "Xem"}
-        </button>
+        <div className="admin-icon-actions">
+          <button
+            type="button"
+            className="admin-icon-btn"
+            onClick={() => setSelectedBooking(row)}
+            title="Xem chi tiết"
+            aria-label={`Xem chi tiết đơn đặt #${row.id}`}
+          >
+            <LuEye aria-hidden="true" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -91,73 +132,33 @@ function Bookings() {
       <div className="admin-card">
         <div className="admin-toolbar">
           <h3>Đặt tour</h3>
-          <span className="admin-toolbar__meta">{visibleBookings.length} bản ghi</span>
+          <span className="admin-toolbar__meta">
+            {visibleBookings.length} bản ghi
+          </span>
         </div>
         {error && <p className="admin-state admin-state--error">{error}</p>}
         {loading ? (
           <p className="admin-state">Đang tải danh sách đặt tour...</p>
         ) : (
-          <DataTable columns={columns} data={paginated} emptyText="Chưa có đơn đã thanh toán" />
+          <DataTable
+            columns={columns}
+            data={paginated}
+            emptyText="Chưa có đơn đã thanh toán"
+          />
         )}
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       </div>
 
-      {selectedBooking && (
-        <div className="admin-card">
-          <div className="admin-toolbar">
-            <h3>Đơn đặt #{selectedBooking.id}</h3>
-            <button type="button" className="admin-btn" onClick={() => setSelected(null)}>
-              ✕ Đóng
-            </button>
-          </div>
-          <div className="admin-detail-grid">
-            <div className="admin-detail-item">
-              <label>Người dùng</label>
-              <span>{selectedBooking.user_name}</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Email</label>
-              <span>{selectedBooking.user_email || "—"}</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Tour</label>
-              <span>{selectedBooking.ten_tour}</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Ngày khởi hành</label>
-              <span>
-                {selectedBooking.start_date
-                  ? new Date(selectedBooking.start_date).toLocaleDateString("vi-VN")
-                  : "—"}
-              </span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Số người</label>
-              <span>{selectedBooking.so_nguoi}</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Tổng tiền</label>
-              <span>{Number(selectedBooking.tong_tien).toLocaleString("vi-VN")} ₫</span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Trạng thái</label>
-              <span>
-                <span className={`status-pill status-pill--${selectedBooking.trang_thai}`}>
-                  {bookingStatusLabels[selectedBooking.trang_thai] || selectedBooking.trang_thai}
-                </span>
-              </span>
-            </div>
-            <div className="admin-detail-item">
-              <label>Ngày đặt</label>
-              <span>
-                {selectedBooking.created_at
-                  ? new Date(selectedBooking.created_at).toLocaleDateString("vi-VN")
-                  : "—"}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      <BookingViewModal
+        booking={selectedBooking}
+        onClose={() => setSelectedBooking(null)}
+        bookingStatusLabels={bookingStatusLabels}
+        paymentStatusLabels={paymentStatusLabels}
+      />
     </div>
   );
 }

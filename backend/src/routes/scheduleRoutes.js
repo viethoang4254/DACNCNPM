@@ -5,6 +5,7 @@ import adminMiddleware from "../middlewares/adminMiddleware.js";
 import validationMiddleware from "../middlewares/validateMiddleware.js";
 import {
 	getAllSchedulesController,
+	getWarningSchedulesController,
 	createScheduleController,
 	updateScheduleController,
 	deleteScheduleController,
@@ -28,6 +29,7 @@ const updateValidation = [
 ];
 
 router.get("/", getAllSchedulesController);
+router.get("/warning", getWarningSchedulesController);
 
 router.post(
 	"/",

@@ -7,6 +7,7 @@ import Login from "./pages/user/Login";
 import Register from "./pages/user/Register";
 import Tours from "./pages/user/Tours";
 import TourDetail from "./pages/user/TourDetail";
+import TourHistory from "./pages/user/TourHistory";
 import About from "./pages/user/About";
 import Contact from "./pages/user/Contact";
 import CheckoutPage from "./components/user/CheckoutPage";
@@ -21,6 +22,11 @@ import Bookings from "./pages/admin/Bookings";
 import Payments from "./pages/admin/Payments";
 import Reviews from "./pages/admin/Reviews";
 import Itineraries from "./pages/admin/Itineraries";
+import AdminWarnings from "./pages/admin/AdminWarnings";
+import UserLayout from "./components/user/UserLayout";
+import InfoUser from "./pages/user/InfoUser";
+import UserBookingHistory from "./pages/user/BookingHistory";
+import ChangePassword from "./pages/user/ChangePassword";
 
 import { getAuthUser } from "./utils/authStorage";
 
@@ -36,6 +42,20 @@ function AdminRoute({ children }) {
 function UserRoute({ children }) {
   const user = getAuthUser();
   if (user?.role === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return children;
+}
+
+function CustomerAuthRoute({ children }) {
+  const user = getAuthUser();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role === "admin") {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -63,10 +83,22 @@ function App() {
           path="/customer"
           element={
             <UserRoute>
-              <Home />
+              <Navigate to="/info-user" replace />
             </UserRoute>
           }
         />
+        <Route
+          path="/info-user"
+          element={
+            <CustomerAuthRoute>
+              <UserLayout />
+            </CustomerAuthRoute>
+          }
+        >
+          <Route index element={<InfoUser />} />
+          <Route path="bookings" element={<UserBookingHistory />} />
+          <Route path="change-password" element={<ChangePassword />} />
+        </Route>
         <Route
           path="/login"
           element={
@@ -96,6 +128,14 @@ function App() {
           element={
             <UserRoute>
               <TourDetail />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/tour-history"
+          element={
+            <UserRoute>
+              <TourHistory />
             </UserRoute>
           }
         />
@@ -132,6 +172,14 @@ function App() {
           }
         />
         <Route
+          path="/payment-success/:bookingId"
+          element={
+            <UserRoute>
+              <PaymentSuccess />
+            </UserRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <AdminRoute>
@@ -148,6 +196,7 @@ function App() {
           <Route path="bookings" element={<Bookings />} />
           <Route path="payments" element={<Payments />} />
           <Route path="reviews" element={<Reviews />} />
+          <Route path="warnings" element={<AdminWarnings />} />
         </Route>
       </Routes>
       {!isAdminPath && <Footer />}

@@ -112,6 +112,28 @@
   padding: 18px;
   font-size: 1.45rem;
   color: var(--color-body);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkout-page__spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid #d3deed;
+  border-top-color: var(--color-primary);
+  animation: checkout-spin 0.8s linear infinite;
+}
+
+@keyframes checkout-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .checkout-page__state--error,
