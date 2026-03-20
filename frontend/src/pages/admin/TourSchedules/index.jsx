@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import { MdVisibility } from "react-icons/md";
+import { useSearchParams } from "react-router-dom";
 
 import DataTable from "../../../components/admin/DataTable";
 import Pagination from "../../../components/admin/Pagination";
@@ -40,6 +41,15 @@ function TourSchedules() {
   const [tourSchedules, setTourSchedules] = useState([]);
   const [viewLoading, setViewLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [saleLoadingScheduleId, setSaleLoadingScheduleId] = useState(null);
+  const [searchParams] = useSearchParams();
+  const handledScheduleFocusRef = useRef(new Set());
+
+  const highlightedScheduleId = useMemo(() => {
+    const scheduleId = Number(searchParams.get("scheduleId") || 0);
+    if (!Number.isInteger(scheduleId) || scheduleId <= 0) return null;
+    return scheduleId;
+  }, [searchParams]);
 
   const [notification, setNotification] = useState({
     open: false,
@@ -207,6 +217,109 @@ function TourSchedules() {
     setTourSchedules(items);
     setShowViewModal(true);
   }
+
+  async function handleApplySale(schedule) {
+    try {
+      setSaleLoadingScheduleId(Number(schedule.id));
+      await apiClient.post(`/api/admin/schedules/${schedule.id}/apply-sale`);
+      await fetchBaseData();
+
+      if (selectedTour?.id) {
+        await fetchSchedulesByTour(selectedTour.id);
+      }
+
+      openNotification(
+        "Thành công",
+        "Đã áp dụng sale cho lịch khởi hành",
+        "primary",
+      );
+    } catch (err) {
+      openNotification(
+        "Lỗi",
+        getApiMessage(err, "Không thể áp dụng sale cho lịch khởi hành"),
+        "danger",
+      );
+    } finally {
+      setSaleLoadingScheduleId(null);
+    }
+  }
+
+  async function handleRemoveSale(schedule) {
+    try {
+      setSaleLoadingScheduleId(Number(schedule.id));
+      await apiClient.post(`/api/admin/schedules/${schedule.id}/remove-sale`);
+      await fetchBaseData();
+
+      if (selectedTour?.id) {
+        await fetchSchedulesByTour(selectedTour.id);
+      }
+
+      openNotification(
+        "Thành công",
+        "Đã hủy sale cho lịch khởi hành",
+        "primary",
+      );
+    } catch (err) {
+      openNotification(
+        "Lỗi",
+        getApiMessage(err, "Không thể hủy sale cho lịch khởi hành"),
+        "danger",
+      );
+    } finally {
+      setSaleLoadingScheduleId(null);
+    }
+  }
+
+  useEffect(() => {
+    if (!highlightedScheduleId) return;
+    if (loading) return;
+    if (handledScheduleFocusRef.current.has(highlightedScheduleId)) return;
+
+    const targetSchedule = schedules.find(
+      (item) => Number(item.id) === Number(highlightedScheduleId),
+    );
+
+    handledScheduleFocusRef.current.add(highlightedScheduleId);
+
+    if (!targetSchedule) {
+      openNotification(
+        "Không tìm thấy",
+        "Không tìm thấy lịch khởi hành theo liên kết được chọn",
+        "danger",
+      );
+      return;
+    }
+
+    let isMounted = true;
+
+    async function openLinkedSchedule() {
+      const selectedTourId = Number(targetSchedule.tour_id);
+      const targetTour = tours.find(
+        (tour) => Number(tour.id) === selectedTourId,
+      );
+
+      const tourPayload = {
+        id: selectedTourId,
+        ten_tour:
+          targetSchedule.ten_tour ||
+          targetTour?.ten_tour ||
+          `Tour #${selectedTourId}`,
+      };
+
+      setSelectedTour(tourPayload);
+      setShowViewModal(true);
+      const items = await fetchSchedulesByTour(selectedTourId);
+
+      if (!isMounted) return;
+      setTourSchedules(items);
+    }
+
+    openLinkedSchedule();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [highlightedScheduleId, loading, schedules, tours]);
 
   const groupedTours = useMemo(() => {
     const tourMap = new Map(tours.map((tour) => [Number(tour.id), tour]));
@@ -392,6 +505,7 @@ function TourSchedules() {
         tour={selectedTour}
         schedules={tourSchedules}
         loading={submitting || viewLoading}
+        saleLoadingScheduleId={saleLoadingScheduleId}
         onClose={() => {
           if (submitting || viewLoading) return;
           setShowViewModal(false);
@@ -422,6 +536,9 @@ function TourSchedules() {
           });
           setShowDeleteConfirm(true);
         }}
+        onApplySale={handleApplySale}
+        onRemoveSale={handleRemoveSale}
+        targetScheduleId={highlightedScheduleId}
         formatDate={formatDate}
       />
 

@@ -24,6 +24,10 @@ import {
   getAdminItineraryByTourController,
   updateAdminItinerariesController,
 } from "../controllers/itineraryController.js";
+import {
+  applySaleToScheduleController,
+  removeSaleFromScheduleController,
+} from "../controllers/scheduleController.js";
 import adminMiddleware from "../middlewares/adminMiddleware.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import validationMiddleware from "../middlewares/validateMiddleware.js";
@@ -87,6 +91,20 @@ router.post(
   [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
   validationMiddleware,
   rejectRefundController,
+);
+
+router.post(
+  "/schedules/:id/apply-sale",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  applySaleToScheduleController,
+);
+
+router.post(
+  "/schedules/:id/remove-sale",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  removeSaleFromScheduleController,
 );
 
 router.get("/notifications", getNotificationsController);

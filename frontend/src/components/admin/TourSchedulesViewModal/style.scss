@@ -72,6 +72,12 @@
   background: #f8fafc;
 }
 
+.tour-schedules-view-modal__item--target {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
 .tour-schedules-view-modal__item-top {
   display: flex;
   align-items: center;
@@ -203,6 +209,50 @@
   font-size: 1.1rem;
   color: #b91c1c;
   font-weight: 600;
+}
+
+.tour-schedules-view-modal__sale {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tour-schedules-view-modal__sale-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.04em;
+}
+
+.tour-schedules-view-modal__sale-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.tour-schedules-view-modal__sale-badge--none {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.tour-schedules-view-modal__sale-badge--suggested {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.tour-schedules-view-modal__sale-badge--active {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.tour-schedules-view-modal__sale-btn {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 1.15rem;
 }
 
 .tour-schedules-view-modal__empty {

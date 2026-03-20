@@ -100,6 +100,17 @@
   text-decoration: underline;
 }
 
+.admin-page-warnings__sale-action {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fff1f2;
+}
+
+.admin-page-warnings__sale-action:hover {
+  background: #ffe4e6;
+  border-color: #fca5a5;
+}
+
 @media (max-width: 768px) {
   .admin-page-warnings__tab {
     width: 100%;
