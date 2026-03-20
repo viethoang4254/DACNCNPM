@@ -62,6 +62,12 @@
   grid-template-columns: 230px 1fr;
 }
 
+.booking-history__card--highlight {
+  border-color: #7fd49a;
+  box-shadow: 0 0 0 3px rgba(94, 197, 121, 0.2);
+  animation: bookingHighlightPulse 1.6s ease-out;
+}
+
 .booking-history__card img {
   width: 100%;
   height: 100%;
@@ -101,12 +107,6 @@
   color: #15365f;
 }
 
-.booking-history__cancel-reason {
-  margin-top: 2px;
-  color: #c73838;
-  font-weight: 600;
-}
-
 .booking-history__success {
   background: #e8faef;
   border: 1px solid #5ec579;
@@ -127,14 +127,21 @@
   }
 }
 
-.booking-history__refund {
-  font-size: 1.35rem;
-  color: #228348;
-  font-weight: 600;
-  padding: 6px 10px;
-  background: #e8faef;
-  border-radius: 4px;
-  display: inline-block;
+.booking-history__refund-summary {
+  font-size: 1.28rem;
+  margin-top: 2px;
+
+  &--pending strong {
+    color: #9a6a00;
+  }
+
+  &--processed strong {
+    color: #1f7f45;
+  }
+
+  &--failed strong {
+    color: #b53333;
+  }
 }
 
 .status-badge {
@@ -214,6 +221,23 @@
   }
 }
 
+.booking-history__cancel-info-btn {
+  padding: 8px 16px;
+  background: #eef4ff;
+  color: #234f93;
+  border: 1px solid #bfd3f6;
+  border-radius: 6px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #dfeaff;
+    border-color: #94b5ef;
+  }
+}
+
 @media (max-width: 900px) {
   .booking-history__card {
     grid-template-columns: 1fr;
@@ -243,7 +267,8 @@
   }
 
   .booking-history__detail-btn,
-  .booking-history__cancel-btn {
+  .booking-history__cancel-btn,
+  .booking-history__cancel-info-btn {
     width: 100%;
     text-align: center;
   }
@@ -257,5 +282,16 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes bookingHighlightPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(94, 197, 121, 0.45);
+    background: #f3fff6;
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgba(94, 197, 121, 0.2);
+    background: #ffffff;
   }
 }

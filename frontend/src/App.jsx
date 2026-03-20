@@ -23,6 +23,7 @@ import Payments from "./pages/admin/Payments";
 import Reviews from "./pages/admin/Reviews";
 import Itineraries from "./pages/admin/Itineraries";
 import AdminWarnings from "./pages/admin/AdminWarnings";
+import Refunds from "./pages/admin/Refunds";
 import UserLayout from "./components/user/UserLayout";
 import InfoUser from "./pages/user/InfoUser";
 import UserBookingHistory from "./pages/user/BookingHistory";
@@ -195,6 +196,7 @@ function App() {
           <Route path="itineraries" element={<Itineraries />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="payments" element={<Payments />} />
+          <Route path="refunds" element={<Refunds />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="warnings" element={<AdminWarnings />} />
         </Route>

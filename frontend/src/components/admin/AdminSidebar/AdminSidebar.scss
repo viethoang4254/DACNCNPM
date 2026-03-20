@@ -126,6 +126,20 @@
   animation: warningPulse 1.8s ease-in-out infinite;
 }
 
+.admin-sidebar__warning-badge--payment {
+  color: #fef3c7;
+  background: rgba(245, 158, 11, 0.24);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.admin-sidebar__warning-badge--payment.is-alert {
+  color: #ffffff;
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  border-color: rgba(252, 211, 77, 0.6);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+  animation: paymentPulse 1.8s ease-in-out infinite;
+}
+
 @keyframes warningPulse {
   0% {
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18);
@@ -135,6 +149,18 @@
   }
   100% {
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes paymentPulse {
+  0% {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0);
   }
 }
 

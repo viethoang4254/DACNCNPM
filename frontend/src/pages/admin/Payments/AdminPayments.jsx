@@ -14,7 +14,32 @@ const paymentStatusLabels = {
   pending: "Chờ xác nhận",
   paid: "Đã thanh toán",
   failed: "Thất bại",
+  refunded: "Đã hoàn tiền",
 };
+
+const paymentMethodLabels = {
+  bank_transfer: "Chuyển khoản ngân hàng",
+  cash: "Tiền mặt",
+  card: "Thẻ ngân hàng",
+  momo: "Ví MoMo",
+  vnpay: "VNPay",
+};
+
+function normalizeKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function getStatusLabel(status) {
+  const statusKey = normalizeKey(status);
+  return paymentStatusLabels[statusKey] || status || "-";
+}
+
+function getMethodLabel(method) {
+  const methodKey = normalizeKey(method);
+  return paymentMethodLabels[methodKey] || method || "-";
+}
 
 function formatCurrency(value) {
   return `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
@@ -74,13 +99,19 @@ function AdminPayments() {
       header: "Số tiền",
       render: (row) => formatCurrency(row.amount),
     },
-    { key: "method", header: "Phương thức" },
+    {
+      key: "method",
+      header: "Phương thức",
+      render: (row) => getMethodLabel(row.method),
+    },
     {
       key: "status",
       header: "Trạng thái",
       render: (row) => (
-        <span className={`status-pill status-pill--${row.status}`}>
-          {paymentStatusLabels[row.status] || row.status}
+        <span
+          className={`status-pill status-pill--${normalizeKey(row.status)}`}
+        >
+          {getStatusLabel(row.status)}
         </span>
       ),
     },
@@ -164,7 +195,9 @@ function AdminPayments() {
         onClose={() => (isActionLoading ? null : setSelectedPayment(null))}
         onConfirm={handleConfirm}
         onReject={handleReject}
-        statusLabelMap={paymentStatusLabels}
+        getStatusLabel={getStatusLabel}
+        getMethodLabel={getMethodLabel}
+        normalizeStatus={normalizeKey}
         formatCurrency={formatCurrency}
         formatDate={formatDate}
       />

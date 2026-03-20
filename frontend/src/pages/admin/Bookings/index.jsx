@@ -19,7 +19,14 @@ const paymentStatusLabels = {
   pending: "Chờ xác nhận",
   paid: "Đã thanh toán",
   failed: "Thất bại",
+  refunded: "Đã hoàn tiền",
 };
+
+function normalizeStatus(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
 
 function Bookings() {
   const [bookings, setBookings] = useState([]);
@@ -99,7 +106,7 @@ function Bookings() {
       key: "payment_status",
       header: "Thanh toán",
       render: (row) => {
-        const normalized = row.payment_status || "pending";
+        const normalized = normalizeStatus(row.payment_status) || "pending";
         return (
           <span className={`status-pill status-pill--${normalized}`}>
             {paymentStatusLabels[normalized] || normalized}

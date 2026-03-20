@@ -70,8 +70,32 @@ router.get(
 
 // Cancel booking endpoint - execute cancellation
 router.post(
+  "/cancel",
+  [
+    body("booking_id").isInt({ gt: 0 }).withMessage("booking_id must be a positive integer"),
+    body("cancel_reason")
+      .optional({ nullable: true })
+      .isString()
+      .withMessage("cancel_reason must be a string")
+      .isLength({ max: 500 })
+      .withMessage("cancel_reason must be at most 500 characters"),
+  ],
+  validationMiddleware,
+  cancelBookingController
+);
+
+// Backward-compatible cancel endpoint by id
+router.post(
   "/:id/cancel",
-  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  [
+    param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer"),
+    body("cancel_reason")
+      .optional({ nullable: true })
+      .isString()
+      .withMessage("cancel_reason must be a string")
+      .isLength({ max: 500 })
+      .withMessage("cancel_reason must be at most 500 characters"),
+  ],
   validationMiddleware,
   cancelBookingController
 );

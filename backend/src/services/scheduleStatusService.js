@@ -1,6 +1,7 @@
 import pool from "../config/db.js";
 
 const DEFAULT_MIN_REQUIRED_RATIO = 0.5;
+const SYSTEM_CANCEL_DAYS_THRESHOLD = 2;
 
 const startOfDay = (value) => {
   if (!value) return null;
@@ -55,13 +56,14 @@ export const updateScheduleStatus = (schedule) => {
   if (daysLeft !== null && daysLeft < 0) return "completed";
   if (bookedSlots >= maxSlots && maxSlots > 0) return "full";
   if (percentRatio >= minRequiredRatio) return "guaranteed";
-  if (daysLeft !== null && daysLeft <= 2 && percentRatio < minRequiredRatio) {
+  if (
+    daysLeft !== null &&
+    daysLeft <= SYSTEM_CANCEL_DAYS_THRESHOLD &&
+    percentRatio < minRequiredRatio
+  ) {
     return "cancelled";
   }
-  if (daysLeft !== null && daysLeft <= 7 && percentRatio < minRequiredRatio) {
-    return "warning";
-  }
-  return "open";
+  return "warning";
 };
 
 export const getScheduleAlertLevel = (schedule) => {
@@ -156,6 +158,124 @@ const persistScheduleSnapshot = async (connection, snapshot) => {
     "UPDATE tour_schedules SET max_slots = ?, booked_slots = ?, available_slots = ?, status = ? WHERE id = ?",
     [maxSlots, bookedSlots, nextAvailable, nextStatus, snapshot.id],
   );
+
+  if (nextStatus === "cancelled") {
+    await cancelAllBookingsForCancelledSchedule(connection, snapshot.id);
+  }
+};
+
+const cancelAllBookingsForCancelledSchedule = async (connection, scheduleId) => {
+  const now = new Date();
+
+  await connection.execute(
+    `UPDATE bookings
+     SET trang_thai = 'cancelled',
+         cancelled_at = ?,
+         refund_amount = tong_tien,
+         refund_status = 'processed',
+         cancelled_by = 'system'
+     WHERE schedule_id = ?
+       AND trang_thai IN ('pending', 'confirmed')`,
+    [now, scheduleId],
+  );
+
+  await connection.execute(
+    `UPDATE payments p
+     INNER JOIN bookings b ON b.id = p.booking_id
+     SET p.status = 'refunded'
+     WHERE b.schedule_id = ?
+       AND b.trang_thai = 'cancelled'
+       AND p.status = 'paid'`,
+    [scheduleId],
+  );
+};
+
+const loadScheduleSnapshotsByFilter = async (connection, { tourId, scheduleId } = {}) => {
+  const hasTourId = Number.isInteger(Number(tourId)) && Number(tourId) > 0;
+  const hasScheduleId = Number.isInteger(Number(scheduleId)) && Number(scheduleId) > 0;
+
+  const where = [];
+  const params = [];
+
+  if (hasTourId) {
+    where.push("ts.tour_id = ?");
+    params.push(Number(tourId));
+  }
+
+  if (hasScheduleId) {
+    where.push("ts.id = ?");
+    params.push(Number(scheduleId));
+  }
+
+  const [rows] = await connection.execute(
+    `SELECT ts.id,
+            ts.tour_id,
+            ts.start_date,
+            COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) AS max_slots,
+            ts.booked_slots,
+            ts.min_required_ratio,
+            COALESCE(SUM(CASE WHEN b.trang_thai = 'confirmed' THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots_actual
+     FROM tour_schedules ts
+     INNER JOIN tours t ON t.id = ts.tour_id
+     LEFT JOIN bookings b ON b.schedule_id = ts.id
+     ${where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""}
+     GROUP BY ts.id, ts.tour_id, ts.start_date, ts.max_slots, t.so_nguoi_toi_da, ts.booked_slots, ts.min_required_ratio
+     ORDER BY ts.start_date ASC`,
+    params,
+  );
+
+  return rows;
+};
+
+export const checkCapacityAndApplyPolicy = async (
+  { tourId, scheduleId } = {},
+  connection = pool,
+) => {
+  const snapshots = await loadScheduleSnapshotsByFilter(connection, {
+    tourId,
+    scheduleId,
+  });
+
+  const affected = [];
+
+  for (const snapshot of snapshots) {
+    const maxSlots = Number(snapshot.max_slots || 0);
+    const bookedSlots = Math.min(
+      maxSlots,
+      Math.max(0, Number(snapshot.booked_slots_actual || 0)),
+    );
+    const status = updateScheduleStatus({
+      ...snapshot,
+      max_slots: maxSlots,
+      booked_slots: bookedSlots,
+    });
+
+    await connection.execute(
+      `UPDATE tour_schedules
+       SET max_slots = ?,
+           booked_slots = ?,
+           available_slots = ?,
+           status = ?
+       WHERE id = ?`,
+      [maxSlots, bookedSlots, Math.max(maxSlots - bookedSlots, 0), status, snapshot.id],
+    );
+
+    if (status === "cancelled") {
+      await cancelAllBookingsForCancelledSchedule(connection, snapshot.id);
+    }
+
+    affected.push({
+      schedule_id: snapshot.id,
+      tour_id: snapshot.tour_id,
+      status,
+      booked_slots: bookedSlots,
+      max_slots: maxSlots,
+      ratio: maxSlots > 0 ? Number((bookedSlots / maxSlots).toFixed(4)) : 0,
+      days_left: getScheduleDaysLeft(snapshot.start_date),
+    });
+  }
+
+  return affected;
 };
 
 export const refreshSchedulesOccupancyAndStatus = async (

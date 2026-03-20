@@ -5,7 +5,9 @@ function PaymentDetailModal({
   onClose,
   onConfirm,
   onReject,
-  statusLabelMap,
+  getStatusLabel,
+  getMethodLabel,
+  normalizeStatus,
   formatCurrency,
   formatDate,
 }) {
@@ -13,7 +15,8 @@ function PaymentDetailModal({
     return null;
   }
 
-  const canReview = payment.status === "pending";
+  const normalizedStatus = normalizeStatus(payment.status);
+  const canReview = normalizedStatus === "pending";
 
   return (
     <div
@@ -94,15 +97,15 @@ function PaymentDetailModal({
               </div>
               <div className="admin-detail-item">
                 <label>Phương thức</label>
-                <span>{payment.method || "-"}</span>
+                <span>{getMethodLabel(payment.method)}</span>
               </div>
               <div className="admin-detail-item">
                 <label>Trạng thái</label>
                 <span>
                   <span
-                    className={`status-pill status-pill--${payment.status}`}
+                    className={`status-pill status-pill--${normalizedStatus}`}
                   >
-                    {statusLabelMap[payment.status] || payment.status}
+                    {getStatusLabel(payment.status)}
                   </span>
                 </span>
               </div>
