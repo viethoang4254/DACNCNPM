@@ -7,6 +7,8 @@ import {
 	createSchedule,
 	updateSchedule,
 	deleteScheduleById,
+	applySaleToScheduleById,
+	removeSaleFromScheduleById,
 } from "../models/scheduleModel.js";
 
 export const getAllSchedulesController = asyncHandler(async (req, res) => {
@@ -88,4 +90,48 @@ export const deleteScheduleController = asyncHandler(async (req, res) => {
 		});
 	}
 	sendResponse(res, { message: "Schedule deleted successfully", data: {} });
+});
+
+export const applySaleToScheduleController = asyncHandler(async (req, res) => {
+	const id = Number(req.params.id);
+	const existing = await getScheduleById(id);
+
+	if (!existing) {
+		return sendResponse(res, {
+			statusCode: 404,
+			success: false,
+			message: "Schedule not found",
+			data: {},
+		});
+	}
+
+	await applySaleToScheduleById(id, 20);
+	const updated = await getScheduleById(id);
+
+	return sendResponse(res, {
+		message: "Sale applied successfully",
+		data: updated,
+	});
+});
+
+export const removeSaleFromScheduleController = asyncHandler(async (req, res) => {
+	const id = Number(req.params.id);
+	const existing = await getScheduleById(id);
+
+	if (!existing) {
+		return sendResponse(res, {
+			statusCode: 404,
+			success: false,
+			message: "Schedule not found",
+			data: {},
+		});
+	}
+
+	await removeSaleFromScheduleById(id);
+	const updated = await getScheduleById(id);
+
+	return sendResponse(res, {
+		message: "Sale removed successfully",
+		data: updated,
+	});
 });

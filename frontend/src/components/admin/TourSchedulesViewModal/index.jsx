@@ -1,6 +1,9 @@
+import { useEffect, useMemo, useRef } from "react";
 import { MdClose, MdDelete } from "react-icons/md";
 import { PiPencilLineFill } from "react-icons/pi";
-import { FaCircle } from "react-icons/fa";
+import { FaCircle, FaFireAlt } from "react-icons/fa";
+import { BiSolidDiscount } from "react-icons/bi";
+import { HiExclamationTriangle } from "react-icons/hi2";
 import { LuCalendarDays } from "react-icons/lu";
 import { getDaysLeftFromDateKey } from "../../../utils/dateOnly";
 import "./style.scss";
@@ -117,25 +120,152 @@ function TourSchedulesViewModal({
   tour,
   schedules = [],
   loading = false,
+  saleLoadingScheduleId = null,
   onClose,
   onAdd,
   onEdit,
   onDelete,
+  onApplySale,
+  onRemoveSale,
+  targetScheduleId = null,
   formatDate,
   readOnly = false,
 }) {
+  const scheduleItemRefs = useRef(new Map());
+  const saleActionRefs = useRef(new Map());
+  const highlightScheduleId = useMemo(
+    () => Number(targetScheduleId || 0),
+    [targetScheduleId],
+  );
+
+  useEffect(() => {
+    if (!open || !highlightScheduleId) return;
+
+    const item = scheduleItemRefs.current.get(highlightScheduleId);
+    if (item) {
+      item.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    const saleAction = saleActionRefs.current.get(highlightScheduleId);
+    if (saleAction) {
+      const timer = window.setTimeout(() => {
+        saleAction.focus();
+      }, 240);
+
+      return () => {
+        window.clearTimeout(timer);
+      };
+    }
+
+    return undefined;
+  }, [highlightScheduleId, open, schedules]);
+
   if (!open) return null;
+
+  const renderSale = (schedule, isLocked) => {
+    const isOnSale = Boolean(schedule?.is_on_sale);
+    const discount = Number(schedule?.discount_percent || 0);
+    const suggestedSale =
+      Boolean(schedule?.suggested_sale) && !isOnSale && !isLocked;
+    const suggestedDiscount = Number(
+      schedule?.suggested_discount_percent || 20,
+    );
+    const isSaleUpdating =
+      Number(saleLoadingScheduleId) === Number(schedule.id);
+
+    if (isOnSale) {
+      return (
+        <div className="tour-schedules-view-modal__sale">
+          <span className="tour-schedules-view-modal__sale-label">SALE</span>
+          <span className="tour-schedules-view-modal__sale-badge tour-schedules-view-modal__sale-badge--active">
+            <FaFireAlt aria-hidden="true" />
+            🔥 -{Math.round(discount)}%
+          </span>
+          {!readOnly && (
+            <button
+              type="button"
+              className="admin-btn admin-btn--danger tour-schedules-view-modal__sale-btn"
+              onClick={() => onRemoveSale?.(schedule)}
+              disabled={loading || isSaleUpdating}
+              ref={(node) => {
+                if (node) {
+                  saleActionRefs.current.set(Number(schedule.id), node);
+                  return;
+                }
+                saleActionRefs.current.delete(Number(schedule.id));
+              }}
+            >
+              <MdClose aria-hidden="true" />❌ Hủy
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (suggestedSale) {
+      return (
+        <div className="tour-schedules-view-modal__sale">
+          <span className="tour-schedules-view-modal__sale-label">SALE</span>
+          <span className="tour-schedules-view-modal__sale-badge tour-schedules-view-modal__sale-badge--suggested">
+            <HiExclamationTriangle aria-hidden="true" />
+            Đề xuất -{Math.round(suggestedDiscount)}%
+          </span>
+          {!readOnly && (
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary tour-schedules-view-modal__sale-btn"
+              onClick={() => onApplySale?.(schedule)}
+              disabled={loading || isSaleUpdating}
+              ref={(node) => {
+                if (node) {
+                  saleActionRefs.current.set(Number(schedule.id), node);
+                  return;
+                }
+                saleActionRefs.current.delete(Number(schedule.id));
+              }}
+            >
+              <FaFireAlt aria-hidden="true" />
+              Áp dụng
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="tour-schedules-view-modal__sale">
+        <span className="tour-schedules-view-modal__sale-label">SALE</span>
+        <span className="tour-schedules-view-modal__sale-badge tour-schedules-view-modal__sale-badge--none">
+          <BiSolidDiscount aria-hidden="true" />
+        </span>
+      </div>
+    );
+  };
 
   const renderScheduleItem = (schedule) => {
     const computed = calculateScheduleStatus(schedule);
     const statusKey = computed.status;
     const isLocked = ["completed", "cancelled"].includes(statusKey);
+    const isHighlighted = Number(schedule.id) === highlightScheduleId;
 
     return (
-      <div className="tour-schedules-view-modal__item" key={schedule.id}>
+      <div
+        className={`tour-schedules-view-modal__item ${isHighlighted ? "tour-schedules-view-modal__item--target" : ""}`}
+        key={schedule.id}
+        ref={(node) => {
+          if (node) {
+            scheduleItemRefs.current.set(Number(schedule.id), node);
+            return;
+          }
+          scheduleItemRefs.current.delete(Number(schedule.id));
+        }}
+      >
         <div className="tour-schedules-view-modal__item-top">
           <span className="tour-schedules-view-modal__item-date">
-            <LuCalendarDays className="tour-schedules-view-modal__date-icon" aria-hidden="true" />
+            <LuCalendarDays
+              className="tour-schedules-view-modal__date-icon"
+              aria-hidden="true"
+            />
             {formatDate(schedule.start_date)}
           </span>
           <span
@@ -166,6 +296,7 @@ function TourSchedulesViewModal({
                 {computed.alertText}
               </span>
             )}
+            {renderSale(schedule, isLocked)}
           </div>
 
           {isLocked && (

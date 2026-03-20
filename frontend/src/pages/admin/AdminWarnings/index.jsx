@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LuEye } from "react-icons/lu";
 import { FaBell, FaCircle, FaTimesCircle } from "react-icons/fa";
+import { MdLocalFireDepartment } from "react-icons/md";
 import DataTable from "../../../components/admin/DataTable";
 import TourSchedulesViewModal from "../../../components/admin/TourSchedulesViewModal";
 import apiClient from "../../../utils/apiClient";
@@ -48,6 +49,7 @@ const resolveDaysLeft = (item) => {
 };
 
 function AdminWarnings() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [allSchedules, setAllSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -194,6 +196,15 @@ function AdminWarnings() {
             }}
           >
             <LuEye aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="admin-icon-btn admin-page-warnings__sale-action"
+            title="Xử lý sale"
+            aria-label={`Xử lý sale cho lịch của tour ${row.ten_tour}`}
+            onClick={() => navigate(`/admin/schedules?scheduleId=${row.id}`)}
+          >
+            <MdLocalFireDepartment aria-hidden="true" />
           </button>
         </div>
       ),

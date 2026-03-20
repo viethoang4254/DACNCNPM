@@ -2,6 +2,9 @@ import pool from "../config/db.js";
 
 const DEFAULT_MIN_REQUIRED_RATIO = 0.5;
 const SYSTEM_CANCEL_DAYS_THRESHOLD = 2;
+const SUGGESTED_SALE_DAYS_THRESHOLD = 7;
+const SUGGESTED_SALE_FILL_RATE_THRESHOLD = 0.5;
+const DEFAULT_SUGGESTED_DISCOUNT_PERCENT = 20;
 
 const startOfDay = (value) => {
   if (!value) return null;
@@ -42,6 +45,27 @@ export const getSchedulePercentRatio = (bookedSlots, maxSlots) => {
 
 export const getSchedulePercent = (bookedSlots, maxSlots) =>
   Math.floor(getSchedulePercentRatio(bookedSlots, maxSlots) * 100);
+
+export const getScheduleSaleSuggestion = (schedule) => {
+  const daysLeft = getScheduleDaysLeft(schedule?.start_date);
+  const fillRate = getSchedulePercentRatio(
+    schedule?.booked_slots,
+    schedule?.max_slots,
+  );
+
+  const suggested_sale =
+    daysLeft !== null &&
+    daysLeft >= 0 &&
+    daysLeft <= SUGGESTED_SALE_DAYS_THRESHOLD &&
+    fillRate < SUGGESTED_SALE_FILL_RATE_THRESHOLD;
+
+  return {
+    suggested_sale,
+    suggested_discount_percent: suggested_sale
+      ? DEFAULT_SUGGESTED_DISCOUNT_PERCENT
+      : 0,
+  };
+};
 
 export const updateScheduleStatus = (schedule) => {
   const maxSlots = Number(schedule?.max_slots || 0);
@@ -91,6 +115,7 @@ export const getScheduleAlertLevel = (schedule) => {
 export const withScheduleComputedFields = (schedule) => {
   const maxSlots = Number(schedule?.max_slots || 0);
   const bookedSlots = Number(schedule?.booked_slots || 0);
+  const discountPercent = Number(schedule?.discount_percent || 0);
   const daysLeft = getScheduleDaysLeft(schedule?.start_date);
   const percent = getSchedulePercent(bookedSlots, maxSlots);
   const status = updateScheduleStatus({
@@ -103,10 +128,17 @@ export const withScheduleComputedFields = (schedule) => {
     ...schedule,
     max_slots: maxSlots,
     booked_slots: bookedSlots,
+    is_on_sale: Boolean(schedule?.is_on_sale),
+    discount_percent: discountPercent,
     available_slots: Math.max(maxSlots - bookedSlots, 0),
     days_left: daysLeft,
     percent,
     status,
+    ...getScheduleSaleSuggestion({
+      ...schedule,
+      max_slots: maxSlots,
+      booked_slots: bookedSlots,
+    }),
     ...getScheduleAlertLevel({
       ...schedule,
       max_slots: maxSlots,
