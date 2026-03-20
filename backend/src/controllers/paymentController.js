@@ -289,8 +289,20 @@ export const rejectPaymentController = asyncHandler(async (req, res) => {
       });
     }
 
+    const now = new Date();
+
     await connection.execute("UPDATE payments SET status = 'failed' WHERE id = ?", [paymentId]);
-    await connection.execute("UPDATE bookings SET trang_thai = 'cancelled' WHERE id = ?", [payment.booking_id]);
+    await connection.execute(
+      `UPDATE bookings
+       SET trang_thai = 'cancelled',
+           cancelled_at = ?,
+           cancel_reason = 'Thanh toán bị từ chối bởi admin',
+           refund_amount = 0,
+           refund_status = 'none',
+           cancelled_by = 'admin'
+       WHERE id = ?`,
+      [now, payment.booking_id],
+    );
 
     await connection.commit();
 

@@ -4,6 +4,7 @@ import { getBookingPendingCutoff } from "../utils/bookingExpiration.js";
 export const getBookingById = async (id) => {
   const [rows] = await pool.execute(
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai, b.created_at,
+            b.cancelled_at, b.cancel_reason, b.refund_amount, b.refund_status, b.cancelled_by,
             u.ho_ten AS user_name, u.email AS user_email,
             t.ten_tour, t.gia, t.tinh_thanh,
             DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
@@ -31,6 +32,7 @@ export const getBookingById = async (id) => {
 export const getBookingsByUserId = async (userId) => {
   const [rows] = await pool.execute(
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai, b.created_at,
+            b.cancelled_at, b.cancel_reason, b.refund_amount, b.refund_status, b.cancelled_by,
             t.ten_tour, t.gia, t.tinh_thanh,
             DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
             s.status AS schedule_status,
@@ -56,6 +58,7 @@ export const getBookingsByUserId = async (userId) => {
 export const getAllBookings = async () => {
   const [rows] = await pool.execute(
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai, b.created_at,
+            b.cancelled_at, b.cancel_reason, b.refund_amount, b.refund_status, b.cancelled_by,
             u.ho_ten AS user_name, u.email AS user_email,
             t.ten_tour, t.gia, t.tinh_thanh,
             DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,
@@ -140,7 +143,7 @@ export const expirePendingBookingById = async (id, expireMinutes, connection = p
 export const getBookingForCancel = async (id, userId, connection = pool) => {
   const [rows] = await connection.execute(
     `SELECT b.id, b.user_id, b.schedule_id, b.tour_id, b.so_nguoi, b.tong_tien, 
-            b.trang_thai, b.cancelled_at, s.start_date, s.max_slots, s.booked_slots,
+            b.trang_thai, b.cancelled_at, s.start_date, s.max_slots, s.booked_slots, s.status AS schedule_status,
             s.min_required_ratio, p.status AS payment_status,
             t.ten_tour, t.gia
      FROM bookings b
@@ -160,7 +163,7 @@ export const getBookingForCancel = async (id, userId, connection = pool) => {
 export const getBookingsByUserIdWithCancelInfo = async (userId, connection = pool) => {
   const [rows] = await connection.execute(
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, 
-            b.trang_thai, b.created_at, b.cancelled_at, b.refund_amount, 
+            b.trang_thai, b.created_at, b.cancelled_at, b.cancel_reason, b.refund_amount, 
             b.refund_status, b.cancelled_by,
             t.ten_tour, t.gia, t.tinh_thanh,
             DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date,

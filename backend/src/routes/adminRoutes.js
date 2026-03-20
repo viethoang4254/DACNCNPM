@@ -1,10 +1,22 @@
 import express from "express";
 import { body, param } from "express-validator";
 import {
+  checkTourCapacityController,
   getAdminBookingsController,
   getRevenueController,
   getStatsController,
 } from "../controllers/adminController.js";
+import {
+  approveRefundController,
+  getRefundDetailController,
+  getRefundsController,
+  rejectRefundController,
+} from "../controllers/refundController.js";
+import {
+  getNotificationsController,
+  getUnreadNotificationCountController,
+  markNotificationReadController,
+} from "../controllers/notificationController.js";
 import {
   createAdminItinerariesController,
   deleteAdminItinerariesController,
@@ -47,6 +59,44 @@ router.use(authMiddleware, adminMiddleware);
 router.get("/stats", getStatsController);
 router.get("/revenue", getRevenueController);
 router.get("/bookings", getAdminBookingsController);
+router.post(
+  "/tour/check-capacity",
+  [
+    body("tour_id").optional().isInt({ gt: 0 }).withMessage("tour_id must be a positive integer"),
+    body("schedule_id").optional().isInt({ gt: 0 }).withMessage("schedule_id must be a positive integer"),
+  ],
+  validationMiddleware,
+  checkTourCapacityController,
+);
+
+router.get("/refunds", getRefundsController);
+router.get(
+  "/refunds/:id",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  getRefundDetailController,
+);
+router.post(
+  "/refunds/:id/approve",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  approveRefundController,
+);
+router.post(
+  "/refunds/:id/reject",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  rejectRefundController,
+);
+
+router.get("/notifications", getNotificationsController);
+router.get("/notifications/unread-count", getUnreadNotificationCountController);
+router.put(
+  "/notifications/:id/read",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  markNotificationReadController,
+);
 
 router.get("/itineraries", getAdminItinerariesController);
 

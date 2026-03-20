@@ -10,6 +10,12 @@ function formatCurrency(value) {
   return `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
 }
 
+function normalizeStatus(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
 function BookingViewModal({
   booking,
   onClose,
@@ -37,7 +43,7 @@ function BookingViewModal({
 
   if (!booking) return null;
 
-  const paymentStatus = booking.payment_status || "pending";
+  const paymentStatus = normalizeStatus(booking.payment_status) || "pending";
 
   return (
     <div className="admin-modal__backdrop" onClick={onClose}>

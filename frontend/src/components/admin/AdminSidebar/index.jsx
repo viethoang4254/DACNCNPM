@@ -9,6 +9,7 @@ import {
   FaCalendarAlt,
   FaRoute,
   FaExclamationTriangle,
+  FaUndo,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -45,12 +46,14 @@ const menuItems = [
   { to: "/admin/itineraries", label: "Itineraries", icon: FaRoute },
   { to: "/admin/bookings", label: "Bookings", icon: FaBook },
   { to: "/admin/payments", label: "Payments", icon: FaMoneyCheckAlt },
+  { to: "/admin/refunds", label: "Refunds", icon: FaUndo },
   { to: "/admin/warnings", label: "Cảnh báo", icon: FaExclamationTriangle },
   { to: "/admin/reviews", label: "Reviews", icon: FaStar },
 ];
 
 function AdminSidebar() {
   const [warningCount, setWarningCount] = useState(0);
+  const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -76,12 +79,57 @@ function AdminSidebar() {
       }
     }
 
+    async function fetchPendingPaymentCount() {
+      try {
+        const response = await apiClient.get("/api/payments");
+        if (!mounted) return;
+
+        const list = Array.isArray(response?.data?.data)
+          ? response.data.data
+          : [];
+
+        const nextCount = list.filter((item) => {
+          const status = String(item?.status || "")
+            .trim()
+            .toLowerCase();
+          return status === "pending";
+        }).length;
+
+        setPendingPaymentCount(nextCount);
+      } catch {
+        if (!mounted) return;
+        setPendingPaymentCount(0);
+      }
+    }
+
     fetchWarningCount();
-    const timer = setInterval(fetchWarningCount, 60000);
+    fetchPendingPaymentCount();
+
+    const timer = setInterval(() => {
+      fetchWarningCount();
+      fetchPendingPaymentCount();
+    }, 12000);
+
+    const handleFocus = () => {
+      fetchWarningCount();
+      fetchPendingPaymentCount();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchWarningCount();
+        fetchPendingPaymentCount();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       mounted = false;
       clearInterval(timer);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -112,6 +160,14 @@ function AdminSidebar() {
                 aria-label={`Tổng cảnh báo ${warningCount}`}
               >
                 {warningCount}
+              </span>
+            )}
+            {to === "/admin/payments" && (
+              <span
+                className={`admin-sidebar__warning-badge admin-sidebar__warning-badge--payment ${pendingPaymentCount > 0 ? "is-alert" : ""}`}
+                aria-label={`Yêu cầu thanh toán chờ duyệt ${pendingPaymentCount}`}
+              >
+                {pendingPaymentCount}
               </span>
             )}
           </NavLink>

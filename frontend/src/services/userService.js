@@ -68,11 +68,13 @@ export const getCancelPreview = async (bookingId) => {
 };
 
 /**
- * Cancel booking with auto-refund
+ * Cancel booking and create refund request if eligible
  * @param {number} bookingId
- * @returns {Promise} { bookingId, tourName, refundAmount, refundPercentage, refundStatus, cancelledAt, booking }
+ * @param {object} payload
+ * @param {string} payload.cancel_reason
+ * @returns {Promise} { bookingId, tourName, refundPercentage, refundStatus, cancelledAt, booking }
  */
-export const cancelBooking = async (bookingId) => {
-  const response = await apiClient.post(`/api/bookings/${bookingId}/cancel`);
+export const cancelBooking = async (bookingId, payload = {}) => {
+  const response = await apiClient.post(`/api/bookings/${bookingId}/cancel`, payload);
   return response.data?.data || null;
 };

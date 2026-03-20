@@ -13,11 +13,8 @@ import {
 import { getPendingExpireMinutes } from "../utils/bookingExpiration.js";
 import { refreshScheduleOccupancyAndStatusById } from "../services/scheduleStatusService.js";
 import { expirePendingBookingsAndSyncSchedules } from "../services/bookingMaintenanceService.js";
-import { 
-  cancelBookingService, 
-  getCancelPreview, 
-  validateCancel 
-} from "../services/cancelBookingService.js";
+import { getCancelPreview, validateCancel } from "../services/cancelBookingService.js";
+import { cancelBooking } from "../services/bookingService.js";
 
 const PENDING_EXPIRE_MINUTES = getPendingExpireMinutes();
 
@@ -316,57 +313,47 @@ export const cancelPreviewController = asyncHandler(async (req, res) => {
  * Execute booking cancellation with auto-refund calculation
  */
 export const cancelBookingController = asyncHandler(async (req, res) => {
-  const bookingId = Number(req.params.id);
+  const bookingId = Number(req.params.id ?? req.body.booking_id);
   const userId = req.user.id;
+  const cancelReason = String(req.body?.cancel_reason || "").trim();
+
+  if (!Number.isInteger(bookingId) || bookingId <= 0) {
+    return sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: "booking_id is required",
+      data: {},
+    });
+  }
 
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    // Get booking with details
-    const booking = await getBookingForCancel(bookingId, userId, connection);
+    const result = await cancelBooking({
+      bookingId,
+      userId,
+      cancelReason,
+      connection,
+    });
 
-    if (!booking) {
+    if (!result.success) {
       await connection.rollback();
       return sendResponse(res, {
-        statusCode: 404,
+        statusCode: result.statusCode || 400,
         success: false,
-        message: "Booking not found or not yours",
-        data: {},
-      });
-    }
-
-    // Execute cancellation service
-    const cancelResult = await cancelBookingService(bookingId, userId, connection);
-
-    if (!cancelResult.success) {
-      await connection.rollback();
-      return sendResponse(res, {
-        statusCode: 400,
-        success: false,
-        message: cancelResult.error,
-        data: {},
+        message: result.message || "Không thể hủy booking",
+        data: result.data || {},
       });
     }
 
     await connection.commit();
 
-    // Fetch updated booking
-    const updatedBooking = await getBookingById(bookingId);
-
     return sendResponse(res, {
-      statusCode: 200,
+      statusCode: result.statusCode || 200,
       success: true,
-      message: "Booking cancelled successfully",
-      data: {
-        bookingId,
-        tourName: booking.ten_tour,
-        refundAmount: cancelResult.refundAmount,
-        refundPercentage: cancelResult.refundPercentage,
-        refundStatus: cancelResult.refundStatus,
-        cancelledAt: cancelResult.cancelledAt,
-        booking: updatedBooking,
-      },
+      message: result.message || "Booking cancelled successfully",
+      data: result.data || {},
     });
   } catch (error) {
     await connection.rollback();
