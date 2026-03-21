@@ -350,7 +350,7 @@ function ToursPage() {
         <main className="tours-page__main">
           <div className="tours-page__main-scroll" ref={scrollContainerRef}>
             <div className="tours-page__toolbar">
-              <p className="tours-page__result-count">
+              {/* <p className="tours-page__result-count">
                 {isLoading && allTours.length === 0 ? (
                   "Đang tải..."
                 ) : (
@@ -360,7 +360,8 @@ function ToursPage() {
                       : "Không tìm thấy tour nào"}
                   </>
                 )}
-              </p>
+              </p> */}
+              <div></div>
               <div className="tours-page__sort-wrap">
                 <label htmlFor="sort-select" className="tours-page__sort-label">
                   Sắp xếp:

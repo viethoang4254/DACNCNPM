@@ -313,7 +313,7 @@ function Registry() {
     <main className="registry-page">
       <section className="registry-card">
         <div className="registry-card__left">
-          <p className="registry-card__eyebrow">BestPrice Membership</p>
+          <p className="registry-card__eyebrow">VietXanh Membership</p>
           <h1>Tạo tài khoản mới</h1>
           <p>
             Đăng ký để nhận ưu đãi độc quyền, tích điểm cho mỗi hành trình và
@@ -322,7 +322,7 @@ function Registry() {
         </div>
 
         <div className="registry-card__right">
-          <h2>Đăng ký tài khoản</h2>
+          <h2>ĐĂNG KÝ</h2>
           <form className="registry-form" onSubmit={handleSubmit} noValidate>
             <label htmlFor="full-name">Họ và tên</label>
             <input

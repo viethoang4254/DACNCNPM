@@ -3,7 +3,7 @@ function WhyChooseUs({ reasons }) {
     <section className="home__section">
       <div className="home__section-heading">
         <h2>
-          Tại sao nên chọn <span>BestPrice Travel ?</span>
+          Tại sao nên chọn <span>Việt Xanh Travel ?</span>
         </h2>
       </div>
 

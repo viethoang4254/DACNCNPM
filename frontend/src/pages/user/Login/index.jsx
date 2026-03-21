@@ -150,7 +150,7 @@ function Login() {
     <main className="auth-page auth-page--login">
       <section className="auth-card">
         <div className="auth-card__left">
-          <p className="auth-card__eyebrow">BestPrice Travel</p>
+          <p className="auth-card__eyebrow">VietXanh Travel</p>
           <h1>Chào mừng bạn trở lại</h1>
           <p>
             Đăng nhập để quản lý lịch đặt tour, theo dõi ưu đãi và nhận thông
@@ -159,7 +159,7 @@ function Login() {
         </div>
 
         <div className="auth-card__right">
-          <h2>Đăng nhập tài khoản</h2>
+          <h2>ĐĂNG NHẬP</h2>
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
             <label htmlFor="login-email">Email</label>
             <input

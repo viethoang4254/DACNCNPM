@@ -56,15 +56,24 @@ CREATE TABLE tour_schedules (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tour_id INT NOT NULL,
   start_date DATE NOT NULL,
+  max_slots INT NOT NULL,
+  booked_slots INT NOT NULL DEFAULT 0,
   available_slots INT NOT NULL,
+  is_on_sale BOOLEAN DEFAULT FALSE,
+  discount_percent DECIMAL(5,2) DEFAULT 0,
+  status ENUM('open', 'warning', 'guaranteed', 'full', 'cancelled', 'completed') NOT NULL DEFAULT 'open',
+  min_required_ratio DECIMAL(3,2) NOT NULL DEFAULT 0.50,
   INDEX idx_tour_schedules_tour_id (tour_id),
   INDEX idx_tour_schedules_start_date (start_date),
+  INDEX idx_tour_schedules_status (status),
   CONSTRAINT uq_tour_schedule UNIQUE (tour_id, start_date),
   CONSTRAINT fk_tour_schedules_tour
     FOREIGN KEY (tour_id)
     REFERENCES tours(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
+  CONSTRAINT chk_tour_schedules_max_slots CHECK (max_slots > 0),
+  CONSTRAINT chk_tour_schedules_booked_slots CHECK (booked_slots >= 0),
   CONSTRAINT chk_tour_schedules_slots CHECK (available_slots >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -159,4 +168,26 @@ CREATE TABLE reviews (
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE tour_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  tour_id INT NOT NULL,
+  viewed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_tour_history_user_tour (user_id, tour_id),
+  INDEX idx_tour_history_user_id (user_id),
+  INDEX idx_tour_history_tour_id (tour_id),
+  INDEX idx_tour_history_viewed_at (viewed_at),
+  INDEX idx_tour_history_user_tour_viewed (user_id, tour_id, viewed_at),
+  CONSTRAINT fk_tour_history_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_tour_history_tour
+    FOREIGN KEY (tour_id)
+    REFERENCES tours(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

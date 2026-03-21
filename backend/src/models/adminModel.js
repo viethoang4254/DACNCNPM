@@ -32,7 +32,7 @@ export const getAdminBookings = async () => {
     `SELECT b.id, b.user_id, b.tour_id, b.schedule_id, b.so_nguoi, b.tong_tien, b.trang_thai, b.created_at,
             u.ho_ten AS user_name,
             t.ten_tour,
-            s.start_date
+                 DATE_FORMAT(s.start_date, '%Y-%m-%d') AS start_date
      FROM bookings b
      INNER JOIN users u ON u.id = b.user_id
      INNER JOIN tours t ON t.id = b.tour_id

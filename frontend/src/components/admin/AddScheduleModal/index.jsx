@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
 import apiClient from "../../../utils/apiClient";
+import { toDateKey } from "../../../utils/dateOnly";
 import TourSearchDropdown from "../TourSearchDropdown";
 import "./AddScheduleModal.scss";
 
-const todayStr = () => new Date().toISOString().split("T")[0];
+const todayStr = () => toDateKey(new Date());
 
 function AddScheduleModal({
   open,
@@ -69,9 +70,7 @@ function AddScheduleModal({
   return (
     <div
       className="admin-modal__backdrop"
-      onClick={(e) =>
-        e.target === e.currentTarget && !loading && onClose()
-      }
+      onClick={(e) => e.target === e.currentTarget && !loading && onClose()}
     >
       <div className="schedule-modal">
         <div className="schedule-modal__header">
@@ -90,7 +89,11 @@ function AddScheduleModal({
           </button>
         </div>
 
-        <form className="schedule-modal__body" onSubmit={handleSubmit} noValidate>
+        <form
+          className="schedule-modal__body"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           {apiError && (
             <div className="schedule-modal__alert" role="alert">
               <strong>Cảnh báo:</strong> {apiError}
@@ -103,7 +106,10 @@ function AddScheduleModal({
               <input
                 type="text"
                 className="admin-input"
-                value={tours.find((t) => String(t.id) === String(tourId))?.ten_tour || ""}
+                value={
+                  tours.find((t) => String(t.id) === String(tourId))
+                    ?.ten_tour || ""
+                }
                 disabled
                 readOnly
               />
