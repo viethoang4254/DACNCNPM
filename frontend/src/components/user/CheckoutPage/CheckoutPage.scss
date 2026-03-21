@@ -90,8 +90,14 @@
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px dashed #dfe7f2;
+  display: grid;
+  gap: 8px;
+}
+
+.checkout-page__payment-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
 
   span {
@@ -100,8 +106,30 @@
   }
 
   strong {
+    color: #1e293b;
+    font-size: 1.55rem;
+    text-align: right;
+  }
+}
+
+.checkout-page__payment-row .is-original {
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.checkout-page__payment-row .is-discount {
+  color: #dc2626;
+}
+
+.checkout-page__payment-row--total {
+  padding-top: 8px;
+  border-top: 1px dashed #e4ebf5;
+
+  span,
+  strong {
     color: #ce4b00;
     font-size: 1.8rem;
+    font-weight: 800;
   }
 }
 

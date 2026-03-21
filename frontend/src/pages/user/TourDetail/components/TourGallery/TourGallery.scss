@@ -1,6 +1,23 @@
 .tour-detail__main-image-wrap {
+  position: relative;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
+}
+
+.tour-detail__image-sale-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  z-index: 2;
 }
 
 .tour-detail__main-image {

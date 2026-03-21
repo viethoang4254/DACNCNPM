@@ -55,6 +55,15 @@
   }
 }
 
+.order-summary__row .is-original {
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.order-summary__row .is-discount {
+  color: #dc2626;
+}
+
 .order-summary__row--total {
   border-bottom: 0;
   padding-top: 12px;

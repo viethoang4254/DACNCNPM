@@ -19,6 +19,12 @@
   color: #334155;
 }
 
+.tour-detail__sale-note {
+  font-size: 1.2rem;
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 .tour-detail__field select {
   height: 44px;
   border: 1px solid #d7dfec;
@@ -46,14 +52,42 @@
   text-align: center;
 }
 
-.tour-detail__total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.tour-detail__breakdown {
   margin: 16px 0;
   padding: 12px;
   border-radius: 10px;
   background: #eff6ff;
+  display: grid;
+  gap: 8px;
+}
+
+.tour-detail__breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.35rem;
+
+  strong {
+    color: #1e293b;
+  }
+}
+
+.tour-detail__breakdown-original {
+  color: #94a3b8 !important;
+  text-decoration: line-through;
+}
+
+.tour-detail__breakdown-discount {
+  color: #dc2626 !important;
+}
+
+.tour-detail__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px dashed #bfdbfe;
 }
 
 .tour-detail__total strong {

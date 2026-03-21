@@ -301,6 +301,21 @@ button {
   border-radius: 4px;
 }
 
+.tour-card-h__sale-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #d90429;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
 .tour-card-h__body {
   flex: 1;
   min-width: 0;
@@ -371,7 +386,8 @@ button {
 .tour-card-h__price-wrap {
   display: flex;
   align-items: baseline;
-  gap: 5px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .tour-card-h__price-label {
@@ -379,10 +395,24 @@ button {
   color: #8fa0b4;
 }
 
+.tour-card-h__price-original {
+  font-size: 1.25rem;
+  color: #7c8797;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
 .tour-card-h__price {
   font-size: 1.35rem;
   font-weight: 800;
   color: var(--color-primary);
+  line-height: 1;
+}
+
+.tour-card-h__price-current {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #cf1322;
   line-height: 1;
 }
 

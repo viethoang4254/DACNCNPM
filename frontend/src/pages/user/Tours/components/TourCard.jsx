@@ -4,8 +4,10 @@ import {
   FaUsers,
   FaBus,
   FaArrowRight,
+  FaFire,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { getPriceInfo } from "../../../../utils/price";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -37,9 +39,49 @@ function resolveImageUrl(path) {
   return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString("vi-VN");
+}
+
+function getScheduleForCard(tour) {
+  const directSchedule =
+    tour?.schedule || tour?.nearest_schedule || tour?.next_schedule || null;
+
+  if (directSchedule) return directSchedule;
+
+  const scheduleList = Array.isArray(tour?.schedules) ? tour.schedules : [];
+  if (scheduleList.length > 0) {
+    const bestSale = [...scheduleList]
+      .filter(
+        (schedule) =>
+          Boolean(schedule?.is_on_sale) &&
+          Number(schedule?.discount_percent || 0) > 0,
+      )
+      .sort(
+        (a, b) =>
+          Number(b?.discount_percent || 0) - Number(a?.discount_percent || 0),
+      )[0];
+
+    return bestSale || scheduleList[0];
+  }
+
+  if (tour?.is_on_sale || Number(tour?.discount_percent || 0) > 0) {
+    return {
+      is_on_sale: Boolean(tour?.is_on_sale),
+      discount_percent: Number(tour?.discount_percent || 0),
+    };
+  }
+
+  return null;
+}
+
 function TourCard({ tour }) {
   const imageUrl = resolveImageUrl(tour.hinh_anh);
-  const price = Number(tour.gia || 0).toLocaleString("vi-VN");
+  const activeSchedule = getScheduleForCard(tour);
+  const { finalPrice, originalPrice, discount } = getPriceInfo(
+    tour,
+    activeSchedule,
+  );
   const destinationLabel =
     DESTINATION_LABELS[tour.tinh_thanh] || tour.tinh_thanh;
   const departureLabel =
@@ -55,6 +97,11 @@ function TourCard({ tour }) {
           <div className="tour-card-h__image-placeholder" aria-hidden="true" />
         )}
         <span className="tour-card-h__badge">{tour.so_ngay} ngày</span>
+        {discount > 0 ? (
+          <span className="tour-card-h__sale-badge">
+            <FaFire aria-hidden="true" /> -{discount}%
+          </span>
+        ) : null}
       </div>
 
       <div className="tour-card-h__body">
@@ -84,7 +131,18 @@ function TourCard({ tour }) {
         <div className="tour-card-h__footer">
           <div className="tour-card-h__price-wrap">
             <span className="tour-card-h__price-label">Giá từ</span>
-            <span className="tour-card-h__price">{price} ₫</span>
+            {originalPrice ? (
+              <span className="tour-card-h__price-original">
+                {formatCurrency(originalPrice)} ₫
+              </span>
+            ) : null}
+            <span
+              className={
+                originalPrice ? "tour-card-h__price-current" : "tour-card-h__price"
+              }
+            >
+              {formatCurrency(finalPrice)} ₫
+            </span>
             <span className="tour-card-h__price-note">/ người</span>
           </div>
           <div className="tour-card-h__actions">
