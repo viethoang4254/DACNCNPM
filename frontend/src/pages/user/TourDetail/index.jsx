@@ -31,15 +31,23 @@ function getAverageRating(reviews = []) {
   return total / reviews.length;
 }
 
-function formatCurrency(value) {
-  return Number(value || 0).toLocaleString("vi-VN");
-}
-
 function formatStartDate(value) {
   if (!value) return "";
-  const date = new Date(value);
+
+  if (typeof value === "string") {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return `${match[3]}/${match[2]}/${match[1]}`;
+    }
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("vi-VN");
+
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 function TourDetailPage() {
@@ -47,6 +55,7 @@ function TourDetailPage() {
   const [tour, setTour] = useState(null);
   const [images, setImages] = useState([]);
   const [schedules, setSchedules] = useState([]);
+  const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [itineraries, setItineraries] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [similarTours, setSimilarTours] = useState([]);
@@ -187,9 +196,41 @@ function TourDetailPage() {
     return saleSchedules[0] || null;
   }, [schedules]);
 
+  useEffect(() => {
+    const scheduleList = Array.isArray(schedules) ? schedules : [];
+
+    if (scheduleList.length === 0) {
+      setSelectedScheduleId("");
+      return;
+    }
+
+    const hasCurrentSelection = scheduleList.some(
+      (schedule) => String(schedule.id) === String(selectedScheduleId),
+    );
+    if (hasCurrentSelection) return;
+
+    const firstAvailable = scheduleList.find(
+      (schedule) => Number(schedule?.available_slots || 0) > 0,
+    );
+    setSelectedScheduleId(String(firstAvailable?.id || scheduleList[0].id));
+  }, [schedules, selectedScheduleId]);
+
+  const selectedSchedule = useMemo(() => {
+    if (!selectedScheduleId) return null;
+    const scheduleList = Array.isArray(schedules) ? schedules : [];
+
+    return (
+      scheduleList.find(
+        (schedule) => String(schedule.id) === String(selectedScheduleId),
+      ) || null
+    );
+  }, [schedules, selectedScheduleId]);
+
+  const displaySchedule = selectedSchedule || highlightedSaleSchedule;
+
   const priceInfo = useMemo(
-    () => getPriceInfo(tour, highlightedSaleSchedule),
-    [tour, highlightedSaleSchedule],
+    () => getPriceInfo(tour, displaySchedule),
+    [tour, displaySchedule],
   );
 
   if (loading) {
@@ -239,26 +280,13 @@ function TourDetailPage() {
               {priceInfo.discount > 0 ? (
                 <p className="tour-detail__sale-note">
                   Giảm {priceInfo.discount}% cho tour này
-                  {highlightedSaleSchedule?.start_date
-                    ? ` (khởi hành ${formatStartDate(highlightedSaleSchedule.start_date)})`
+                  {displaySchedule?.start_date
+                    ? ` (khởi hành ${formatStartDate(displaySchedule.start_date)})`
                     : ""}
                 </p>
               ) : null}
 
-              <div className="tour-detail__price-line">
-                {priceInfo.originalPrice ? (
-                  <span className="tour-detail__price-original">
-                    {formatCurrency(priceInfo.originalPrice)} đ
-                  </span>
-                ) : null}
-                <span
-                  className={`tour-detail__price-final ${
-                    priceInfo.discount > 0 ? "tour-detail__price-final--sale" : ""
-                  }`}
-                >
-                  {formatCurrency(priceInfo.finalPrice)} đ / người
-                </span>
-              </div>
+              {/* Hidden per UX request: avoid duplicating price line with booking card */}
             </div>
           </article>
 
@@ -284,7 +312,12 @@ function TourDetailPage() {
         </section>
 
         <aside className="tour-detail__right">
-          <BookingCard tour={tour} schedules={schedules} />
+          <BookingCard
+            tour={tour}
+            schedules={schedules}
+            selectedScheduleId={selectedScheduleId}
+            onSelectedScheduleIdChange={setSelectedScheduleId}
+          />
           <SimilarTours tours={similarTours} />
           <section className="tour-detail__mini-review card">
             <h3>Đánh giá nhanh</h3>

@@ -70,13 +70,36 @@ function isScheduleBookable(schedule) {
   return availableSlots > 0;
 }
 
-function BookingCard({ tour, schedules = [] }) {
+function BookingCard({
+  tour,
+  schedules = [],
+  selectedScheduleId: selectedScheduleIdProp,
+  onSelectedScheduleIdChange,
+}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedScheduleId, setSelectedScheduleId] = useState("");
+  const [internalSelectedScheduleId, setInternalSelectedScheduleId] =
+    useState("");
   const [people, setPeople] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+
+  const isSelectionControlled = selectedScheduleIdProp !== undefined;
+  const selectedScheduleId = isSelectionControlled
+    ? String(selectedScheduleIdProp || "")
+    : internalSelectedScheduleId;
+
+  const updateSelectedScheduleId = (nextValue) => {
+    const normalized = String(nextValue || "");
+
+    if (!isSelectionControlled) {
+      setInternalSelectedScheduleId(normalized);
+    }
+
+    if (typeof onSelectedScheduleIdChange === "function") {
+      onSelectedScheduleIdChange(normalized);
+    }
+  };
 
   const scheduleOptions = useMemo(
     () => (Array.isArray(schedules) ? schedules : []),
@@ -96,17 +119,23 @@ function BookingCard({ tour, schedules = [] }) {
     Boolean(selectedScheduleId) && isSelectedScheduleAvailable && !submitting;
 
   useEffect(() => {
-    if (scheduleOptions.length > 0) {
-      const firstAvailable = scheduleOptions.find((schedule) =>
-        isScheduleBookable(schedule),
-      );
-      setSelectedScheduleId(
-        String(firstAvailable?.id || scheduleOptions[0].id),
-      );
-    } else {
-      setSelectedScheduleId("");
+    if (scheduleOptions.length === 0) {
+      updateSelectedScheduleId("");
+      return;
     }
-  }, [scheduleOptions]);
+
+    const hasCurrentSelection = scheduleOptions.some(
+      (schedule) => String(schedule.id) === String(selectedScheduleId),
+    );
+    if (hasCurrentSelection) return;
+
+    const firstAvailable = scheduleOptions.find((schedule) =>
+      isScheduleBookable(schedule),
+    );
+    updateSelectedScheduleId(
+      String(firstAvailable?.id || scheduleOptions[0].id),
+    );
+  }, [scheduleOptions, selectedScheduleId]);
 
   useEffect(() => {
     if (!selectedSchedule) return;
@@ -222,7 +251,7 @@ function BookingCard({ tour, schedules = [] }) {
         <select
           value={selectedScheduleId}
           onChange={(event) => {
-            setSelectedScheduleId(event.target.value);
+            updateSelectedScheduleId(event.target.value);
             setMessage({ text: "", type: "" });
           }}
           disabled={scheduleOptions.length === 0}

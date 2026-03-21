@@ -10,13 +10,16 @@ import {
 	applySaleToScheduleById,
 	removeSaleFromScheduleById,
 } from "../models/scheduleModel.js";
+import { refreshAllSchedulesOccupancyAndStatus } from "../services/scheduleStatusService.js";
 
 export const getAllSchedulesController = asyncHandler(async (req, res) => {
+	await refreshAllSchedulesOccupancyAndStatus();
 	const schedules = await getAllSchedules();
 	sendResponse(res, { data: schedules });
 });
 
 export const getWarningSchedulesController = asyncHandler(async (req, res) => {
+	await refreshAllSchedulesOccupancyAndStatus();
 	const schedules = await getWarningSchedules();
 	sendResponse(res, { data: schedules });
 });

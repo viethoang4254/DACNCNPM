@@ -164,6 +164,7 @@ function TourSchedulesViewModal({
 
   const renderSale = (schedule, isLocked) => {
     const isOnSale = Boolean(schedule?.is_on_sale);
+    const isAutoSale = Boolean(schedule?.auto_sale_applied);
     const discount = Number(schedule?.discount_percent || 0);
     const suggestedSale =
       Boolean(schedule?.suggested_sale) && !isOnSale && !isLocked;
@@ -174,12 +175,20 @@ function TourSchedulesViewModal({
       Number(saleLoadingScheduleId) === Number(schedule.id);
 
     if (isOnSale) {
+      const saleBadgeClass = isAutoSale
+        ? "tour-schedules-view-modal__sale-badge--auto"
+        : "tour-schedules-view-modal__sale-badge--active";
+
       return (
         <div className="tour-schedules-view-modal__sale">
           <span className="tour-schedules-view-modal__sale-label">SALE</span>
-          <span className="tour-schedules-view-modal__sale-badge tour-schedules-view-modal__sale-badge--active">
+          <span
+            className={`tour-schedules-view-modal__sale-badge ${saleBadgeClass}`}
+          >
             <FaFireAlt aria-hidden="true" />
-            🔥 -{Math.round(discount)}%
+            {isAutoSale
+              ? `Auto sale -${Math.round(discount)}%`
+              : `Sale -${Math.round(discount)}%`}
           </span>
           {!readOnly && (
             <button
@@ -195,7 +204,7 @@ function TourSchedulesViewModal({
                 saleActionRefs.current.delete(Number(schedule.id));
               }}
             >
-              <MdClose aria-hidden="true" />❌ Hủy
+              <MdClose aria-hidden="true" /> Hủy
             </button>
           )}
         </div>

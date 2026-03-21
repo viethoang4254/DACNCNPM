@@ -8,7 +8,7 @@ const scheduleSelectSql = `SELECT ts.id, ts.tour_id, t.ten_tour, t.so_nguoi_toi_
 	   ts.start_date,
 	   COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) AS max_slots,
 	   ts.booked_slots, ts.available_slots, ts.status, ts.min_required_ratio,
-	   ts.is_on_sale, ts.discount_percent
+	   ts.is_on_sale, ts.discount_percent, ts.auto_sale_applied
    FROM tour_schedules ts
    JOIN tours t ON t.id = ts.tour_id`;
 
@@ -125,7 +125,7 @@ export const deleteScheduleById = async (id) => {
 
 export const applySaleToScheduleById = async (id, discountPercent = 20) => {
 	const [result] = await pool.execute(
-		"UPDATE tour_schedules SET is_on_sale = TRUE, discount_percent = ? WHERE id = ?",
+		"UPDATE tour_schedules SET is_on_sale = TRUE, discount_percent = ?, auto_sale_applied = FALSE WHERE id = ?",
 		[Number(discountPercent), id],
 	);
 
@@ -134,7 +134,7 @@ export const applySaleToScheduleById = async (id, discountPercent = 20) => {
 
 export const removeSaleFromScheduleById = async (id) => {
 	const [result] = await pool.execute(
-		"UPDATE tour_schedules SET is_on_sale = FALSE, discount_percent = 0 WHERE id = ?",
+		"UPDATE tour_schedules SET is_on_sale = FALSE, discount_percent = 0, auto_sale_applied = FALSE WHERE id = ?",
 		[id],
 	);
 

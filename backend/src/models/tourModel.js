@@ -666,7 +666,11 @@ export const getTourSchedules = async (tourId) => {
 
 export const getScheduleById = async (id) => {
   const [rows] = await pool.execute(
-    `SELECT ts.id, ts.tour_id, ts.start_date, ts.available_slots, t.so_nguoi_toi_da,
+    `SELECT ts.id,
+            ts.tour_id,
+            ts.start_date,
+            ts.available_slots,
+            t.so_nguoi_toi_da,
             CASE
               WHEN DATE(ts.start_date) > CURDATE() THEN 'Sắp khởi hành'
               WHEN DATE(ts.start_date) = CURDATE() THEN 'Đang khởi hành'

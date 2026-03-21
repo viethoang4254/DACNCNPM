@@ -61,6 +61,7 @@ CREATE TABLE tour_schedules (
   available_slots INT NOT NULL,
   is_on_sale BOOLEAN DEFAULT FALSE,
   discount_percent DECIMAL(5,2) DEFAULT 0,
+  auto_sale_applied BOOLEAN DEFAULT FALSE,
   status ENUM('open', 'warning', 'guaranteed', 'full', 'cancelled', 'completed') NOT NULL DEFAULT 'open',
   min_required_ratio DECIMAL(3,2) NOT NULL DEFAULT 0.50,
   INDEX idx_tour_schedules_tour_id (tour_id),
