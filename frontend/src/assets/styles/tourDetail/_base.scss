@@ -42,6 +42,26 @@
   color: #0f172a;
 }
 
+.tour-detail__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tour-detail__sale-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .tour-detail__headline p {
   margin: 0;
   color: #f59e0b;
@@ -53,6 +73,59 @@
 
 .tour-detail__headline span {
   color: #475569;
+}
+
+.tour-detail__price-box {
+  margin-top: 14px;
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.tour-detail__price-box--sale {
+  background: #fff5f5;
+  border-color: #fecaca;
+}
+
+.tour-detail__sale-heading {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 1.45rem;
+  color: #b91c1c;
+  font-weight: 800;
+}
+
+.tour-detail__sale-note {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 1.3rem;
+}
+
+.tour-detail__price-line {
+  margin-top: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tour-detail__price-original {
+  color: #94a3b8;
+  text-decoration: line-through;
+  font-size: 1.35rem;
+}
+
+.tour-detail__price-final {
+  color: var(--color-primary);
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.tour-detail__price-final--sale {
+  color: #dc2626;
 }
 
 .tour-detail__services {

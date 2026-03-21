@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import apiClient from "../../../../../utils/apiClient";
 import { getAuthToken } from "../../../../../utils/authStorage";
+import { getPriceInfo } from "../../../../../utils/price";
 import "./BookingCard.scss";
 
 function formatCurrency(value) {
@@ -115,10 +116,25 @@ function BookingCard({ tour, schedules = [] }) {
     setPeople((prev) => Math.min(prev, maxPeople));
   }, [selectedSchedule]);
 
-  const totalPrice = useMemo(
-    () => Number(tour?.gia || 0) * people,
-    [tour?.gia, people],
-  );
+  const pricing = useMemo(() => {
+    const { finalPrice, originalPrice, discount } = getPriceInfo(
+      tour,
+      selectedSchedule,
+    );
+
+    const unitFinal = Number(finalPrice || 0);
+    const unitOriginal = Number(originalPrice ?? tour?.gia ?? 0);
+    const originalTotal = unitOriginal * people;
+    const finalTotal = unitFinal * people;
+    const discountTotal = Math.max(0, originalTotal - finalTotal);
+
+    return {
+      discount,
+      originalTotal,
+      discountTotal,
+      finalTotal,
+    };
+  }, [tour, selectedSchedule, people]);
 
   const getScheduleLabel = (schedule) => {
     const available = Number(schedule?.available_slots || 0);
@@ -225,6 +241,12 @@ function BookingCard({ tour, schedules = [] }) {
             ))
           )}
         </select>
+
+        {pricing.discount > 0 ? (
+          <small className="tour-detail__sale-note">
+            Đang áp dụng ưu đãi -{pricing.discount}% cho lịch này
+          </small>
+        ) : null}
       </label>
 
       <div className="tour-detail__field">
@@ -251,9 +273,29 @@ function BookingCard({ tour, schedules = [] }) {
         </div>
       </div>
 
-      <div className="tour-detail__total">
-        <span>Tổng giá trị</span>
-        <strong>{formatCurrency(totalPrice)} VND</strong>
+      <div className="tour-detail__breakdown">
+        <div className="tour-detail__breakdown-row">
+          <span>Giá gốc</span>
+          <strong
+            className={
+              pricing.discount > 0 ? "tour-detail__breakdown-original" : ""
+            }
+          >
+            {formatCurrency(pricing.originalTotal)} đ
+          </strong>
+        </div>
+
+        <div className="tour-detail__breakdown-row">
+          <span>Giảm giá</span>
+          <strong className="tour-detail__breakdown-discount">
+            -{formatCurrency(pricing.discountTotal)} đ
+          </strong>
+        </div>
+
+        <div className="tour-detail__total">
+          <span>Tổng tiền</span>
+          <strong>{formatCurrency(pricing.finalTotal)} đ</strong>
+        </div>
       </div>
 
       {message.text && (

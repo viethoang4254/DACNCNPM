@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { FaFire } from "react-icons/fa";
 import TourGallery from "./components/TourGallery/index.jsx";
 import BookingCard from "./components/BookingCard/index.jsx";
 import Breadcrumb from "./components/Breadcrumb/index.jsx";
@@ -9,6 +10,7 @@ import TourItinerary from "./components/TourItinerary/index.jsx";
 import TourReviews from "./components/TourReviews/index.jsx";
 import SimilarTours from "./components/SimilarTours/index.jsx";
 import { saveTourView } from "../../../services/historyService";
+import { getPriceInfo } from "../../../utils/price";
 import "./TourDetail.scss";
 
 const API_BASE_URL =
@@ -27,6 +29,17 @@ function getAverageRating(reviews = []) {
     0,
   );
   return total / reviews.length;
+}
+
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString("vi-VN");
+}
+
+function formatStartDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("vi-VN");
 }
 
 function TourDetailPage() {
@@ -153,6 +166,32 @@ function TourDetailPage() {
     ];
   }, [tour]);
 
+  const highlightedSaleSchedule = useMemo(() => {
+    const scheduleList = Array.isArray(schedules) ? schedules : [];
+
+    const saleSchedules = scheduleList
+      .filter(
+        (schedule) =>
+          Boolean(schedule?.is_on_sale) &&
+          Number(schedule?.discount_percent || 0) > 0,
+      )
+      .sort((a, b) => {
+        const discountDiff =
+          Number(b?.discount_percent || 0) - Number(a?.discount_percent || 0);
+        if (discountDiff !== 0) return discountDiff;
+        return String(a?.start_date || "").localeCompare(
+          String(b?.start_date || ""),
+        );
+      });
+
+    return saleSchedules[0] || null;
+  }, [schedules]);
+
+  const priceInfo = useMemo(
+    () => getPriceInfo(tour, highlightedSaleSchedule),
+    [tour, highlightedSaleSchedule],
+  );
+
   if (loading) {
     return (
       <main className="tour-detail tour-detail--state">
@@ -175,7 +214,7 @@ function TourDetailPage() {
 
       <div className="tour-detail__grid">
         <section className="tour-detail__left">
-          <TourGallery images={images} />
+          <TourGallery images={images} saleDiscount={priceInfo.discount} />
 
           <article className="tour-detail__headline card">
             <h1>{tour.ten_tour}</h1>
@@ -185,6 +224,42 @@ function TourDetailPage() {
                 {averageRating.toFixed(1)} ({reviews.length} đánh giá)
               </span>
             </p>
+
+            <div
+              className={`tour-detail__price-box ${
+                priceInfo.discount > 0 ? "tour-detail__price-box--sale" : ""
+              }`}
+            >
+              {priceInfo.discount > 0 ? (
+                <p className="tour-detail__sale-heading">
+                  <FaFire aria-hidden="true" /> Ưu đãi đặc biệt
+                </p>
+              ) : null}
+
+              {priceInfo.discount > 0 ? (
+                <p className="tour-detail__sale-note">
+                  Giảm {priceInfo.discount}% cho tour này
+                  {highlightedSaleSchedule?.start_date
+                    ? ` (khởi hành ${formatStartDate(highlightedSaleSchedule.start_date)})`
+                    : ""}
+                </p>
+              ) : null}
+
+              <div className="tour-detail__price-line">
+                {priceInfo.originalPrice ? (
+                  <span className="tour-detail__price-original">
+                    {formatCurrency(priceInfo.originalPrice)} đ
+                  </span>
+                ) : null}
+                <span
+                  className={`tour-detail__price-final ${
+                    priceInfo.discount > 0 ? "tour-detail__price-final--sale" : ""
+                  }`}
+                >
+                  {formatCurrency(priceInfo.finalPrice)} đ / người
+                </span>
+              </div>
+            </div>
           </article>
 
           <section
