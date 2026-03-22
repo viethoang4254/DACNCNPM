@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import DataTable from "../../../components/admin/DataTable";
 import Pagination from "../../../components/admin/Pagination";
 import apiClient from "../../../utils/apiClient";
-import { formatDateVi } from "../../../utils/dateOnly";
 import PaymentDetailModal from "./PaymentDetailModal";
 import "./Payments.scss";
 
@@ -43,10 +42,6 @@ function getMethodLabel(method) {
 
 function formatCurrency(value) {
   return `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
-}
-
-function formatDate(value) {
-  return formatDateVi(value, "-");
 }
 
 function AdminPayments() {
@@ -199,7 +194,6 @@ function AdminPayments() {
         getMethodLabel={getMethodLabel}
         normalizeStatus={normalizeKey}
         formatCurrency={formatCurrency}
-        formatDate={formatDate}
       />
     </div>
   );

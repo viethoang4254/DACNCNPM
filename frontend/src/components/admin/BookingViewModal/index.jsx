@@ -1,10 +1,6 @@
 import { useEffect } from "react";
+import { formatDateVi } from "../../../utils/dateOnly";
 import "./BookingViewModal.scss";
-
-function formatDate(dateValue) {
-  if (!dateValue) return "—";
-  return new Date(dateValue).toLocaleDateString("vi-VN");
-}
 
 function formatCurrency(value) {
   return `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
@@ -14,6 +10,13 @@ function normalizeStatus(value) {
   return String(value || "")
     .trim()
     .toLowerCase();
+}
+
+function formatCreatedDate(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("vi-VN");
 }
 
 function BookingViewModal({
@@ -93,7 +96,7 @@ function BookingViewModal({
               </div>
               <div className="booking-detail-item">
                 <label>Ngày khởi hành</label>
-                <span>{formatDate(booking.start_date)}</span>
+                <span>{formatDateVi(booking.start_date, "—")}</span>
               </div>
               <div className="booking-detail-item">
                 <label>Số người</label>
@@ -122,7 +125,7 @@ function BookingViewModal({
               </div>
               <div className="booking-detail-item">
                 <label>Ngày đặt</label>
-                <span>{formatDate(booking.created_at)}</span>
+                <span>{formatCreatedDate(booking.created_at)}</span>
               </div>
             </div>
           </div>

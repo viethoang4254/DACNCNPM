@@ -642,11 +642,11 @@ export const getTourSchedules = async (tourId) => {
             ts.tour_id,
             ts.start_date,
             COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) AS max_slots,
-            COALESCE(SUM(CASE WHEN b.trang_thai = 'confirmed' THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots,
+            COALESCE(SUM(CASE WHEN b.trang_thai IN ('pending', 'confirmed') THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots,
             ts.min_required_ratio,
             GREATEST(
               COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) -
-              COALESCE(SUM(CASE WHEN b.trang_thai = 'confirmed' THEN b.so_nguoi ELSE 0 END), 0),
+              COALESCE(SUM(CASE WHEN b.trang_thai IN ('pending', 'confirmed') THEN b.so_nguoi ELSE 0 END), 0),
               0
             ) AS available_slots,
             t.so_nguoi_toi_da,

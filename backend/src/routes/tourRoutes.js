@@ -43,7 +43,12 @@ const tourBodyValidation = [
 ];
 
 const scheduleValidation = [
-  body("start_date").isISO8601().withMessage("start_date must be a valid date"),
+  body("start_date")
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage("start_date must be in YYYY-MM-DD format")
+    .bail()
+    .isISO8601()
+    .withMessage("start_date must be a valid date"),
   body("available_slots").isInt({ min: 0 }).withMessage("available_slots must be >= 0"),
 ];
 
