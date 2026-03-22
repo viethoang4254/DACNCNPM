@@ -1,13 +1,15 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import { sendResponse } from "../utils/response.js";
-import { hasUserBookedTour } from "../models/bookingModel.js";
 import {
+  canUserReviewTour,
   createReview,
   deleteReviewById,
   getAllReviews,
   getReviewById,
   getReviewsByTourId,
+  getTourReviewStats,
   hasUserReviewedTour,
+  setReviewHiddenStateById,
   updateReviewById,
 } from "../models/reviewModel.js";
 
@@ -19,12 +21,12 @@ export const createReviewController = asyncHandler(async (req, res) => {
     comment: req.body.comment,
   };
 
-  const hasBooked = await hasUserBookedTour(payload.user_id, payload.tour_id);
-  if (!hasBooked) {
+  const canReview = await canUserReviewTour(payload.user_id, payload.tour_id);
+  if (!canReview) {
     return sendResponse(res, {
       statusCode: 400,
       success: false,
-      message: "User must book this tour before reviewing",
+      message: "Bạn chỉ có thể đánh giá sau khi hoàn thành tour",
       data: {},
     });
   }
@@ -34,7 +36,7 @@ export const createReviewController = asyncHandler(async (req, res) => {
     return sendResponse(res, {
       statusCode: 409,
       success: false,
-      message: "User already reviewed this tour",
+      message: "Bạn đã đánh giá tour này",
       data: {},
     });
   }
@@ -80,13 +82,46 @@ export const getReviewByIdController = asyncHandler(async (req, res) => {
 });
 
 export const getReviewsByTourController = asyncHandler(async (req, res) => {
-  const reviews = await getReviewsByTourId(Number(req.params.tourId));
+  const tourId = Number(req.params.tourId);
+  const reviews = await getReviewsByTourId(tourId, { includeHidden: false });
+  const stats = await getTourReviewStats(tourId);
 
   return sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Tour reviews fetched successfully",
-    data: reviews,
+    data: {
+      reviews,
+      stats,
+    },
+  });
+});
+
+export const getReviewEligibilityController = asyncHandler(async (req, res) => {
+  const userId = Number(req.user?.id || 0);
+  const tourId = Number(req.params.tourId || 0);
+
+  const [canReview, hasReviewed] = await Promise.all([
+    canUserReviewTour(userId, tourId),
+    hasUserReviewedTour(userId, tourId),
+  ]);
+
+  let message = "";
+  if (hasReviewed) {
+    message = "Bạn đã đánh giá tour này";
+  } else if (!canReview) {
+    message = "Bạn chỉ có thể đánh giá sau khi hoàn thành tour";
+  }
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Review eligibility fetched successfully",
+    data: {
+      canReview: canReview && !hasReviewed,
+      hasReviewed,
+      message,
+    },
   });
 });
 
@@ -154,5 +189,51 @@ export const deleteReviewController = asyncHandler(async (req, res) => {
     success: true,
     message: "Review deleted successfully",
     data: {},
+  });
+});
+
+export const hideReviewController = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const existing = await getReviewById(id);
+
+  if (!existing) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Review not found",
+      data: {},
+    });
+  }
+
+  await setReviewHiddenStateById(id, true);
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Review hidden successfully",
+    data: await getReviewById(id),
+  });
+});
+
+export const showReviewController = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const existing = await getReviewById(id);
+
+  if (!existing) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Review not found",
+      data: {},
+    });
+  }
+
+  await setReviewHiddenStateById(id, false);
+
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Review shown successfully",
+    data: await getReviewById(id),
   });
 });

@@ -10,6 +10,7 @@ import TourItinerary from "./components/TourItinerary/index.jsx";
 import TourReviews from "./components/TourReviews/index.jsx";
 import SimilarTours from "./components/SimilarTours/index.jsx";
 import { saveTourView } from "../../../services/historyService";
+import { getTourReviews } from "../../../services/reviewService";
 import { getPriceInfo } from "../../../utils/price";
 import "./TourDetail.scss";
 
@@ -85,7 +86,7 @@ function TourDetailPage() {
           fetch(`${API_BASE_URL}/api/tours/${id}/images`),
           fetch(`${API_BASE_URL}/api/tours/${id}/schedules`),
           fetch(`${API_BASE_URL}/api/tours/${id}/itineraries`),
-          fetch(`${API_BASE_URL}/api/tours/${id}/reviews`),
+          getTourReviews(id),
           fetch(`${API_BASE_URL}/api/tours/similar/${id}`),
         ]);
 
@@ -98,14 +99,14 @@ function TourDetailPage() {
           imageJson,
           scheduleJson,
           itineraryJson,
-          reviewJson,
+          reviewData,
           similarJson,
         ] = await Promise.all([
           tourRes.json(),
           imageRes.ok ? imageRes.json() : Promise.resolve({ data: [] }),
           scheduleRes.ok ? scheduleRes.json() : Promise.resolve({ data: [] }),
           itineraryRes.ok ? itineraryRes.json() : Promise.resolve({ data: [] }),
-          reviewRes.ok ? reviewRes.json() : Promise.resolve({ data: [] }),
+          reviewRes,
           similarRes.ok ? similarRes.json() : Promise.resolve({ data: [] }),
         ]);
 
@@ -143,7 +144,9 @@ function TourDetailPage() {
           Array.isArray(scheduleJson?.data) ? scheduleJson.data : [],
         );
         setItineraries(nextItineraries);
-        setReviews(Array.isArray(reviewJson?.data) ? reviewJson.data : []);
+        setReviews(
+          Array.isArray(reviewData?.reviews) ? reviewData.reviews : [],
+        );
         setSimilarTours(nextSimilarTours);
       } catch (err) {
         if (ignore) return;
@@ -308,7 +311,13 @@ function TourDetailPage() {
           {activeTab === "itinerary" && (
             <TourItinerary tour={tour} itineraries={itineraries} />
           )}
-          {activeTab === "reviews" && <TourReviews reviews={reviews} />}
+          {activeTab === "reviews" && (
+            <TourReviews
+              tourId={tour.id}
+              reviews={reviews}
+              onReviewsChange={setReviews}
+            />
+          )}
         </section>
 
         <aside className="tour-detail__right">

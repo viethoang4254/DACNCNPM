@@ -1,3 +1,5 @@
+import { formatDateVi } from "../../../utils/dateOnly";
+
 function PaymentDetailModal({
   open,
   payment,
@@ -9,7 +11,6 @@ function PaymentDetailModal({
   getMethodLabel,
   normalizeStatus,
   formatCurrency,
-  formatDate,
 }) {
   if (!open || !payment) {
     return null;
@@ -79,7 +80,7 @@ function PaymentDetailModal({
               </div>
               <div className="admin-detail-item">
                 <label>Ngày đi</label>
-                <span>{formatDate(payment.start_date)}</span>
+                <span>{formatDateVi(payment.start_date, "-")}</span>
               </div>
               <div className="admin-detail-item">
                 <label>Booking ID</label>
@@ -111,7 +112,7 @@ function PaymentDetailModal({
               </div>
               <div className="admin-detail-item">
                 <label>Ngày tạo</label>
-                <span>{formatDate(payment.created_at)}</span>
+                <span>{formatDateVi(payment.created_at, "-")}</span>
               </div>
             </div>
           </section>

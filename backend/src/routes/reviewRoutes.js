@@ -3,11 +3,13 @@ import { body, param } from "express-validator";
 import {
   createReviewController,
   deleteReviewController,
+  getReviewEligibilityController,
   getReviewByIdController,
   getReviewsController,
   getReviewsByTourController,
   updateReviewController,
 } from "../controllers/reviewController.js";
+import adminMiddleware from "../middlewares/adminMiddleware.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import validationMiddleware from "../middlewares/validateMiddleware.js";
 
@@ -25,7 +27,15 @@ router.post(
   createReviewController
 );
 
-router.get("/", getReviewsController);
+router.get("/", authMiddleware, adminMiddleware, getReviewsController);
+
+router.get(
+  "/eligibility/:tourId",
+  authMiddleware,
+  [param("tourId").isInt({ gt: 0 }).withMessage("tourId must be a positive integer")],
+  validationMiddleware,
+  getReviewEligibilityController
+);
 
 router.get(
   "/tour/:tourId",
@@ -36,6 +46,8 @@ router.get(
 
 router.get(
   "/:id",
+  authMiddleware,
+  adminMiddleware,
   [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
   validationMiddleware,
   getReviewByIdController

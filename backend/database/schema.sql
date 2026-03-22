@@ -153,6 +153,7 @@ CREATE TABLE reviews (
   tour_id INT NOT NULL,
   rating TINYINT NOT NULL,
   comment TEXT,
+  is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_reviews_user_id (user_id),
   INDEX idx_reviews_tour_id (tour_id),

@@ -199,7 +199,7 @@ const selectScheduleSnapshots = async (connection, scheduleIds = null) => {
            ts.is_on_sale,
            ts.discount_percent,
            ts.auto_sale_applied,
-            COALESCE(SUM(CASE WHEN b.trang_thai = 'confirmed' THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots_actual
+            COALESCE(SUM(CASE WHEN b.trang_thai IN ('pending', 'confirmed') THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots_actual
      FROM tour_schedules ts
      INNER JOIN tours t ON t.id = ts.tour_id
      LEFT JOIN bookings b ON b.schedule_id = ts.id
@@ -303,7 +303,7 @@ const loadScheduleSnapshotsByFilter = async (connection, { tourId, scheduleId } 
             ts.is_on_sale,
             ts.discount_percent,
             ts.auto_sale_applied,
-            COALESCE(SUM(CASE WHEN b.trang_thai = 'confirmed' THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots_actual
+            COALESCE(SUM(CASE WHEN b.trang_thai IN ('pending', 'confirmed') THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots_actual
      FROM tour_schedules ts
      INNER JOIN tours t ON t.id = ts.tour_id
      LEFT JOIN bookings b ON b.schedule_id = ts.id

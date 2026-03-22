@@ -28,6 +28,10 @@ import {
   applySaleToScheduleController,
   removeSaleFromScheduleController,
 } from "../controllers/scheduleController.js";
+import {
+  hideReviewController,
+  showReviewController,
+} from "../controllers/reviewController.js";
 import adminMiddleware from "../middlewares/adminMiddleware.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import validationMiddleware from "../middlewares/validateMiddleware.js";
@@ -105,6 +109,20 @@ router.post(
   [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
   validationMiddleware,
   removeSaleFromScheduleController,
+);
+
+router.patch(
+  "/reviews/:id/hide",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  hideReviewController,
+);
+
+router.patch(
+  "/reviews/:id/show",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  showReviewController,
 );
 
 router.get("/notifications", getNotificationsController);
