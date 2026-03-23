@@ -1,0 +1,55 @@
+.dashboard-alert-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.dashboard-alert {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px;
+  border: 1px solid #e5eaf3;
+  background: #fff;
+}
+
+.dashboard-alert__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+}
+
+.dashboard-alert__type {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+
+.dashboard-alert__message {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.dashboard-alert--risk .dashboard-alert__icon {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.dashboard-alert--low .dashboard-alert__icon {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.dashboard-alert--payment .dashboard-alert__icon {
+  background: #dbeafe;
+  color: #1d4ed8;
+}

@@ -42,6 +42,45 @@ function formatDate(value) {
   return date.toLocaleDateString("vi-VN");
 }
 
+function normalizePaymentMethod(value) {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[\s-]+/g, "_");
+}
+
+function isCodMethod(value) {
+  const normalized = normalizePaymentMethod(value);
+  return [
+    "pay_at_place",
+    "pay_later",
+    "cod",
+    "cash",
+    "cash_on_delivery",
+  ].includes(normalized);
+}
+
+function getPaymentMethodLabel(value) {
+  const normalized = normalizePaymentMethod(value);
+  if (
+    normalized === "pay_at_place" ||
+    normalized === "pay_later" ||
+    normalized === "cod"
+  ) {
+    return "Thanh toán khi đến nơi (COD)";
+  }
+  if (normalized === "bank_transfer") {
+    return "Chuyển khoản ngân hàng";
+  }
+  if (normalized === "paypal") {
+    return "PayPal";
+  }
+  if (normalized === "cash" || normalized === "cash_on_delivery") {
+    return "Tiền mặt (COD)";
+  }
+  return "Đang cập nhật";
+}
+
 function PaymentSuccess() {
   const { bookingId: bookingIdParam } = useParams();
   const { state } = useLocation();
@@ -57,8 +96,22 @@ function PaymentSuccess() {
   );
 
   const [booking, setBooking] = useState(state?.booking || null);
+  const [payment, setPayment] = useState({
+    id: paymentId || null,
+    method: state?.paymentMethod || "",
+    status: "pending",
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const isCodPayment = isCodMethod(payment?.method);
+  const pageTag = isCodPayment ? "Booking Confirmed" : "Payment Pending";
+  const pageTitle = isCodPayment
+    ? "Đặt tour thành công"
+    : "Yêu cầu thanh toán đã được gửi";
+  const pageDescription = isCodPayment
+    ? "Bạn chọn thanh toán khi đến nơi. Vui lòng dùng mã booking khi check-in để hoàn tất thanh toán."
+    : "Đơn của bạn đang ở trạng thái chờ xử lý. Chúng tôi sẽ xác nhận trong thời gian sớm nhất.";
 
   useEffect(() => {
     let ignore = false;
@@ -104,6 +157,43 @@ function PaymentSuccess() {
 
     fetchBookingFallback();
 
+    async function fetchPaymentFallback() {
+      if (bookingIdFromUrl <= 0) {
+        return;
+      }
+
+      try {
+        const token = getAuthToken();
+        const response = await fetch(
+          `${API_BASE_URL}/api/payments/booking/${bookingIdFromUrl}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          },
+        );
+
+        const payload = parseJsonSafe(await response.text());
+        if (!response.ok || payload?.success === false) {
+          return;
+        }
+
+        const paymentData = payload?.data || {};
+        if (!ignore) {
+          setPayment((prev) => ({
+            id: Number(paymentData?.id || prev?.id || 0) || null,
+            method: paymentData?.method || prev?.method || "",
+            status: paymentData?.status || prev?.status || "pending",
+          }));
+        }
+      } catch {
+        // Keep UI resilient when payment fallback cannot be loaded.
+      }
+    }
+
+    fetchPaymentFallback();
+
     return () => {
       ignore = true;
     };
@@ -112,12 +202,13 @@ function PaymentSuccess() {
   return (
     <main className="payment-success-page">
       <section className="payment-success-page__card">
-        <p className="payment-success-page__tag">Payment Pending</p>
-        <h1>Yêu cầu thanh toán đã được gửi</h1>
-        <p>
-          Đơn của bạn đang ở trạng thái chờ xử lý. Chúng tôi sẽ xác nhận trong
-          thời gian sớm nhất.
+        <p
+          className={`payment-success-page__tag ${isCodPayment ? "payment-success-page__tag--cod" : ""}`}
+        >
+          {pageTag}
         </p>
+        <h1>{pageTitle}</h1>
+        <p>{pageDescription}</p>
 
         {isLoading && (
           <p className="payment-success-page__hint">
@@ -137,11 +228,19 @@ function PaymentSuccess() {
               <strong>BOOKING#{booking.id}</strong>
             </div>
             <div>
-              <span>Mã thanh toán</span>
-              <strong>
-                {paymentId > 0 ? `PAYMENT#${paymentId}` : "Đang xử lý"}
-              </strong>
+              <span>Phương thức thanh toán</span>
+              <strong>{getPaymentMethodLabel(payment?.method)}</strong>
             </div>
+            {!isCodPayment && (
+              <div>
+                <span>Mã thanh toán</span>
+                <strong>
+                  {(payment?.id || paymentId) > 0
+                    ? `PAYMENT#${payment?.id || paymentId}`
+                    : "Đang xử lý"}
+                </strong>
+              </div>
+            )}
             <div>
               <span>Tổng thanh toán</span>
               <strong>{formatCurrency(booking.tong_tien)} VND</strong>

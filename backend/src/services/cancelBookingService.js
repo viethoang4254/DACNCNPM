@@ -64,6 +64,26 @@ export const validateCancel = async (booking) => {
  * Get cancel details for preview (before confirmation)
  */
 export const getCancelPreview = async (booking) => {
+  const paymentStatus = String(booking?.payment_status || "").toLowerCase();
+  const paymentMethod = String(booking?.payment_method || "").toLowerCase();
+  const normalizedPaymentMethod = paymentMethod.replace(/[\s-]+/g, "_");
+  const isPaid = paymentStatus === "paid";
+  const isCodMethod = ["pay_later", "cod", "pay_at_place", "cash", "cash_on_delivery"].includes(
+    normalizedPaymentMethod,
+  );
+
+  if (isCodMethod || !isPaid) {
+    return {
+      daysLeft: getScheduleDaysLeft(booking.start_date),
+      refundPercentage: 0,
+      originalAmount: booking.tong_tien,
+      refundAmount: 0,
+      message: isCodMethod
+        ? "Bạn chưa thanh toán nên không có tiền hoàn"
+        : "Bạn chưa thanh toán nên không có tiền hoàn",
+    };
+  }
+
   const daysLeft = getScheduleDaysLeft(booking.start_date);
   const scheduleStatus = String(booking.schedule_status || "").toLowerCase();
   const isSystemCancelledSchedule =

@@ -23,7 +23,7 @@ function BookingViewModal({
   booking,
   onClose,
   bookingStatusLabels,
-  paymentStatusLabels,
+  getPaymentDisplay,
 }) {
   useEffect(() => {
     if (!booking) return undefined;
@@ -46,7 +46,13 @@ function BookingViewModal({
 
   if (!booking) return null;
 
-  const paymentStatus = normalizeStatus(booking.payment_status) || "pending";
+  const paymentDisplay =
+    typeof getPaymentDisplay === "function"
+      ? getPaymentDisplay(booking)
+      : {
+          className: normalizeStatus(booking.payment_status) || "pending",
+          label: normalizeStatus(booking.payment_status) || "pending",
+        };
 
   return (
     <div className="admin-modal__backdrop" onClick={onClose}>
@@ -119,8 +125,10 @@ function BookingViewModal({
               </div>
               <div className="booking-detail-item">
                 <label>Thanh toán</label>
-                <span className={`status-pill status-pill--${paymentStatus}`}>
-                  {paymentStatusLabels[paymentStatus] || paymentStatus}
+                <span
+                  className={`status-pill status-pill--${paymentDisplay.className}`}
+                >
+                  {paymentDisplay.label}
                 </span>
               </div>
               <div className="booking-detail-item">

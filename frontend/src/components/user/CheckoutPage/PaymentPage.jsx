@@ -120,10 +120,15 @@ function PaymentPage() {
 
   const pricing = useMemo(() => {
     const people = Number(booking?.so_nguoi || 0);
-    const priceInfo = getPriceInfo(booking?.tour || {}, booking?.schedule || {});
+    const priceInfo = getPriceInfo(
+      booking?.tour || {},
+      booking?.schedule || {},
+    );
 
     const unitFinal = Number(priceInfo.finalPrice || 0);
-    const unitOriginal = Number(priceInfo.originalPrice ?? booking?.tour?.gia ?? 0);
+    const unitOriginal = Number(
+      priceInfo.originalPrice ?? booking?.tour?.gia ?? 0,
+    );
     const originalTotal = unitOriginal * people;
     const finalTotal = unitFinal * people;
     const discountTotal = Math.max(0, originalTotal - finalTotal);
@@ -275,6 +280,7 @@ function PaymentPage() {
         replace: true,
         state: {
           paymentId: nextPaymentId,
+          paymentMethod: selectedMethod,
           booking,
         },
       });

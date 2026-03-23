@@ -17,6 +17,8 @@ export const createBooking = async ({ userId, scheduleId, quantity }) => {
       `SELECT ts.id,
               ts.tour_id,
               ts.start_date,
+              ts.status,
+              ts.min_required_ratio,
               COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) AS max_slots,
               ts.booked_slots,
               ts.available_slots
@@ -38,6 +40,17 @@ export const createBooking = async ({ userId, scheduleId, quantity }) => {
       };
     }
 
+    const scheduleStatus = String(schedule.status || "").toLowerCase();
+    if (["cancelled", "canceled", "completed"].includes(scheduleStatus)) {
+      await connection.rollback();
+      return {
+        success: false,
+        statusCode: 409,
+        message: "Lịch khởi hành này hiện không thể đặt. Vui lòng chọn lịch khác.",
+        data: {},
+      };
+    }
+
     const today = new Date().toISOString().slice(0, 10);
     const scheduleDate = String(schedule.start_date).slice(0, 10);
 
@@ -52,17 +65,36 @@ export const createBooking = async ({ userId, scheduleId, quantity }) => {
     }
 
     const [[existingActiveBooking]] = await connection.execute(
-      `SELECT id
+      `SELECT id, trang_thai
        FROM bookings
        WHERE user_id = ?
          AND schedule_id = ?
          AND trang_thai IN ('pending', 'confirmed')
+       ORDER BY created_at DESC
        LIMIT 1
        FOR UPDATE`,
       [userId, scheduleId],
     );
 
     if (existingActiveBooking) {
+      const existingStatus = String(existingActiveBooking.trang_thai || "").toLowerCase();
+
+      if (existingStatus === "pending") {
+        await connection.rollback();
+
+        const reusedBooking = await getBookingById(existingActiveBooking.id);
+        return {
+          success: true,
+          statusCode: 200,
+          message: "Bạn đã có đơn chờ thanh toán cho lịch này. Tiếp tục thanh toán.",
+          data: {
+            id: existingActiveBooking.id,
+            booking: reusedBooking,
+            reused: true,
+          },
+        };
+      }
+
       await connection.rollback();
       return {
         success: false,
@@ -95,6 +127,28 @@ export const createBooking = async ({ userId, scheduleId, quantity }) => {
         success: false,
         statusCode: 400,
         message: "Không đủ chỗ cho lịch khởi hành này",
+        data: {},
+      };
+    }
+
+    const maxSlots = Number(schedule.max_slots || 0);
+    const bookedSlots = Number(schedule.booked_slots || 0);
+    const minRequiredRatio = Number(schedule.min_required_ratio ?? 0.5);
+    const daysLeft = getScheduleDaysLeft(schedule.start_date);
+    const projectedBookedSlots = Math.min(maxSlots, bookedSlots + quantity);
+    const projectedFillRatio = maxSlots > 0 ? projectedBookedSlots / maxSlots : 0;
+
+    if (
+      daysLeft !== null &&
+      daysLeft <= 2 &&
+      projectedFillRatio < minRequiredRatio
+    ) {
+      await connection.rollback();
+      return {
+        success: false,
+        statusCode: 409,
+        message:
+          "Lịch khởi hành này chưa đủ số lượng khách tối thiểu và sắp bị hủy. Vui lòng chọn lịch khác.",
         data: {},
       };
     }
@@ -159,12 +213,10 @@ export const cancelBooking = async ({ bookingId, userId, cancelReason, connectio
     `SELECT b.id, b.user_id, b.schedule_id, b.tour_id, b.so_nguoi, b.tong_tien,
          b.trang_thai, b.cancelled_at, s.start_date, s.status AS schedule_status,
          s.max_slots, s.booked_slots, s.available_slots,
-         t.ten_tour,
-            p.status AS payment_status
+         t.ten_tour
      FROM bookings b
      INNER JOIN tour_schedules s ON s.id = b.schedule_id
        INNER JOIN tours t ON t.id = b.tour_id
-     LEFT JOIN payments p ON p.booking_id = b.id
      WHERE b.id = ? AND b.user_id = ?
      FOR UPDATE`,
     [bookingId, userId],
@@ -192,13 +244,33 @@ export const cancelBooking = async ({ bookingId, userId, cancelReason, connectio
   const scheduleStatus = String(booking.schedule_status || "").toLowerCase();
   const isSystemCancelledSchedule =
     scheduleStatus === "cancelled" || scheduleStatus === "canceled";
-  const daysLeft = getScheduleDaysLeft(booking.start_date);
-  const refundPercentage = isSystemCancelledSchedule
-    ? 100
-    : calculateRefundPercentage(daysLeft);
-  const isPaid = String(booking.payment_status || "").toLowerCase() === "paid";
 
-  const refundStatus = isPaid && refundPercentage > 0 ? "pending" : "none";
+  // Always determine payment state from payments table before refund handling.
+  const [[payment]] = await connection.execute(
+    `SELECT id, booking_id, method, status
+     FROM payments
+     WHERE booking_id = ?
+     LIMIT 1
+     FOR UPDATE`,
+    [bookingId],
+  );
+
+  const paymentStatus = String(payment?.status || "").toLowerCase();
+  const paymentMethod = String(payment?.method || "").toLowerCase();
+  const normalizedPaymentMethod = paymentMethod.replace(/[\s-]+/g, "_");
+  const isCodMethod = ["pay_later", "cod", "pay_at_place", "cash", "cash_on_delivery"].includes(
+    normalizedPaymentMethod,
+  );
+  const isPaid = paymentStatus === "paid";
+  const isPendingCod = paymentStatus === "pending" && isCodMethod;
+
+  // Do not run refund flow when payment is not paid.
+  const canRefund = isPaid && !isCodMethod;
+  const daysLeft = canRefund ? getScheduleDaysLeft(booking.start_date) : null;
+  const refundPercentage = canRefund
+    ? (isSystemCancelledSchedule ? 100 : calculateRefundPercentage(daysLeft))
+    : 0;
+  const refundStatus = canRefund && refundPercentage > 0 ? "pending" : "none";
   const now = new Date();
 
   const [bookingResult] = await connection.execute(
@@ -251,7 +323,9 @@ export const cancelBooking = async ({ bookingId, userId, cancelReason, connectio
   return {
     success: true,
     statusCode: 200,
-    message: "Booking cancelled successfully",
+    message: (isPendingCod || isCodMethod)
+      ? "Bạn chưa thanh toán nên không có tiền hoàn"
+      : "Booking cancelled successfully",
     data: {
       bookingId,
       tourName: booking.ten_tour,
