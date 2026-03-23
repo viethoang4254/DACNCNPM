@@ -1,111 +1,133 @@
-import { useEffect, useMemo, useState } from "react";
-import { FaBook, FaMapMarkedAlt, FaMoneyCheckAlt, FaUsers } from "react-icons/fa";
-import ChartRevenue from "../../../components/admin/ChartRevenue";
-import DataTable from "../../../components/admin/DataTable";
-import StatsCard from "../../../components/admin/StatsCard";
-import apiClient from "../../../utils/apiClient";
+import {
+  FaBook,
+  FaMapLocationDot,
+  FaMoneyBillTrendUp,
+  FaUsers,
+} from "react-icons/fa6";
+import AlertPanel from "../../../components/admin/dashboard/AlertPanel";
+import BookingPieChart from "../../../components/admin/dashboard/BookingPieChart";
+import QuickActions from "../../../components/admin/dashboard/QuickActions";
+import RevenueChart from "../../../components/admin/dashboard/RevenueChart";
+import StatCard from "../../../components/admin/dashboard/StatCard";
+import StatusCar from "../../../components/admin/dashboard/StatusCar/indexd";
+import useDashboard from "../../../hooks/useDashboard";
 import "./Dashboard.scss";
 
-const bookingStatusLabels = {
-  pending: "Chờ xác nhận",
-  confirmed: "Đã xác nhận",
-  cancelled: "Đã hủy",
-};
+const SKELETON_ITEMS = Array.from({ length: 4 }, (_, index) => index + 1);
 
 function Dashboard() {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalTours: 0,
-    totalBookings: 0,
-    revenue: 0,
-  });
-  const [latestBookings, setLatestBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const {
+    summary,
+    bookingStatus,
+    revenueChart,
+    alerts,
+    loading,
+    error,
+    isEmpty,
+    refetch,
+  } = useDashboard();
 
-  useEffect(() => {
-    let active = true;
+  const statItems = [
+    {
+      key: "users",
+      title: "Tổng người dùng",
+      value: summary.totalUsers,
+      growth: summary.growth?.users,
+      icon: FaUsers,
+      accent: "blue",
+    },
+    {
+      key: "tours",
+      title: "Tổng tour",
+      value: summary.totalTours,
+      growth: summary.growth?.tours,
+      icon: FaMapLocationDot,
+      accent: "orange",
+    },
+    {
+      key: "bookings",
+      title: "Tổng đơn đặt",
+      value: summary.totalBookings,
+      growth: summary.growth?.bookings,
+      icon: FaBook,
+      accent: "green",
+    },
+    {
+      key: "revenue",
+      title: "Tổng doanh thu",
+      value: summary.totalRevenue,
+      growth: summary.growth?.revenue,
+      icon: FaMoneyBillTrendUp,
+      accent: "purple",
+      isCurrency: true,
+    },
+  ];
 
-    async function fetchDashboard() {
-      try {
-        setLoading(true);
-        const [statsRes, bookingsRes] = await Promise.all([
-          apiClient.get("/api/admin/stats"),
-          apiClient.get("/api/admin/bookings"),
-        ]);
-
-        if (!active) return;
-        setStats(statsRes.data?.data || stats);
-        setLatestBookings(
-          (bookingsRes.data?.data || [])
-            .filter((b) => b.trang_thai !== "pending")
-            .slice(0, 5)
-        );
-      } catch (err) {
-        if (!active) return;
-        setError(err?.response?.data?.message || "Không thể tải dữ liệu tổng quan");
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    fetchDashboard();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const columns = useMemo(
-    () => [
-      { key: "id", header: "Mã đơn" },
-      { key: "user_name", header: "Người dùng" },
-      { key: "ten_tour", header: "Tour" },
-      { key: "so_nguoi", header: "Số người" },
-      {
-        key: "tong_tien",
-        header: "Tổng tiền",
-        render: (row) => `${Number(row.tong_tien || 0).toLocaleString("vi-VN")} ₫`,
-      },
-      {
-        key: "trang_thai",
-        header: "Trạng thái",
-        render: (row) => <span className={`status-pill status-pill--${row.trang_thai}`}>{bookingStatusLabels[row.trang_thai] || row.trang_thai}</span>,
-      },
-    ],
-    []
-  );
+  const statusItems = [
+    { key: "paid", label: "Đã thanh toán", value: bookingStatus.paid },
+    { key: "cod", label: "COD", value: bookingStatus.cod },
+    { key: "pending", label: "Chưa thanh toán", value: bookingStatus.pending },
+    { key: "cancelled", label: "Đã hủy", value: bookingStatus.cancelled },
+  ];
 
   return (
-    <div className="admin-stack">
-      {error && <p className="admin-state admin-state--error">{error}</p>}
-
-      <div className="admin-grid admin-grid--stats">
-        <StatsCard title="Tổng người dùng" value={stats.totalUsers} hint="Tài khoản hệ thống" accent="blue" icon={FaUsers} />
-        <StatsCard title="Tổng tour" value={stats.totalTours} hint="Tour đang quản lý" accent="orange" icon={FaMapMarkedAlt} />
-        <StatsCard title="Tổng đơn đặt" value={stats.totalBookings} hint="Đơn đặt tour" accent="green" icon={FaBook} />
-        <StatsCard
-          title="Tổng doanh thu"
-          value={`${Number(stats.revenue || 0).toLocaleString("vi-VN")} ₫`}
-          hint="Doanh thu đã thanh toán"
-          accent="purple"
-          icon={FaMoneyCheckAlt}
-        />
-      </div>
-
-      <ChartRevenue />
-
-      <div className="admin-card">
-        <div className="admin-toolbar">
-          <h3>Đơn đặt gần đây</h3>
-          <span className="admin-toolbar__meta">5 bản ghi mới nhất</span>
+    <section className="dashboard-page">
+      <header className="dashboard-page__head">
+        <div>
+          <h2>Dashboard</h2>
+          <p>Tổng quan hệ thống</p>
         </div>
-        {loading ? (
-          <p className="admin-state">Đang tải...</p>
-        ) : (
-          <DataTable columns={columns} data={latestBookings} emptyText="Chưa có đơn đặt tour" />
-        )}
+        <button
+          type="button"
+          className="admin-btn admin-btn--ghost"
+          onClick={refetch}
+        >
+          Làm mới dữ liệu
+        </button>
+      </header>
+
+      {error ? (
+        <p className="admin-state admin-state--error">Không thể tải dữ liệu</p>
+      ) : null}
+
+      {loading ? (
+        <div className="dashboard-skeleton">
+          {SKELETON_ITEMS.map((item) => (
+            <div key={item} className="dashboard-skeleton__item" />
+          ))}
+        </div>
+      ) : (
+        <div className="dashboard-stat-grid">
+          {statItems.map((item) => (
+            <StatCard key={item.key} {...item} />
+          ))}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="dashboard-skeleton dashboard-skeleton--status">
+          {SKELETON_ITEMS.map((item) => (
+            <div key={item} className="dashboard-skeleton__item" />
+          ))}
+        </div>
+      ) : (
+        <StatusCar items={statusItems} />
+      )}
+
+      <div className="dashboard-main-grid">
+        <RevenueChart data={revenueChart} />
+        <BookingPieChart status={bookingStatus} />
       </div>
-    </div>
+
+      <div className="dashboard-main-grid dashboard-main-grid--secondary">
+        <AlertPanel alerts={alerts} />
+        <QuickActions />
+      </div>
+
+      {!loading && isEmpty ? (
+        <p className="admin-state">Chưa có dữ liệu</p>
+      ) : null}
+    </section>
   );
 }
 

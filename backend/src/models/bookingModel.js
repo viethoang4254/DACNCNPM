@@ -12,6 +12,7 @@ export const getBookingById = async (id) => {
             s.discount_percent,
             s.status AS schedule_status,
             p.status AS payment_status,
+            p.method AS payment_method,
             ti.image_url AS image
      FROM bookings b
      INNER JOIN users u ON u.id = b.user_id
@@ -41,6 +42,7 @@ export const getBookingsByUserId = async (userId) => {
             s.discount_percent,
             s.status AS schedule_status,
             p.status AS payment_status,
+            p.method AS payment_method,
             ti.image_url AS image
      FROM bookings b
      INNER JOIN tours t ON t.id = b.tour_id
@@ -70,6 +72,7 @@ export const getAllBookings = async () => {
             s.discount_percent,
             s.status AS schedule_status,
             p.status AS payment_status,
+            p.method AS payment_method,
             ti.image_url AS image
      FROM bookings b
      INNER JOIN users u ON u.id = b.user_id
@@ -151,7 +154,7 @@ export const getBookingForCancel = async (id, userId, connection = pool) => {
     `SELECT b.id, b.user_id, b.schedule_id, b.tour_id, b.so_nguoi, b.tong_tien, 
             b.trang_thai, b.cancelled_at, s.start_date, s.max_slots, s.booked_slots, s.status AS schedule_status,
             s.is_on_sale, s.discount_percent,
-            s.min_required_ratio, p.status AS payment_status,
+            s.min_required_ratio, p.status AS payment_status, p.method AS payment_method,
             t.ten_tour, t.gia
      FROM bookings b
      INNER JOIN tour_schedules s ON s.id = b.schedule_id
@@ -178,6 +181,7 @@ export const getBookingsByUserIdWithCancelInfo = async (userId, connection = poo
             s.discount_percent,
             s.status AS schedule_status,
             p.status AS payment_status,
+            p.method AS payment_method,
             ti.image_url AS image
      FROM bookings b
      INNER JOIN tours t ON t.id = b.tour_id

@@ -26,10 +26,18 @@ const toRatio = (percentValue) => {
   return value;
 };
 
-const resolveScheduleStatus = (item) => {
-  const ratio = toRatio(item?.percent);
-  const daysLeft = getDaysLeftFromDateKey(item?.start_date);
+const resolveDaysLeft = (item) => {
+  const computedDaysLeft = getDaysLeftFromDateKey(item?.start_date);
+  if (Number.isFinite(computedDaysLeft)) return computedDaysLeft;
 
+  const apiDaysLeft = Number(item?.days_left);
+  if (Number.isFinite(apiDaysLeft)) return apiDaysLeft;
+
+  return Number.POSITIVE_INFINITY;
+};
+
+const resolveScheduleStatus = (item, daysLeft) => {
+  const ratio = toRatio(item?.percent);
   if (daysLeft < 0) return "completed";
   if (ratio >= MIN_RATIO) return "guaranteed";
   if (daysLeft === 0 && ratio < MIN_RATIO) return "cancelled";
@@ -47,18 +55,17 @@ const menuItems = [
   { to: "/admin/bookings", label: "Bookings", icon: FaBook },
   { to: "/admin/payments", label: "Payments", icon: FaMoneyCheckAlt },
   { to: "/admin/refunds", label: "Refunds", icon: FaUndo },
-  { to: "/admin/warnings", label: "Cảnh báo", icon: FaExclamationTriangle },
+  { to: "/admin/warnings", label: "Alerts", icon: FaExclamationTriangle },
   { to: "/admin/reviews", label: "Reviews", icon: FaStar },
 ];
 
 function AdminSidebar() {
-  const [warningCount, setWarningCount] = useState(0);
-  const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
+  const [alertCount, setAlertCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
 
-    async function fetchWarningCount() {
+    async function fetchAlertCount() {
       try {
         const response = await apiClient.get("/api/schedules/warning");
         if (!mounted) return;
@@ -66,59 +73,32 @@ function AdminSidebar() {
         const list = Array.isArray(response?.data?.data)
           ? response.data.data
           : [];
+        const matchedAlerts = list.filter((item) => {
+          const daysLeft = resolveDaysLeft(item);
+          const status = resolveScheduleStatus(item, daysLeft);
+          return status === "warning" || status === "warning_critical";
+        });
 
-        const nextCount = list.filter((item) => {
-          const status = resolveScheduleStatus(item);
-          return ["warning", "warning_critical"].includes(status);
-        }).length;
-
-        setWarningCount(nextCount);
+        setAlertCount(matchedAlerts.length);
       } catch {
         if (!mounted) return;
-        setWarningCount(0);
+        setAlertCount(0);
       }
     }
 
-    async function fetchPendingPaymentCount() {
-      try {
-        const response = await apiClient.get("/api/payments");
-        if (!mounted) return;
-
-        const list = Array.isArray(response?.data?.data)
-          ? response.data.data
-          : [];
-
-        const nextCount = list.filter((item) => {
-          const status = String(item?.status || "")
-            .trim()
-            .toLowerCase();
-          return status === "pending";
-        }).length;
-
-        setPendingPaymentCount(nextCount);
-      } catch {
-        if (!mounted) return;
-        setPendingPaymentCount(0);
-      }
-    }
-
-    fetchWarningCount();
-    fetchPendingPaymentCount();
+    fetchAlertCount();
 
     const timer = setInterval(() => {
-      fetchWarningCount();
-      fetchPendingPaymentCount();
+      fetchAlertCount();
     }, 12000);
 
     const handleFocus = () => {
-      fetchWarningCount();
-      fetchPendingPaymentCount();
+      fetchAlertCount();
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        fetchWarningCount();
-        fetchPendingPaymentCount();
+        fetchAlertCount();
       }
     };
 
@@ -156,18 +136,10 @@ function AdminSidebar() {
             <span>{label}</span>
             {to === "/admin/warnings" && (
               <span
-                className={`admin-sidebar__warning-badge ${warningCount > 0 ? "is-alert" : ""}`}
-                aria-label={`Tổng cảnh báo ${warningCount}`}
+                className={`admin-sidebar__warning-badge ${alertCount > 0 ? "is-alert" : ""}`}
+                aria-label={`Tổng cảnh báo ${alertCount}`}
               >
-                {warningCount}
-              </span>
-            )}
-            {to === "/admin/payments" && (
-              <span
-                className={`admin-sidebar__warning-badge admin-sidebar__warning-badge--payment ${pendingPaymentCount > 0 ? "is-alert" : ""}`}
-                aria-label={`Yêu cầu thanh toán chờ duyệt ${pendingPaymentCount}`}
-              >
-                {pendingPaymentCount}
+                {alertCount}
               </span>
             )}
           </NavLink>

@@ -8,6 +8,7 @@ function PaymentDetailModal({
   onConfirm,
   onReject,
   getStatusLabel,
+  getPaymentStatusDisplay,
   getMethodLabel,
   normalizeStatus,
   formatCurrency,
@@ -17,6 +18,13 @@ function PaymentDetailModal({
   }
 
   const normalizedStatus = normalizeStatus(payment.status);
+  const statusDisplay =
+    typeof getPaymentStatusDisplay === "function"
+      ? getPaymentStatusDisplay(payment)
+      : {
+          className: normalizedStatus,
+          label: getStatusLabel(payment.status),
+        };
   const canReview = normalizedStatus === "pending";
 
   return (
@@ -104,9 +112,9 @@ function PaymentDetailModal({
                 <label>Trạng thái</label>
                 <span>
                   <span
-                    className={`status-pill status-pill--${normalizedStatus}`}
+                    className={`status-pill status-pill--${statusDisplay.className}`}
                   >
-                    {getStatusLabel(payment.status)}
+                    {statusDisplay.label}
                   </span>
                 </span>
               </div>

@@ -25,7 +25,62 @@ const paymentStatusLabels = {
 function normalizeStatus(value) {
   return String(value || "")
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function isCodMethod(method) {
+  const normalized = normalizeStatus(method);
+  return [
+    "pay_at_place",
+    "pay_later",
+    "cod",
+    "cash_on_delivery",
+    "cash",
+  ].includes(normalized);
+}
+
+function getPaymentDisplay(booking = {}) {
+  const status = normalizeStatus(booking.payment_status) || "pending";
+  const bookingStatus = normalizeStatus(booking.trang_thai);
+
+  if (isCodMethod(booking.payment_method)) {
+    if (status === "pending") {
+      return {
+        className: "pending",
+        label: "Chờ xác nhận COD",
+      };
+    }
+
+    if (status === "paid") {
+      return {
+        className: bookingStatus === "cancelled" ? "cancelled" : "confirmed",
+        label:
+          bookingStatus === "cancelled"
+            ? "COD đã xác nhận (tour đã hủy)"
+            : "Đã xác nhận COD",
+      };
+    }
+
+    if (status === "refunded") {
+      return {
+        className: "failed",
+        label: "Không áp dụng hoàn tiền (COD)",
+      };
+    }
+
+    if (status === "failed") {
+      return {
+        className: "failed",
+        label: "Từ chối xác nhận COD",
+      };
+    }
+  }
+
+  return {
+    className: status,
+    label: paymentStatusLabels[status] || status,
+  };
 }
 
 function Bookings() {
@@ -106,10 +161,12 @@ function Bookings() {
       key: "payment_status",
       header: "Thanh toán",
       render: (row) => {
-        const normalized = normalizeStatus(row.payment_status) || "pending";
+        const paymentDisplay = getPaymentDisplay(row);
         return (
-          <span className={`status-pill status-pill--${normalized}`}>
-            {paymentStatusLabels[normalized] || normalized}
+          <span
+            className={`status-pill status-pill--${paymentDisplay.className}`}
+          >
+            {paymentDisplay.label}
           </span>
         );
       },
@@ -164,7 +221,7 @@ function Bookings() {
         booking={selectedBooking}
         onClose={() => setSelectedBooking(null)}
         bookingStatusLabels={bookingStatusLabels}
-        paymentStatusLabels={paymentStatusLabels}
+        getPaymentDisplay={getPaymentDisplay}
       />
     </div>
   );

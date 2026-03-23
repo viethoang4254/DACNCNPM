@@ -17,7 +17,12 @@ const paymentStatusLabels = {
 };
 
 const paymentMethodLabels = {
+  pay_at_place: "Thanh toán khi đến nơi",
+  pay_later: "Thanh toán khi đến nơi",
+  cod: "Thanh toán khi đến nơi",
+  cash_on_delivery: "Thanh toán khi đến nơi",
   bank_transfer: "Chuyển khoản ngân hàng",
+  paypal: "PayPal",
   cash: "Tiền mặt",
   card: "Thẻ ngân hàng",
   momo: "Ví MoMo",
@@ -27,12 +32,67 @@ const paymentMethodLabels = {
 function normalizeKey(value) {
   return String(value || "")
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
 }
 
 function getStatusLabel(status) {
   const statusKey = normalizeKey(status);
   return paymentStatusLabels[statusKey] || status || "-";
+}
+
+function isCodMethod(method) {
+  const methodKey = normalizeKey(method);
+  return [
+    "pay_at_place",
+    "pay_later",
+    "cod",
+    "cash_on_delivery",
+    "cash",
+  ].includes(methodKey);
+}
+
+function getPaymentStatusDisplay(payment = {}) {
+  const statusKey = normalizeKey(payment.status);
+  const bookingStatus = normalizeKey(payment.booking_status);
+
+  if (isCodMethod(payment.method)) {
+    if (statusKey === "pending") {
+      return {
+        className: "pending",
+        label: "Chờ xác nhận COD",
+      };
+    }
+
+    if (statusKey === "paid") {
+      return {
+        className: bookingStatus === "cancelled" ? "cancelled" : "confirmed",
+        label:
+          bookingStatus === "cancelled"
+            ? "COD đã xác nhận (tour đã hủy)"
+            : "Đã xác nhận COD",
+      };
+    }
+
+    if (statusKey === "refunded") {
+      return {
+        className: "failed",
+        label: "Không áp dụng hoàn tiền (COD)",
+      };
+    }
+
+    if (statusKey === "failed") {
+      return {
+        className: "failed",
+        label: "Từ chối xác nhận COD",
+      };
+    }
+  }
+
+  return {
+    className: statusKey,
+    label: getStatusLabel(statusKey),
+  };
 }
 
 function getMethodLabel(method) {
@@ -102,13 +162,16 @@ function AdminPayments() {
     {
       key: "status",
       header: "Trạng thái",
-      render: (row) => (
-        <span
-          className={`status-pill status-pill--${normalizeKey(row.status)}`}
-        >
-          {getStatusLabel(row.status)}
-        </span>
-      ),
+      render: (row) => {
+        const statusDisplay = getPaymentStatusDisplay(row);
+        return (
+          <span
+            className={`status-pill status-pill--${statusDisplay.className}`}
+          >
+            {statusDisplay.label}
+          </span>
+        );
+      },
     },
     {
       key: "actions",
@@ -191,6 +254,7 @@ function AdminPayments() {
         onConfirm={handleConfirm}
         onReject={handleReject}
         getStatusLabel={getStatusLabel}
+        getPaymentStatusDisplay={getPaymentStatusDisplay}
         getMethodLabel={getMethodLabel}
         normalizeStatus={normalizeKey}
         formatCurrency={formatCurrency}

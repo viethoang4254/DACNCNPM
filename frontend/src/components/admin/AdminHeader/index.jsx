@@ -10,7 +10,7 @@ import {
 import "./AdminHeader.scss";
 
 const titleMap = {
-  "/admin/dashboard": { label: "Bảng điều khiển", sub: "Tổng quan hệ thống" },
+  "/admin/dashboard": { label: "Dashboard", sub: "Tổng quan hệ thống" },
   "/admin/users": { label: "Người dùng", sub: "Quản lý tài khoản người dùng" },
   "/admin/tours": { label: "Tour", sub: "Danh sách tour du lịch" },
   "/admin/schedules": {
@@ -21,6 +21,7 @@ const titleMap = {
   "/admin/bookings": { label: "Đặt tour", sub: "Quản lý đơn đặt tour" },
   "/admin/payments": { label: "Thanh toán", sub: "Thống kê thanh toán" },
   "/admin/refunds": { label: "Hoàn tiền", sub: "Xử lý yêu cầu hoàn tiền" },
+  "/admin/warnings": { label: "Alerts", sub: "Cảnh báo hệ thống" },
   "/admin/reviews": { label: "Đánh giá", sub: "Quản lý đánh giá" },
 };
 

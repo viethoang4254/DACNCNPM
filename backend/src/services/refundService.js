@@ -111,6 +111,18 @@ export const approveRefund = async (bookingId) => {
       };
     }
 
+    const paymentMethod = String(refund.payment_method || "").toLowerCase();
+    const normalizedPaymentMethod = paymentMethod.replace(/[\s-]+/g, "_");
+    if (["pay_later", "cod", "pay_at_place", "cash", "cash_on_delivery"].includes(normalizedPaymentMethod)) {
+      await connection.rollback();
+      return {
+        success: false,
+        statusCode: 400,
+        message: "Đơn thanh toán khi đến nơi (COD) không áp dụng hoàn tiền",
+        data: {},
+      };
+    }
+
     const { expectedRefundAmount: officialRefundAmount } =
       calculateExpectedRefundAmount(refund);
 
