@@ -10,6 +10,7 @@ import {
   FaRoute,
   FaExclamationTriangle,
   FaUndo,
+  FaBullhorn,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -55,6 +56,7 @@ const menuItems = [
   { to: "/admin/bookings", label: "Bookings", icon: FaBook },
   { to: "/admin/payments", label: "Payments", icon: FaMoneyCheckAlt },
   { to: "/admin/refunds", label: "Refunds", icon: FaUndo },
+  { to: "/admin/popup-banners", label: "Popups", icon: FaBullhorn },
   { to: "/admin/warnings", label: "Alerts", icon: FaExclamationTriangle },
   { to: "/admin/reviews", label: "Reviews", icon: FaStar },
 ];

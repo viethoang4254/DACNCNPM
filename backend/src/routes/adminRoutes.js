@@ -32,6 +32,13 @@ import {
   hideReviewController,
   showReviewController,
 } from "../controllers/reviewController.js";
+import {
+  createPopupBannerController,
+  deletePopupBannerController,
+  getAdminPopupBannersController,
+  togglePopupBannerController,
+  updatePopupBannerController,
+} from "../controllers/popupBannerController.js";
 import adminMiddleware from "../middlewares/adminMiddleware.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import validationMiddleware from "../middlewares/validateMiddleware.js";
@@ -61,6 +68,59 @@ const createBulkItineraryValidation = [
 ];
 
 const updateBulkItineraryValidation = [...itineraryArrayValidation];
+
+const popupBannerValidation = [
+  body("title")
+    .trim()
+    .notEmpty()
+    .withMessage("title is required")
+    .isLength({ max: 255 })
+    .withMessage("title must be at most 255 characters"),
+  body("image_url")
+    .trim()
+    .notEmpty()
+    .withMessage("image_url is required")
+    .isLength({ max: 2000 })
+    .withMessage("image_url is too long"),
+  body("link")
+    .optional({ nullable: true })
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("link must be at most 500 characters"),
+  body("is_active")
+    .optional()
+    .isBoolean()
+    .withMessage("is_active must be a boolean"),
+  body("start_date")
+    .notEmpty()
+    .withMessage("start_date is required")
+    .isISO8601()
+    .withMessage("start_date must be a valid datetime"),
+  body("end_date")
+    .notEmpty()
+    .withMessage("end_date is required")
+    .isISO8601()
+    .withMessage("end_date must be a valid datetime")
+    .custom((value, { req }) => {
+      const startDate = new Date(req.body.start_date);
+      const endDate = new Date(value);
+
+      if (startDate >= endDate) {
+        throw new Error("start_date must be earlier than end_date");
+      }
+
+      return true;
+    }),
+  body("priority")
+    .optional()
+    .isInt()
+    .withMessage("priority must be an integer"),
+  body("target_type")
+    .notEmpty()
+    .withMessage("target_type is required")
+    .isIn(["all", "guest", "logged_in"])
+    .withMessage("target_type must be one of: all, guest, logged_in"),
+];
 
 router.use(authMiddleware, adminMiddleware);
 
@@ -162,6 +222,39 @@ router.delete(
   [param("tourId").isInt({ gt: 0 }).withMessage("tourId must be a positive integer")],
   validationMiddleware,
   deleteAdminItinerariesController
+);
+
+router.get("/popup-banners", getAdminPopupBannersController);
+
+router.post(
+  "/popup-banners",
+  popupBannerValidation,
+  validationMiddleware,
+  createPopupBannerController,
+);
+
+router.put(
+  "/popup-banners/:id",
+  [
+    param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer"),
+    ...popupBannerValidation,
+  ],
+  validationMiddleware,
+  updatePopupBannerController,
+);
+
+router.delete(
+  "/popup-banners/:id",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  deletePopupBannerController,
+);
+
+router.patch(
+  "/popup-banners/:id/toggle",
+  [param("id").isInt({ gt: 0 }).withMessage("id must be a positive integer")],
+  validationMiddleware,
+  togglePopupBannerController,
 );
 
 export default router;

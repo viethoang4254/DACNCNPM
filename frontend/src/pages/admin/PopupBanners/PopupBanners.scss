@@ -1,0 +1,254 @@
+.admin-page-popups .admin-col-image {
+  width: 92px;
+}
+
+.admin-page-popups .admin-col-priority {
+  width: 92px;
+}
+
+.admin-page-popups .admin-col-status {
+  width: 120px;
+}
+
+.admin-page-popups .admin-col-actions {
+  width: 200px;
+}
+
+.admin-page-popups__toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.popup-thumb {
+  width: 76px;
+  height: 52px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  object-fit: cover;
+  display: block;
+}
+
+.popup-thumb--empty {
+  width: 76px;
+  height: 52px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+}
+
+.popup-banner-form-modal {
+  width: min(780px, 100%);
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-banner-form-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.popup-banner-form-modal__header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+}
+
+.popup-banner-form-modal__header p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.popup-banner-form-modal__close {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.popup-banner-form-modal__close:hover {
+  background: #f1f5f9;
+}
+
+.popup-banner-form-modal__close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.popup-banner-form-modal__body {
+  padding: 20px 24px 24px;
+  overflow-y: auto;
+}
+
+.popup-banner-form-modal__footer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.popup-banner-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.popup-banner-form-grid .full {
+  grid-column: 1 / -1;
+}
+
+.popup-banner-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popup-banner-inline input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.popup-banner-inline label {
+  margin: 0;
+  color: #334155;
+  font-size: 0.875rem;
+}
+
+.popup-banner-upload-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.popup-banner-file-input {
+  width: 100%;
+  height: 52px;
+  border: 1.5px solid #cfd8e3;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #eef2f7;
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+.popup-banner-file-input::file-selector-button {
+  margin-right: 12px;
+  border: 1px solid #b7c3d7;
+  background: #e6ebf3;
+  color: #334155;
+  height: 36px;
+  border-radius: 11px;
+  padding: 0 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popup-banner-file-input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.popup-banner-upload-btn {
+  min-width: 132px;
+  height: 52px;
+  border-radius: 12px;
+  padding: 0 18px;
+  font-size: 0.9rem;
+}
+
+.popup-banner-upload-btn:disabled {
+  opacity: 0.7;
+}
+
+.popup-banner-upload-file {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.popup-banner-preview-modal {
+  width: min(520px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+}
+
+.popup-banner-preview-modal__image {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  display: block;
+}
+
+.popup-banner-preview-modal__content {
+  padding: 18px 20px 20px;
+}
+
+.popup-banner-preview-modal__content h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.popup-banner-preview-modal__content p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.popup-banner-preview-modal__actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .popup-banner-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .popup-banner-upload-row {
+    grid-template-columns: 1fr;
+  }
+
+  .popup-banner-upload-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-page-popups .admin-col-actions {
+    width: 160px;
+  }
+
+  .admin-page-popups__toolbar-actions {
+    width: 100%;
+  }
+
+  .popup-banner-form-modal__footer {
+    flex-direction: column-reverse;
+  }
+}
