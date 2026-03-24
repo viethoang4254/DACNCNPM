@@ -8,8 +8,10 @@ import {
   useState,
 } from "react";
 import HeroSection from "../../../components/user/HeroSection";
+import PopupBanner from "../../../components/user/PopupBanner";
 import TrendingDestinations from "../../../components/user/TrendingDestinations";
 import { featuredDestinations, reasons, reviews } from "../../../data/homeData";
+import usePopupBanner from "../../../hooks/usePopupBanner";
 
 // Lazy-load below-fold sections to reduce initial bundle size
 const FeaturedDestinations = lazy(
@@ -27,6 +29,12 @@ function Home() {
   const [tours, setTours] = useState([]);
   const [toursLoading, setToursLoading] = useState(true);
   const [toursError, setToursError] = useState("");
+  const {
+    banner: popupBanner,
+    isOpen: isPopupOpen,
+    isLoading: isPopupLoading,
+    closePopup,
+  } = usePopupBanner({ showDelayMs: 1200 });
 
   const apiBaseUrl = useMemo(
     () => import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
@@ -120,6 +128,13 @@ function Home() {
       <Suspense fallback={SUSPENSE_FALLBACK}>
         <Reviews reviews={reviews} />
       </Suspense>
+
+      <PopupBanner
+        open={isPopupOpen}
+        isLoading={isPopupLoading}
+        banner={popupBanner}
+        onClose={closePopup}
+      />
     </main>
   );
 }
