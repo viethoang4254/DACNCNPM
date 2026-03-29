@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
+import { FaFire } from "react-icons/fa";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./TourGallery.scss";
 
-function TourGallery({ images = [] }) {
+function TourGallery({ images = [], saleDiscount = 0 }) {
   const normalizedImages = useMemo(() => images.filter(Boolean), [images]);
 
   const [mainImage, setMainImage] = useState(normalizedImages[0] || "");
@@ -23,7 +24,14 @@ function TourGallery({ images = [] }) {
     <section className="tour-detail__gallery card">
       <div className="tour-detail__main-image-wrap">
         {activeImage ? (
-          <img src={activeImage} alt="Tour" className="tour-detail__main-image" />
+          <>
+            <img src={activeImage} alt="Tour" className="tour-detail__main-image" />
+            {Number(saleDiscount || 0) > 0 ? (
+              <span className="tour-detail__image-sale-badge">
+                <FaFire aria-hidden="true" /> -{saleDiscount}%
+              </span>
+            ) : null}
+          </>
         ) : (
           <div className="tour-detail__main-image-empty">Không có hình ảnh</div>
         )}

@@ -11,7 +11,7 @@ function formatDate(value) {
   return date.toLocaleDateString("vi-VN");
 }
 
-function OrderSummary({ booking }) {
+function OrderSummary({ booking, pricing }) {
   const imageUrl = booking?.image || "";
 
   return (
@@ -42,9 +42,23 @@ function OrderSummary({ booking }) {
           <strong>{formatCurrency(booking?.tour?.gia)} VND</strong>
         </div>
 
+        <div className="order-summary__row">
+          <span>Giá gốc</span>
+          <strong className={pricing?.discount > 0 ? "is-original" : ""}>
+            {formatCurrency(pricing?.originalTotal)} VND
+          </strong>
+        </div>
+
+        <div className="order-summary__row">
+          <span>Giảm giá</span>
+          <strong className="is-discount">
+            -{formatCurrency(pricing?.discountTotal)} VND
+          </strong>
+        </div>
+
         <div className="order-summary__row order-summary__row--total">
           <span>Tổng tiền</span>
-          <strong>{formatCurrency(booking?.tong_tien)} VND</strong>
+          <strong>{formatCurrency(pricing?.total)} VND</strong>
         </div>
       </div>
     </aside>

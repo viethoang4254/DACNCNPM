@@ -20,12 +20,75 @@ const paymentStatusLabels = {
   paid: "Đã thanh toán",
   failed: "Thất bại",
   refunded: "Đã hoàn tiền",
+  none: "Chưa gửi yêu cầu",
 };
 
 function normalizeStatus(value) {
   return String(value || "")
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function isCodMethod(method) {
+  const normalized = normalizeStatus(method);
+  return [
+    "pay_at_place",
+    "pay_later",
+    "cod",
+    "cash_on_delivery",
+    "cash",
+  ].includes(normalized);
+}
+
+function getPaymentDisplay(booking = {}) {
+  const status = normalizeStatus(booking.payment_status);
+  const bookingStatus = normalizeStatus(booking.trang_thai);
+
+  if (!status) {
+    return {
+      className: "admin",
+      label: paymentStatusLabels.none,
+    };
+  }
+
+  if (isCodMethod(booking.payment_method)) {
+    if (status === "pending") {
+      return {
+        className: "pending",
+        label: "Chờ xác nhận COD",
+      };
+    }
+
+    if (status === "paid") {
+      return {
+        className: bookingStatus === "cancelled" ? "cancelled" : "confirmed",
+        label:
+          bookingStatus === "cancelled"
+            ? "COD đã xác nhận (tour đã hủy)"
+            : "Đã xác nhận COD",
+      };
+    }
+
+    if (status === "refunded") {
+      return {
+        className: "failed",
+        label: "Không áp dụng hoàn tiền (COD)",
+      };
+    }
+
+    if (status === "failed") {
+      return {
+        className: "failed",
+        label: "Từ chối xác nhận COD",
+      };
+    }
+  }
+
+  return {
+    className: status,
+    label: paymentStatusLabels[status] || status,
+  };
 }
 
 function Bookings() {
@@ -59,7 +122,17 @@ function Bookings() {
   }, []);
 
   const visibleBookings = useMemo(
-    () => bookings.filter((booking) => booking.trang_thai !== "pending"),
+    () =>
+      bookings.filter((booking) => {
+        const bookingStatus = normalizeStatus(booking.trang_thai);
+        const paymentStatus = normalizeStatus(booking.payment_status);
+
+        if (bookingStatus !== "pending") {
+          return true;
+        }
+
+        return paymentStatus === "pending";
+      }),
     [bookings],
   );
 
@@ -106,10 +179,12 @@ function Bookings() {
       key: "payment_status",
       header: "Thanh toán",
       render: (row) => {
-        const normalized = normalizeStatus(row.payment_status) || "pending";
+        const paymentDisplay = getPaymentDisplay(row);
         return (
-          <span className={`status-pill status-pill--${normalized}`}>
-            {paymentStatusLabels[normalized] || normalized}
+          <span
+            className={`status-pill status-pill--${paymentDisplay.className}`}
+          >
+            {paymentDisplay.label}
           </span>
         );
       },
@@ -150,7 +225,7 @@ function Bookings() {
           <DataTable
             columns={columns}
             data={paginated}
-            emptyText="Chưa có đơn đã thanh toán"
+            emptyText="Chưa có đơn đặt tour"
           />
         )}
         <Pagination
@@ -164,7 +239,7 @@ function Bookings() {
         booking={selectedBooking}
         onClose={() => setSelectedBooking(null)}
         bookingStatusLabels={bookingStatusLabels}
-        paymentStatusLabels={paymentStatusLabels}
+        getPaymentDisplay={getPaymentDisplay}
       />
     </div>
   );

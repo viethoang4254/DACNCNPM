@@ -1,3 +1,5 @@
+import { formatDateVi } from "../../../utils/dateOnly";
+
 function PaymentDetailModal({
   open,
   payment,
@@ -6,16 +8,23 @@ function PaymentDetailModal({
   onConfirm,
   onReject,
   getStatusLabel,
+  getPaymentStatusDisplay,
   getMethodLabel,
   normalizeStatus,
   formatCurrency,
-  formatDate,
 }) {
   if (!open || !payment) {
     return null;
   }
 
   const normalizedStatus = normalizeStatus(payment.status);
+  const statusDisplay =
+    typeof getPaymentStatusDisplay === "function"
+      ? getPaymentStatusDisplay(payment)
+      : {
+          className: normalizedStatus,
+          label: getStatusLabel(payment.status),
+        };
   const canReview = normalizedStatus === "pending";
 
   return (
@@ -79,7 +88,7 @@ function PaymentDetailModal({
               </div>
               <div className="admin-detail-item">
                 <label>Ngày đi</label>
-                <span>{formatDate(payment.start_date)}</span>
+                <span>{formatDateVi(payment.start_date, "-")}</span>
               </div>
               <div className="admin-detail-item">
                 <label>Booking ID</label>
@@ -103,15 +112,15 @@ function PaymentDetailModal({
                 <label>Trạng thái</label>
                 <span>
                   <span
-                    className={`status-pill status-pill--${normalizedStatus}`}
+                    className={`status-pill status-pill--${statusDisplay.className}`}
                   >
-                    {getStatusLabel(payment.status)}
+                    {statusDisplay.label}
                   </span>
                 </span>
               </div>
               <div className="admin-detail-item">
                 <label>Ngày tạo</label>
-                <span>{formatDate(payment.created_at)}</span>
+                <span>{formatDateVi(payment.created_at, "-")}</span>
               </div>
             </div>
           </section>

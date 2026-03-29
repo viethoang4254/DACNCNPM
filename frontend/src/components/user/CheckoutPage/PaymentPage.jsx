@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import apiClient from "../../../utils/apiClient";
 import { getAuthUser } from "../../../utils/authStorage";
+import { getPriceInfo } from "../../../utils/price";
 import CustomerForm from "./components/CustomerForm";
 import PaymentMethod from "./components/PaymentMethod";
 import OrderSummary from "./components/OrderSummary";
@@ -67,6 +68,12 @@ function normalizeBooking(rawBooking = {}) {
     },
     schedule: {
       start_date: scheduleFromApi.start_date || rawBooking.start_date || "",
+      is_on_sale: Boolean(
+        scheduleFromApi.is_on_sale ?? rawBooking.is_on_sale ?? false,
+      ),
+      discount_percent: Number(
+        scheduleFromApi.discount_percent ?? rawBooking.discount_percent ?? 0,
+      ),
     },
     image:
       resolveImageUrl(rawBooking.image) ||
@@ -110,6 +117,29 @@ function PaymentPage() {
   });
 
   const authUser = useMemo(() => getAuthUser(), []);
+
+  const pricing = useMemo(() => {
+    const people = Number(booking?.so_nguoi || 0);
+    const priceInfo = getPriceInfo(
+      booking?.tour || {},
+      booking?.schedule || {},
+    );
+
+    const unitFinal = Number(priceInfo.finalPrice || 0);
+    const unitOriginal = Number(
+      priceInfo.originalPrice ?? booking?.tour?.gia ?? 0,
+    );
+    const originalTotal = unitOriginal * people;
+    const finalTotal = unitFinal * people;
+    const discountTotal = Math.max(0, originalTotal - finalTotal);
+
+    return {
+      discount: Number(priceInfo.discount || 0),
+      originalTotal,
+      discountTotal,
+      total: finalTotal,
+    };
+  }, [booking]);
 
   useEffect(() => {
     let isMounted = true;
@@ -228,7 +258,7 @@ function PaymentPage() {
       if (!nextPaymentId) {
         const createRes = await apiClient.post("/api/payments", {
           booking_id: booking.id,
-          amount: booking.tong_tien,
+          amount: pricing.total,
           method: selectedMethod,
           status: "pending",
         });
@@ -250,6 +280,7 @@ function PaymentPage() {
         replace: true,
         state: {
           paymentId: nextPaymentId,
+          paymentMethod: selectedMethod,
           booking,
         },
       });
@@ -322,10 +353,26 @@ function PaymentPage() {
             />
 
             <div className="checkout-page__payment-total">
-              <span>Tổng tiền</span>
-              <strong>
-                {Number(booking?.tong_tien || 0).toLocaleString("vi-VN")}đ
-              </strong>
+              <div className="checkout-page__payment-row">
+                <span>Giá gốc</span>
+                <strong className={pricing.discount > 0 ? "is-original" : ""}>
+                  {Number(pricing.originalTotal || 0).toLocaleString("vi-VN")}đ
+                </strong>
+              </div>
+
+              <div className="checkout-page__payment-row">
+                <span>Giảm giá</span>
+                <strong className="is-discount">
+                  -{Number(pricing.discountTotal || 0).toLocaleString("vi-VN")}đ
+                </strong>
+              </div>
+
+              <div className="checkout-page__payment-row checkout-page__payment-row--total">
+                <span>Tổng tiền</span>
+                <strong>
+                  {Number(pricing.total || 0).toLocaleString("vi-VN")}đ
+                </strong>
+              </div>
             </div>
 
             <button
@@ -351,7 +398,7 @@ function PaymentPage() {
         </div>
 
         <div className="checkout-page__right">
-          <OrderSummary booking={booking} />
+          <OrderSummary booking={booking} pricing={pricing} />
         </div>
       </section>
     </main>

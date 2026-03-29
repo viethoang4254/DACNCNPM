@@ -61,6 +61,7 @@ CREATE TABLE tour_schedules (
   available_slots INT NOT NULL,
   is_on_sale BOOLEAN DEFAULT FALSE,
   discount_percent DECIMAL(5,2) DEFAULT 0,
+  auto_sale_applied BOOLEAN DEFAULT FALSE,
   status ENUM('open', 'warning', 'guaranteed', 'full', 'cancelled', 'completed') NOT NULL DEFAULT 'open',
   min_required_ratio DECIMAL(3,2) NOT NULL DEFAULT 0.50,
   INDEX idx_tour_schedules_tour_id (tour_id),
@@ -152,6 +153,7 @@ CREATE TABLE reviews (
   tour_id INT NOT NULL,
   rating TINYINT NOT NULL,
   comment TEXT,
+  is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_reviews_user_id (user_id),
   INDEX idx_reviews_tour_id (tour_id),
@@ -190,4 +192,21 @@ CREATE TABLE tour_history (
     REFERENCES tours(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE popup_banners (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  image_url TEXT NOT NULL,
+  link VARCHAR(500),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  start_date DATETIME NOT NULL,
+  end_date DATETIME NOT NULL,
+  priority INT NOT NULL DEFAULT 0,
+  target_type ENUM('all', 'guest', 'logged_in') NOT NULL DEFAULT 'all',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_popup_banners_active (is_active),
+  INDEX idx_popup_banners_date_range (start_date, end_date),
+  INDEX idx_popup_banners_priority (priority),
+  CONSTRAINT chk_popup_banners_valid_range CHECK (start_date < end_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

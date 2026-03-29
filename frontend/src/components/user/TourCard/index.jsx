@@ -3,12 +3,14 @@ import { CiLocationOn } from "react-icons/ci";
 import {
   FaBusAlt,
   FaCarSide,
+  FaFire,
   FaPlaneDeparture,
   FaShip,
   FaTrain,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { formatDuration } from "../../../utils/tourUtils";
+import { getPriceInfo } from "../../../utils/price";
 
 const normalizeTransport = (value) => {
   if (!value || typeof value !== "string") return "";
@@ -65,7 +67,15 @@ const getTransportMeta = (value) => {
 };
 
 function TourCard({ tour, buttonLabel = "View", viewedText = "" }) {
-  const price = Number(tour.price || 0).toLocaleString("vi-VN");
+  const { finalPrice, originalPrice, discount } = getPriceInfo(
+    { gia: Number(tour.price || 0) },
+    tour.schedule || {
+      is_on_sale: Boolean(tour.is_on_sale),
+      discount_percent: Number(tour.discount_percent || 0),
+    },
+  );
+  const price = Number(finalPrice || 0).toLocaleString("vi-VN");
+  const original = Number(originalPrice || 0).toLocaleString("vi-VN");
   const duration = formatDuration(tour.days);
   const transport = getTransportMeta(tour.transport || tour.phuong_tien || "");
 
@@ -74,6 +84,11 @@ function TourCard({ tour, buttonLabel = "View", viewedText = "" }) {
       <div className="tour-card__image-wrap">
         <img src={tour.image} alt={tour.name} loading="lazy" decoding="async" />
         <span className="tour-card__badge">{duration}</span>
+        {discount > 0 ? (
+          <span className="tour-card__sale-badge">
+            <FaFire aria-hidden="true" /> -{discount}%
+          </span>
+        ) : null}
       </div>
 
       <div className="tour-card__info">
@@ -98,10 +113,19 @@ function TourCard({ tour, buttonLabel = "View", viewedText = "" }) {
         </div>
 
         <div className="tour-card__meta">
-          <p className="tour-card__price">
-            {price} ₫
-            <span className="tour-card__per"> / người</span>
-          </p>
+          <div className="tour-card__price-wrap">
+            {discount > 0 ? (
+              <p className="tour-card__price-old">{original} ₫</p>
+            ) : null}
+            <p
+              className={`tour-card__price ${
+                discount > 0 ? "tour-card__price--sale" : ""
+              }`}
+            >
+              {price} ₫
+              <span className="tour-card__per"> / người</span>
+            </p>
+          </div>
           <Link to={`/tours/${tour.id}`} className="tour-card__button">
             {buttonLabel}
           </Link>

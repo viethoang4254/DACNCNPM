@@ -7,6 +7,11 @@ const FALLBACK_IMAGE =
  * Mapped fields: name, location, days, price, image, plus any sort-related fields.
  */
 export function normalizeTour(item) {
+  const discountPercent = Number(
+    item.discount_percent ?? item.discountPercent ?? 0,
+  );
+  const isOnSale = Boolean(item.is_on_sale ?? item.isOnSale ?? false);
+
   return {
     id: item.id,
     name: item.ten_tour || item.name || "Tour du lịch",
@@ -15,6 +20,12 @@ export function normalizeTour(item) {
     days: Number(item.so_ngay || item.days || 1),
     price: Number(item.gia || item.price || 0),
     image: item.hinh_anh || item.image || FALLBACK_IMAGE,
+    is_on_sale: isOnSale,
+    discount_percent: discountPercent,
+    schedule: {
+      is_on_sale: isOnSale,
+      discount_percent: discountPercent,
+    },
     // Fields used by sort strategies (populated once the API supports them)
     review_count: Number(item.review_count || 0),
     avg_rating: Number(item.avg_rating || 0),

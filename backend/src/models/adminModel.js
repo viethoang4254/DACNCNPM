@@ -4,7 +4,15 @@ export const getAdminStats = async () => {
   const [[userStat]] = await pool.execute("SELECT COUNT(*) AS totalUsers FROM users");
   const [[tourStat]] = await pool.execute("SELECT COUNT(*) AS totalTours FROM tours");
   const [[bookingStat]] = await pool.execute("SELECT COUNT(*) AS totalBookings FROM bookings WHERE trang_thai = 'confirmed'");
-  const [[revenueStat]] = await pool.execute("SELECT COALESCE(SUM(amount), 0) AS revenue FROM payments WHERE status = 'paid'");
+  const [[revenueStat]] = await pool.execute(
+    `SELECT COALESCE(SUM(p.amount), 0) AS revenue
+     FROM payments p
+     INNER JOIN bookings b ON b.id = p.booking_id
+     WHERE p.status = 'paid'
+       AND b.trang_thai = 'confirmed'
+       AND LOWER(REPLACE(REPLACE(p.method, '-', '_'), ' ', '_'))
+           NOT IN ('pay_at_place', 'pay_later', 'cod', 'cash_on_delivery', 'cash')`
+  );
 
   return {
     totalUsers: Number(userStat.totalUsers),
@@ -16,12 +24,16 @@ export const getAdminStats = async () => {
 
 export const getRevenueReport = async () => {
   const [rows] = await pool.execute(
-    `SELECT DATE_FORMAT(created_at, '%Y-%m') AS month,
+    `SELECT DATE_FORMAT(p.created_at, '%Y-%m') AS month,
             COUNT(*) AS totalPayments,
-            COALESCE(SUM(amount), 0) AS revenue
-     FROM payments
-     WHERE status = 'paid'
-     GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            COALESCE(SUM(p.amount), 0) AS revenue
+     FROM payments p
+     INNER JOIN bookings b ON b.id = p.booking_id
+     WHERE p.status = 'paid'
+       AND b.trang_thai = 'confirmed'
+       AND LOWER(REPLACE(REPLACE(p.method, '-', '_'), ' ', '_'))
+           NOT IN ('pay_at_place', 'pay_later', 'cod', 'cash_on_delivery', 'cash')
+     GROUP BY DATE_FORMAT(p.created_at, '%Y-%m')
      ORDER BY month DESC`
   );
   return rows;

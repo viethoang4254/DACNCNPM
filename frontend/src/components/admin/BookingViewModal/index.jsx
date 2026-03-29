@@ -1,10 +1,6 @@
 import { useEffect } from "react";
+import { formatDateVi } from "../../../utils/dateOnly";
 import "./BookingViewModal.scss";
-
-function formatDate(dateValue) {
-  if (!dateValue) return "—";
-  return new Date(dateValue).toLocaleDateString("vi-VN");
-}
 
 function formatCurrency(value) {
   return `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
@@ -16,11 +12,18 @@ function normalizeStatus(value) {
     .toLowerCase();
 }
 
+function formatCreatedDate(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("vi-VN");
+}
+
 function BookingViewModal({
   booking,
   onClose,
   bookingStatusLabels,
-  paymentStatusLabels,
+  getPaymentDisplay,
 }) {
   useEffect(() => {
     if (!booking) return undefined;
@@ -43,7 +46,13 @@ function BookingViewModal({
 
   if (!booking) return null;
 
-  const paymentStatus = normalizeStatus(booking.payment_status) || "pending";
+  const paymentDisplay =
+    typeof getPaymentDisplay === "function"
+      ? getPaymentDisplay(booking)
+      : {
+          className: normalizeStatus(booking.payment_status) || "pending",
+          label: normalizeStatus(booking.payment_status) || "pending",
+        };
 
   return (
     <div className="admin-modal__backdrop" onClick={onClose}>
@@ -93,7 +102,7 @@ function BookingViewModal({
               </div>
               <div className="booking-detail-item">
                 <label>Ngày khởi hành</label>
-                <span>{formatDate(booking.start_date)}</span>
+                <span>{formatDateVi(booking.start_date, "—")}</span>
               </div>
               <div className="booking-detail-item">
                 <label>Số người</label>
@@ -116,13 +125,15 @@ function BookingViewModal({
               </div>
               <div className="booking-detail-item">
                 <label>Thanh toán</label>
-                <span className={`status-pill status-pill--${paymentStatus}`}>
-                  {paymentStatusLabels[paymentStatus] || paymentStatus}
+                <span
+                  className={`status-pill status-pill--${paymentDisplay.className}`}
+                >
+                  {paymentDisplay.label}
                 </span>
               </div>
               <div className="booking-detail-item">
                 <label>Ngày đặt</label>
-                <span>{formatDate(booking.created_at)}</span>
+                <span>{formatCreatedDate(booking.created_at)}</span>
               </div>
             </div>
           </div>

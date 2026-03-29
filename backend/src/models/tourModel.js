@@ -36,6 +36,21 @@ const firstTourImageSubquery = `
   ) tif ON tif.tour_id = timg.tour_id AND tif.first_image_id = timg.id
 `;
 
+const futureScheduleSaleSubquery = `
+  SELECT
+    ts.tour_id,
+    MAX(
+      CASE
+        WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+        THEN ts.discount_percent
+        ELSE 0
+      END
+    ) AS discount_percent
+  FROM tour_schedules ts
+  WHERE DATE(ts.start_date) >= CURDATE()
+  GROUP BY ts.tour_id
+`;
+
 const tourSearchSelect = `
   SELECT
     t.id,
@@ -49,7 +64,25 @@ const tourSearchSelect = `
     t.so_nguoi_toi_da,
     t.created_at,
     ti.image_url AS hinh_anh,
-    MIN(ts.start_date) AS nearest_start_date
+    MIN(ts.start_date) AS nearest_start_date,
+    MAX(
+      CASE
+        WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+        THEN ts.discount_percent
+        ELSE 0
+      END
+    ) AS discount_percent,
+    CASE
+      WHEN MAX(
+        CASE
+          WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+          THEN ts.discount_percent
+          ELSE 0
+        END
+      ) > 0
+      THEN TRUE
+      ELSE FALSE
+    END AS is_on_sale
   FROM tours t
   INNER JOIN tour_schedules ts ON ts.tour_id = t.id
   LEFT JOIN (${firstTourImageSubquery}) ti ON ti.tour_id = t.id
@@ -304,7 +337,12 @@ export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_han
         t.so_ngay,
         t.so_nguoi_toi_da,
         t.created_at,
-        ti.image_url AS hinh_anh
+        ti.image_url AS hinh_anh,
+        COALESCE(ss.discount_percent, 0) AS discount_percent,
+        CASE
+          WHEN COALESCE(ss.discount_percent, 0) > 0 THEN TRUE
+          ELSE FALSE
+        END AS is_on_sale
      FROM tours t
      LEFT JOIN (
        SELECT timg.tour_id, timg.image_url
@@ -315,6 +353,7 @@ export const getTours = async ({ page, limit, keyword, tinh_thanh, diem_khoi_han
          GROUP BY tour_id
        ) tif ON tif.tour_id = timg.tour_id AND tif.first_image_id = timg.id
      ) ti ON ti.tour_id = t.id
+     LEFT JOIN (${futureScheduleSaleSubquery}) ss ON ss.tour_id = t.id
      ${whereSql}
      ORDER BY ${orderBy}
      LIMIT ${safeLimit} OFFSET ${offset}`,
@@ -374,7 +413,39 @@ export const getFeaturedTours = async (limit = 6) => {
               WHERE ti.tour_id = tours.id
               ORDER BY ti.id ASC
               LIMIT 1
-            ) AS hinh_anh
+            ) AS hinh_anh,
+            (
+              SELECT COALESCE(
+                MAX(
+                  CASE
+                    WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+                    THEN ts.discount_percent
+                    ELSE 0
+                  END
+                ),
+                0
+              )
+              FROM tour_schedules ts
+              WHERE ts.tour_id = tours.id AND DATE(ts.start_date) >= CURDATE()
+            ) AS discount_percent,
+            (
+              SELECT CASE
+                WHEN COALESCE(
+                  MAX(
+                    CASE
+                      WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+                      THEN ts.discount_percent
+                      ELSE 0
+                    END
+                  ),
+                  0
+                ) > 0
+                THEN TRUE
+                ELSE FALSE
+              END
+              FROM tour_schedules ts
+              WHERE ts.tour_id = tours.id AND DATE(ts.start_date) >= CURDATE()
+            ) AS is_on_sale
      FROM tours
      ORDER BY created_at DESC
      LIMIT ${safeLimit}`
@@ -393,7 +464,39 @@ export const getLatestTours = async (limit = 8) => {
               WHERE ti.tour_id = tours.id
               ORDER BY ti.id ASC
               LIMIT 1
-            ) AS hinh_anh
+            ) AS hinh_anh,
+            (
+              SELECT COALESCE(
+                MAX(
+                  CASE
+                    WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+                    THEN ts.discount_percent
+                    ELSE 0
+                  END
+                ),
+                0
+              )
+              FROM tour_schedules ts
+              WHERE ts.tour_id = tours.id AND DATE(ts.start_date) >= CURDATE()
+            ) AS discount_percent,
+            (
+              SELECT CASE
+                WHEN COALESCE(
+                  MAX(
+                    CASE
+                      WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+                      THEN ts.discount_percent
+                      ELSE 0
+                    END
+                  ),
+                  0
+                ) > 0
+                THEN TRUE
+                ELSE FALSE
+              END
+              FROM tour_schedules ts
+              WHERE ts.tour_id = tours.id AND DATE(ts.start_date) >= CURDATE()
+            ) AS is_on_sale
      FROM tours
      ORDER BY id DESC
      LIMIT ${safeLimit}`
@@ -432,7 +535,39 @@ export const getSimilarToursByTourId = async (tourId, limit = 3) => {
           WHERE ti.tour_id = t.id
           ORDER BY ti.id ASC
           LIMIT 1
-        ) AS hinh_anh
+        ) AS hinh_anh,
+        (
+          SELECT COALESCE(
+            MAX(
+              CASE
+                WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+                THEN ts.discount_percent
+                ELSE 0
+              END
+            ),
+            0
+          )
+          FROM tour_schedules ts
+          WHERE ts.tour_id = t.id AND DATE(ts.start_date) >= CURDATE()
+        ) AS discount_percent,
+        (
+          SELECT CASE
+            WHEN COALESCE(
+              MAX(
+                CASE
+                  WHEN ts.is_on_sale = TRUE AND ts.discount_percent > 0
+                  THEN ts.discount_percent
+                  ELSE 0
+                END
+              ),
+              0
+            ) > 0
+            THEN TRUE
+            ELSE FALSE
+          END
+          FROM tour_schedules ts
+          WHERE ts.tour_id = t.id AND DATE(ts.start_date) >= CURDATE()
+        ) AS is_on_sale
      FROM tours t
      WHERE t.tinh_thanh = ? AND t.id <> ?
      ORDER BY t.created_at DESC
@@ -507,20 +642,22 @@ export const getTourSchedules = async (tourId) => {
             ts.tour_id,
             ts.start_date,
             COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) AS max_slots,
-            COALESCE(SUM(CASE WHEN b.trang_thai = 'confirmed' THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots,
+            COALESCE(SUM(CASE WHEN b.trang_thai IN ('pending', 'confirmed') THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots,
             ts.min_required_ratio,
             GREATEST(
               COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) -
-              COALESCE(SUM(CASE WHEN b.trang_thai = 'confirmed' THEN b.so_nguoi ELSE 0 END), 0),
+              COALESCE(SUM(CASE WHEN b.trang_thai IN ('pending', 'confirmed') THEN b.so_nguoi ELSE 0 END), 0),
               0
             ) AS available_slots,
             t.so_nguoi_toi_da,
-            ts.status
+                 ts.status,
+                 ts.is_on_sale,
+                 ts.discount_percent
      FROM tour_schedules ts
      JOIN tours t ON t.id = ts.tour_id
      LEFT JOIN bookings b ON b.schedule_id = ts.id
      WHERE ts.tour_id = ? AND DATE(ts.start_date) >= CURDATE()
-     GROUP BY ts.id, ts.tour_id, ts.start_date, ts.max_slots, ts.min_required_ratio, ts.status, t.so_nguoi_toi_da
+               GROUP BY ts.id, ts.tour_id, ts.start_date, ts.max_slots, ts.min_required_ratio, ts.status, ts.is_on_sale, ts.discount_percent, t.so_nguoi_toi_da
      ORDER BY ts.start_date ASC`,
     [tourId]
   );
@@ -529,7 +666,11 @@ export const getTourSchedules = async (tourId) => {
 
 export const getScheduleById = async (id) => {
   const [rows] = await pool.execute(
-    `SELECT ts.id, ts.tour_id, ts.start_date, ts.available_slots, t.so_nguoi_toi_da,
+    `SELECT ts.id,
+            ts.tour_id,
+            ts.start_date,
+            ts.available_slots,
+            t.so_nguoi_toi_da,
             CASE
               WHEN DATE(ts.start_date) > CURDATE() THEN 'Sắp khởi hành'
               WHEN DATE(ts.start_date) = CURDATE() THEN 'Đang khởi hành'

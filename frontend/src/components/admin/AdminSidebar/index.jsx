@@ -10,6 +10,7 @@ import {
   FaRoute,
   FaExclamationTriangle,
   FaUndo,
+  FaBullhorn,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -26,10 +27,18 @@ const toRatio = (percentValue) => {
   return value;
 };
 
-const resolveScheduleStatus = (item) => {
-  const ratio = toRatio(item?.percent);
-  const daysLeft = getDaysLeftFromDateKey(item?.start_date);
+const resolveDaysLeft = (item) => {
+  const computedDaysLeft = getDaysLeftFromDateKey(item?.start_date);
+  if (Number.isFinite(computedDaysLeft)) return computedDaysLeft;
 
+  const apiDaysLeft = Number(item?.days_left);
+  if (Number.isFinite(apiDaysLeft)) return apiDaysLeft;
+
+  return Number.POSITIVE_INFINITY;
+};
+
+const resolveScheduleStatus = (item, daysLeft) => {
+  const ratio = toRatio(item?.percent);
   if (daysLeft < 0) return "completed";
   if (ratio >= MIN_RATIO) return "guaranteed";
   if (daysLeft === 0 && ratio < MIN_RATIO) return "cancelled";
@@ -47,78 +56,99 @@ const menuItems = [
   { to: "/admin/bookings", label: "Bookings", icon: FaBook },
   { to: "/admin/payments", label: "Payments", icon: FaMoneyCheckAlt },
   { to: "/admin/refunds", label: "Refunds", icon: FaUndo },
-  { to: "/admin/warnings", label: "Cảnh báo", icon: FaExclamationTriangle },
+  { to: "/admin/popup-banners", label: "Popups", icon: FaBullhorn },
+  { to: "/admin/warnings", label: "Alerts", icon: FaExclamationTriangle },
   { to: "/admin/reviews", label: "Reviews", icon: FaStar },
 ];
 
 function AdminSidebar() {
-  const [warningCount, setWarningCount] = useState(0);
-  const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
+  const [alertCount, setAlertCount] = useState(0);
+  const [paymentCount, setPaymentCount] = useState(0);
+  const [bookingCount, setBookingCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
 
-    async function fetchWarningCount() {
+    const isPendingPaymentForAdmin = (payment) => {
+      const paymentStatus = String(payment?.status || "")
+        .trim()
+        .toLowerCase();
+      const bookingStatus = String(payment?.booking_status || "")
+        .trim()
+        .toLowerCase();
+
+      if (paymentStatus !== "pending") {
+        return false;
+      }
+
+      return bookingStatus === "pending" || bookingStatus === "confirmed";
+    };
+
+    const normalizeStatus = (value) =>
+      String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+
+    const isPendingBookingForAdmin = (booking) => {
+      const bookingStatus = normalizeStatus(booking?.trang_thai);
+      const paymentStatus = normalizeStatus(booking?.payment_status);
+
+      return bookingStatus === "pending" && paymentStatus === "pending";
+    };
+
+    async function fetchSidebarCounts() {
       try {
-        const response = await apiClient.get("/api/schedules/warning");
+        const [warningRes, paymentRes, bookingRes] = await Promise.all([
+          apiClient.get("/api/schedules/warning"),
+          apiClient.get("/api/payments"),
+          apiClient.get("/api/bookings"),
+        ]);
         if (!mounted) return;
 
-        const list = Array.isArray(response?.data?.data)
-          ? response.data.data
+        const warningList = Array.isArray(warningRes?.data?.data)
+          ? warningRes.data.data
           : [];
+        const matchedAlerts = warningList.filter((item) => {
+          const daysLeft = resolveDaysLeft(item);
+          const status = resolveScheduleStatus(item, daysLeft);
+          return status === "warning" || status === "warning_critical";
+        });
 
-        const nextCount = list.filter((item) => {
-          const status = resolveScheduleStatus(item);
-          return ["warning", "warning_critical"].includes(status);
-        }).length;
+        const payments = Array.isArray(paymentRes?.data?.data)
+          ? paymentRes.data.data
+          : [];
+        const pendingPayments = payments.filter(isPendingPaymentForAdmin);
 
-        setWarningCount(nextCount);
+        const bookings = Array.isArray(bookingRes?.data?.data)
+          ? bookingRes.data.data
+          : [];
+        const pendingBookings = bookings.filter(isPendingBookingForAdmin);
+
+        setAlertCount(matchedAlerts.length);
+        setPaymentCount(pendingPayments.length);
+        setBookingCount(pendingBookings.length);
       } catch {
         if (!mounted) return;
-        setWarningCount(0);
+        setAlertCount(0);
+        setPaymentCount(0);
+        setBookingCount(0);
       }
     }
 
-    async function fetchPendingPaymentCount() {
-      try {
-        const response = await apiClient.get("/api/payments");
-        if (!mounted) return;
-
-        const list = Array.isArray(response?.data?.data)
-          ? response.data.data
-          : [];
-
-        const nextCount = list.filter((item) => {
-          const status = String(item?.status || "")
-            .trim()
-            .toLowerCase();
-          return status === "pending";
-        }).length;
-
-        setPendingPaymentCount(nextCount);
-      } catch {
-        if (!mounted) return;
-        setPendingPaymentCount(0);
-      }
-    }
-
-    fetchWarningCount();
-    fetchPendingPaymentCount();
+    fetchSidebarCounts();
 
     const timer = setInterval(() => {
-      fetchWarningCount();
-      fetchPendingPaymentCount();
+      fetchSidebarCounts();
     }, 12000);
 
     const handleFocus = () => {
-      fetchWarningCount();
-      fetchPendingPaymentCount();
+      fetchSidebarCounts();
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        fetchWarningCount();
-        fetchPendingPaymentCount();
+        fetchSidebarCounts();
       }
     };
 
@@ -156,18 +186,26 @@ function AdminSidebar() {
             <span>{label}</span>
             {to === "/admin/warnings" && (
               <span
-                className={`admin-sidebar__warning-badge ${warningCount > 0 ? "is-alert" : ""}`}
-                aria-label={`Tổng cảnh báo ${warningCount}`}
+                className={`admin-sidebar__warning-badge ${alertCount > 0 ? "is-alert" : ""}`}
+                aria-label={`Tổng cảnh báo ${alertCount}`}
               >
-                {warningCount}
+                {alertCount}
+              </span>
+            )}
+            {to === "/admin/bookings" && (
+              <span
+                className={`admin-sidebar__warning-badge admin-sidebar__warning-badge--booking ${bookingCount > 0 ? "is-alert" : ""}`}
+                aria-label={`Đơn đặt tour chờ phê duyệt ${bookingCount}`}
+              >
+                {bookingCount}
               </span>
             )}
             {to === "/admin/payments" && (
               <span
-                className={`admin-sidebar__warning-badge admin-sidebar__warning-badge--payment ${pendingPaymentCount > 0 ? "is-alert" : ""}`}
-                aria-label={`Yêu cầu thanh toán chờ duyệt ${pendingPaymentCount}`}
+                className={`admin-sidebar__warning-badge admin-sidebar__warning-badge--payment ${paymentCount > 0 ? "is-alert" : ""}`}
+                aria-label={`Yêu cầu thanh toán mới ${paymentCount}`}
               >
-                {pendingPaymentCount}
+                {paymentCount}
               </span>
             )}
           </NavLink>

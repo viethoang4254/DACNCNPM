@@ -11,6 +11,8 @@ frontend/.env
 # Upload files
 backend/uploads/
 
+backend/scripts/
+
 # Logs
 *.log
 

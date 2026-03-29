@@ -2,7 +2,6 @@ import pool from "../config/db.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { sendResponse } from "../utils/response.js";
 import {
-  createBookingRecord,
   deleteBookingById,
   getAllBookings,
   getBookingById,
@@ -14,7 +13,7 @@ import { getPendingExpireMinutes } from "../utils/bookingExpiration.js";
 import { refreshScheduleOccupancyAndStatusById } from "../services/scheduleStatusService.js";
 import { expirePendingBookingsAndSyncSchedules } from "../services/bookingMaintenanceService.js";
 import { getCancelPreview, validateCancel } from "../services/cancelBookingService.js";
-import { cancelBooking } from "../services/bookingService.js";
+import { cancelBooking, createBooking } from "../services/bookingService.js";
 
 const PENDING_EXPIRE_MINUTES = getPendingExpireMinutes();
 
@@ -33,112 +32,18 @@ export const createBookingController = asyncHandler(async (req, res) => {
     });
   }
 
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
+  const result = await createBooking({
+    userId: Number(req.user.id),
+    scheduleId: Number(schedule_id),
+    quantity,
+  });
 
-    const [[schedule]] = await connection.execute(
-      `SELECT ts.id,
-              ts.tour_id,
-              ts.start_date,
-              COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) AS max_slots
-       FROM tour_schedules ts
-       JOIN tours t ON t.id = ts.tour_id
-       WHERE ts.id = ?
-       LIMIT 1
-       FOR UPDATE`,
-      [schedule_id]
-    );
-
-    if (!schedule) {
-      await connection.rollback();
-      return sendResponse(res, {
-        statusCode: 404,
-        success: false,
-        message: "Schedule not found",
-        data: {},
-      });
-    }
-
-    const today = new Date().toISOString().slice(0, 10);
-    const scheduleDate = String(schedule.start_date).slice(0, 10);
-
-    if (scheduleDate < today) {
-      await connection.rollback();
-      return sendResponse(res, {
-        statusCode: 400,
-        success: false,
-        message: "Lịch khởi hành đã qua",
-        data: {},
-      });
-    }
-
-    const [[tour]] = await connection.execute("SELECT id, gia FROM tours WHERE id = ? LIMIT 1", [schedule.tour_id]);
-    if (!tour) {
-      await connection.rollback();
-      return sendResponse(res, {
-        statusCode: 404,
-        success: false,
-        message: "Tour not found",
-        data: {},
-      });
-    }
-
-    const [[occupied]] = await connection.execute(
-      "SELECT COALESCE(SUM(so_nguoi), 0) AS confirmed_booked FROM bookings WHERE schedule_id = ? AND trang_thai = 'confirmed'",
-      [schedule_id]
-    );
-
-    const availableSlots = Math.max(
-      Number(schedule.max_slots || 0) - Number(occupied?.confirmed_booked || 0),
-      0,
-    );
-
-    if (availableSlots < quantity) {
-      await connection.rollback();
-      return sendResponse(res, {
-        statusCode: 400,
-        success: false,
-        message: "Không đủ chỗ cho lịch khởi hành này",
-        data: {},
-      });
-    }
-
-    const tong_tien = Number(tour.gia) * quantity;
-
-    const bookingId = await createBookingRecord(
-      {
-        user_id: req.user.id,
-        tour_id: schedule.tour_id,
-        schedule_id,
-        so_nguoi: quantity,
-        tong_tien,
-        trang_thai: "pending",
-      },
-      connection
-    );
-
-    await connection.commit();
-
-    await refreshScheduleOccupancyAndStatusById(schedule_id);
-
-    const createdBooking = await getBookingById(bookingId);
-
-    return sendResponse(res, {
-      statusCode: 201,
-      success: true,
-      message: "Booking created successfully",
-      data: {
-        id: bookingId,
-        booking: createdBooking,
-      },
-    });
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
+  return sendResponse(res, {
+    statusCode: Number(result.statusCode || (result.success ? 201 : 400)),
+    success: Boolean(result.success),
+    message: result.message || (result.success ? "Booking created successfully" : "Không thể tạo booking"),
+    data: result.data || {},
+  });
 });
 
 export const getMyBookingsController = asyncHandler(async (req, res) => {

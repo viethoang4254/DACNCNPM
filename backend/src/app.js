@@ -12,6 +12,8 @@ import adminRoutes from "./routes/adminRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import historyRoutes from "./routes/historyRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import popupBannerRoutes from "./routes/popupBannerRoutes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import notFoundHandler from "./middlewares/notFoundHandler.js";
 
@@ -43,6 +45,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/history", historyRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api", popupBannerRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -25,7 +25,7 @@ import {
   updateTourSchedule,
 } from "../models/tourModel.js";
 import { getToursService } from "../services/tourService.js";
-import { getReviewsByTourId } from "../models/reviewModel.js";
+import { getReviewsByTourId, getTourReviewStats } from "../models/reviewModel.js";
 import { getItinerariesByTourId } from "../models/itineraryModel.js";
 import { getRecommendedToursByUserId } from "../models/historyModel.js";
 
@@ -294,13 +294,19 @@ export const getTourReviewsController = asyncHandler(async (req, res) => {
     });
   }
 
-  const reviews = await getReviewsByTourId(tourId);
+  const [reviews, stats] = await Promise.all([
+    getReviewsByTourId(tourId, { includeHidden: false }),
+    getTourReviewStats(tourId),
+  ]);
 
   return sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Tour reviews fetched successfully",
-    data: reviews,
+    data: {
+      reviews,
+      stats,
+    },
   });
 });
 

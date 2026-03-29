@@ -18,12 +18,18 @@ const createValidation = [
 		.isInt({ gt: 0 })
 		.withMessage("tour_id must be a positive integer"),
 	body("start_date")
+		.matches(/^\d{4}-\d{2}-\d{2}$/)
+		.withMessage("start_date must be in YYYY-MM-DD format")
+		.bail()
 		.isISO8601()
 		.withMessage("start_date must be a valid ISO8601 date"),
 ];
 
 const updateValidation = [
 	body("start_date")
+		.matches(/^\d{4}-\d{2}-\d{2}$/)
+		.withMessage("start_date must be in YYYY-MM-DD format")
+		.bail()
 		.isISO8601()
 		.withMessage("start_date must be a valid ISO8601 date"),
 ];
