@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { getPriceInfo } from "../../../../utils/price";
+import OptimizedTourImage from "../../../../components/common/OptimizedTourImage";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -92,7 +93,10 @@ function TourCard({ tour }) {
     <article className="tour-card-h">
       <div className="tour-card-h__image-wrap">
         {imageUrl ? (
-          <img src={imageUrl} alt={tour.ten_tour} loading="lazy" />
+          <>
+            {/* Lazy-loading for listing images reduces transfer/parsing on first screen. */}
+            <OptimizedTourImage src={imageUrl} alt={tour.ten_tour} />
+          </>
         ) : (
           <div className="tour-card-h__image-placeholder" aria-hidden="true" />
         )}

@@ -413,7 +413,7 @@ function PopupBannerPreviewModal({ open, banner, onClose }) {
                 className="admin-btn admin-btn--primary"
                 href={banner.link}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
               >
                 Mở link
               </a>

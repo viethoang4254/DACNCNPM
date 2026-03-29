@@ -1,4 +1,5 @@
 import "./BookingCancelInfoModal.scss";
+import OptimizedTourImage from "../../common/OptimizedTourImage";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {
@@ -82,11 +83,9 @@ function BookingCancelInfoModal({ booking, onClose }) {
         <h2 className="booking-cancel-info-modal__title">Thông tin hủy tour</h2>
 
         <div className="booking-cancel-info-modal__tour-block">
-          <img
-            src={
-              booking.image ||
-              "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
-            }
+          <OptimizedTourImage
+            src={booking.image}
+            fallbackSrc="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
             alt={booking.ten_tour || "Tour"}
           />
           <div>
