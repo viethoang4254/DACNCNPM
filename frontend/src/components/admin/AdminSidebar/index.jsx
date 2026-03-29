@@ -63,44 +63,92 @@ const menuItems = [
 
 function AdminSidebar() {
   const [alertCount, setAlertCount] = useState(0);
+  const [paymentCount, setPaymentCount] = useState(0);
+  const [bookingCount, setBookingCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
 
-    async function fetchAlertCount() {
+    const isPendingPaymentForAdmin = (payment) => {
+      const paymentStatus = String(payment?.status || "")
+        .trim()
+        .toLowerCase();
+      const bookingStatus = String(payment?.booking_status || "")
+        .trim()
+        .toLowerCase();
+
+      if (paymentStatus !== "pending") {
+        return false;
+      }
+
+      return bookingStatus === "pending" || bookingStatus === "confirmed";
+    };
+
+    const normalizeStatus = (value) =>
+      String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+
+    const isPendingBookingForAdmin = (booking) => {
+      const bookingStatus = normalizeStatus(booking?.trang_thai);
+      const paymentStatus = normalizeStatus(booking?.payment_status);
+
+      return bookingStatus === "pending" && paymentStatus === "pending";
+    };
+
+    async function fetchSidebarCounts() {
       try {
-        const response = await apiClient.get("/api/schedules/warning");
+        const [warningRes, paymentRes, bookingRes] = await Promise.all([
+          apiClient.get("/api/schedules/warning"),
+          apiClient.get("/api/payments"),
+          apiClient.get("/api/bookings"),
+        ]);
         if (!mounted) return;
 
-        const list = Array.isArray(response?.data?.data)
-          ? response.data.data
+        const warningList = Array.isArray(warningRes?.data?.data)
+          ? warningRes.data.data
           : [];
-        const matchedAlerts = list.filter((item) => {
+        const matchedAlerts = warningList.filter((item) => {
           const daysLeft = resolveDaysLeft(item);
           const status = resolveScheduleStatus(item, daysLeft);
           return status === "warning" || status === "warning_critical";
         });
 
+        const payments = Array.isArray(paymentRes?.data?.data)
+          ? paymentRes.data.data
+          : [];
+        const pendingPayments = payments.filter(isPendingPaymentForAdmin);
+
+        const bookings = Array.isArray(bookingRes?.data?.data)
+          ? bookingRes.data.data
+          : [];
+        const pendingBookings = bookings.filter(isPendingBookingForAdmin);
+
         setAlertCount(matchedAlerts.length);
+        setPaymentCount(pendingPayments.length);
+        setBookingCount(pendingBookings.length);
       } catch {
         if (!mounted) return;
         setAlertCount(0);
+        setPaymentCount(0);
+        setBookingCount(0);
       }
     }
 
-    fetchAlertCount();
+    fetchSidebarCounts();
 
     const timer = setInterval(() => {
-      fetchAlertCount();
+      fetchSidebarCounts();
     }, 12000);
 
     const handleFocus = () => {
-      fetchAlertCount();
+      fetchSidebarCounts();
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        fetchAlertCount();
+        fetchSidebarCounts();
       }
     };
 
@@ -142,6 +190,22 @@ function AdminSidebar() {
                 aria-label={`Tổng cảnh báo ${alertCount}`}
               >
                 {alertCount}
+              </span>
+            )}
+            {to === "/admin/bookings" && (
+              <span
+                className={`admin-sidebar__warning-badge admin-sidebar__warning-badge--booking ${bookingCount > 0 ? "is-alert" : ""}`}
+                aria-label={`Đơn đặt tour chờ phê duyệt ${bookingCount}`}
+              >
+                {bookingCount}
+              </span>
+            )}
+            {to === "/admin/payments" && (
+              <span
+                className={`admin-sidebar__warning-badge admin-sidebar__warning-badge--payment ${paymentCount > 0 ? "is-alert" : ""}`}
+                aria-label={`Yêu cầu thanh toán mới ${paymentCount}`}
+              >
+                {paymentCount}
               </span>
             )}
           </NavLink>

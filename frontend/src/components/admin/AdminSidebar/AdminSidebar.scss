@@ -5,7 +5,8 @@
   flex-direction: column;
   position: sticky;
   top: 0;
-  height: 100vh;
+  min-height: 100vh;
+  height: auto;
   overflow-y: auto;
 }
 
@@ -138,6 +139,19 @@
   border-color: rgba(252, 211, 77, 0.6);
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
   animation: paymentPulse 1.8s ease-in-out infinite;
+}
+
+.admin-sidebar__warning-badge--booking {
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.24);
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.admin-sidebar__warning-badge--booking.is-alert {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border-color: rgba(147, 197, 253, 0.6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
 
 @keyframes warningPulse {

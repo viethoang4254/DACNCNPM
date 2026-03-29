@@ -20,6 +20,7 @@ const paymentStatusLabels = {
   paid: "Đã thanh toán",
   failed: "Thất bại",
   refunded: "Đã hoàn tiền",
+  none: "Chưa gửi yêu cầu",
 };
 
 function normalizeStatus(value) {
@@ -41,8 +42,15 @@ function isCodMethod(method) {
 }
 
 function getPaymentDisplay(booking = {}) {
-  const status = normalizeStatus(booking.payment_status) || "pending";
+  const status = normalizeStatus(booking.payment_status);
   const bookingStatus = normalizeStatus(booking.trang_thai);
+
+  if (!status) {
+    return {
+      className: "admin",
+      label: paymentStatusLabels.none,
+    };
+  }
 
   if (isCodMethod(booking.payment_method)) {
     if (status === "pending") {
@@ -114,7 +122,17 @@ function Bookings() {
   }, []);
 
   const visibleBookings = useMemo(
-    () => bookings.filter((booking) => booking.trang_thai !== "pending"),
+    () =>
+      bookings.filter((booking) => {
+        const bookingStatus = normalizeStatus(booking.trang_thai);
+        const paymentStatus = normalizeStatus(booking.payment_status);
+
+        if (bookingStatus !== "pending") {
+          return true;
+        }
+
+        return paymentStatus === "pending";
+      }),
     [bookings],
   );
 
@@ -207,7 +225,7 @@ function Bookings() {
           <DataTable
             columns={columns}
             data={paginated}
-            emptyText="Chưa có đơn đã thanh toán"
+            emptyText="Chưa có đơn đặt tour"
           />
         )}
         <Pagination
