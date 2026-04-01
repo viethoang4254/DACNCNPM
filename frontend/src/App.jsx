@@ -21,6 +21,11 @@ import Bookings from "./pages/admin/Bookings";
 import Payments from "./pages/admin/Payments";
 import Reviews from "./pages/admin/Reviews";
 import Itineraries from "./pages/admin/Itineraries";
+import AdminChat from "./pages/admin/Chat";
+
+import ChatboxLogin from "./pages/chatbox/Login";
+
+import ChatWidget from "./components/user/ChatWidget";
 
 import { getAuthUser } from "./utils/authStorage";
 
@@ -33,10 +38,23 @@ function AdminRoute({ children }) {
   return children;
 }
 
+function ChatboxRoute({ children }) {
+  const user = getAuthUser();
+  if (!user || (user.role !== "admin" && user.role !== "chatbox")) {
+    return <Navigate to="/chatbox/login" replace />;
+  }
+
+  return children;
+}
+
 function UserRoute({ children }) {
   const user = getAuthUser();
   if (user?.role === "admin") {
     return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  if (user?.role === "chatbox") {
+    return <Navigate to="/chatbox" replace />;
   }
 
   return children;
@@ -45,10 +63,13 @@ function UserRoute({ children }) {
 function App() {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
+  const isChatboxPath = location.pathname.startsWith("/chatbox");
+  const isShellPath = isAdminPath || isChatboxPath;
+  const isAuthPath = location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/chatbox/login";
 
   return (
     <>
-      {!isAdminPath && <Header />}
+      {!isShellPath && <Header />}
       <ScrollToTop />
       <Routes>
         <Route
@@ -131,6 +152,16 @@ function App() {
             </UserRoute>
           }
         />
+
+        <Route path="/chatbox/login" element={<ChatboxLogin />} />
+        <Route
+          path="/chatbox"
+          element={
+            <ChatboxRoute>
+              <AdminChat />
+            </ChatboxRoute>
+          }
+        />
         <Route
           path="/admin"
           element={
@@ -148,9 +179,11 @@ function App() {
           <Route path="bookings" element={<Bookings />} />
           <Route path="payments" element={<Payments />} />
           <Route path="reviews" element={<Reviews />} />
+          <Route path="chat" element={<Navigate to="/chatbox" replace />} />
         </Route>
       </Routes>
-      {!isAdminPath && <Footer />}
+      {!isShellPath && !isAuthPath && <ChatWidget />}
+      {!isShellPath && <Footer />}
     </>
   );
 }

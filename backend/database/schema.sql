@@ -13,7 +13,7 @@ CREATE TABLE users (
   email VARCHAR(191) NOT NULL,
   mat_khau VARCHAR(255) NOT NULL,
   so_dien_thoai VARCHAR(20) NOT NULL,
-  role ENUM('admin', 'customer') NOT NULL DEFAULT 'customer',
+  role ENUM('admin','chatbox', 'customer') NOT NULL DEFAULT 'customer',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_users_email (email),
   INDEX idx_users_role (role),
@@ -159,4 +159,37 @@ CREATE TABLE reviews (
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE chat_conversations (
+  id VARCHAR(64) PRIMARY KEY,
+  customer_id INT NULL,
+  customer_name VARCHAR(150) NULL,
+  customer_email VARCHAR(191) NULL,
+  last_message_at DATETIME NULL,
+  last_message_text TEXT NULL,
+  unread_count INT NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_chat_conversations_customer_id (customer_id),
+  INDEX idx_chat_conversations_last_message_at (last_message_at),
+  CONSTRAINT fk_chat_conversations_customer
+    FOREIGN KEY (customer_id)
+    REFERENCES users(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE chat_messages (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  conversation_id VARCHAR(64) NOT NULL,
+  sender_role ENUM('agent', 'customer') NOT NULL,
+  sender_name VARCHAR(150) NULL,
+  text TEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_chat_messages_conversation_created (conversation_id, created_at),
+  CONSTRAINT fk_chat_messages_conversation
+    FOREIGN KEY (conversation_id)
+    REFERENCES chat_conversations(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

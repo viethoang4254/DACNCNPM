@@ -1,32 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { saveAuthSession } from "../../../utils/authStorage";
+import { useNavigate } from "react-router-dom";
+import { getAuthUser, saveAuthSession } from "../../../utils/authStorage";
 import "./Login.scss";
 
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const validateEmail = (value) => {
-  if (!value.trim()) {
-    return "Vui lòng nhập email";
-  }
-
-  if (!EMAIL_REGEX.test(value.trim())) {
-    return "Email không đúng định dạng. Ví dụ: ten@domain.com";
-  }
-
+  if (!value.trim()) return "Vui lòng nhập email";
+  if (!EMAIL_REGEX.test(value.trim())) return "Email không đúng định dạng. Ví dụ: ten@domain.com";
   return "";
 };
 
-function Login() {
+function ChatboxLogin() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const redirectPath =
-    typeof location?.state?.from === "string" && location.state.from.trim()
-      ? location.state.from
-      : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,11 +27,15 @@ function Login() {
   const [isEmailTouched, setIsEmailTouched] = useState(false);
   const [isPasswordTouched, setIsPasswordTouched] = useState(false);
 
-  const validatePassword = (value) => {
-    if (!value) {
-      return "Vui lòng nhập mật khẩu";
+  useEffect(() => {
+    const user = getAuthUser();
+    if (user?.role === "admin" || user?.role === "chatbox") {
+      navigate("/chatbox", { replace: true });
     }
+  }, [navigate]);
 
+  const validatePassword = (value) => {
+    if (!value) return "Vui lòng nhập mật khẩu";
     return "";
   };
 
@@ -59,9 +51,7 @@ function Login() {
     setIsPasswordTouched(true);
     setSubmitError("");
 
-    if (nextEmailError || nextPasswordError) {
-      return;
-    }
+    if (nextEmailError || nextPasswordError) return;
 
     try {
       setIsSubmitting(true);
@@ -80,12 +70,12 @@ function Login() {
       const payload = await response.json();
 
       if (!response.ok || !payload.success) {
-        const backendMessage = payload?.message || "Đăng nhập thất bại";
         if (response.status === 401) {
           setSubmitError("Email hoặc mật khẩu không đúng");
           return;
         }
 
+        const backendMessage = payload?.message || "Đăng nhập thất bại";
         const firstValidationError = payload?.data?.errors?.[0]?.msg;
         setSubmitError(firstValidationError || backendMessage);
         return;
@@ -98,24 +88,13 @@ function Login() {
         return;
       }
 
+      if (user.role !== "admin" && user.role !== "chatbox") {
+        setSubmitError("Tài khoản này không có quyền truy cập chatbox");
+        return;
+      }
+
       saveAuthSession({ token, user, rememberMe });
-
-      if (user.role === "admin") {
-        navigate("/admin", { replace: true });
-        return;
-      }
-
-      if (user.role === "chatbox") {
-        navigate("/chatbox", { replace: true });
-        return;
-      }
-
-      if (user.role === "customer") {
-        navigate(redirectPath, { replace: true });
-        return;
-      }
-
-      setSubmitError("Vai trò tài khoản không hợp lệ");
+      navigate("/chatbox", { replace: true });
     } catch {
       setSubmitError("Không thể kết nối máy chủ. Vui lòng thử lại sau.");
     } finally {
@@ -126,10 +105,7 @@ function Login() {
   const handleEmailChange = (event) => {
     const nextEmail = event.target.value;
     setEmail(nextEmail);
-
-    if (isEmailTouched) {
-      setEmailError(validateEmail(nextEmail));
-    }
+    if (isEmailTouched) setEmailError(validateEmail(nextEmail));
   };
 
   const handleEmailBlur = () => {
@@ -140,10 +116,7 @@ function Login() {
   const handlePasswordChange = (event) => {
     const nextPassword = event.target.value;
     setPassword(nextPassword);
-
-    if (isPasswordTouched) {
-      setPasswordError(validatePassword(nextPassword));
-    }
+    if (isPasswordTouched) setPasswordError(validatePassword(nextPassword));
   };
 
   const handlePasswordBlur = () => {
@@ -152,23 +125,20 @@ function Login() {
   };
 
   return (
-    <main className="auth-page auth-page--login">
+    <main className="auth-page auth-page--login auth-page--chatbox">
       <section className="auth-card">
         <div className="auth-card__left">
           <p className="auth-card__eyebrow">BestPrice Travel</p>
-          <h1>Chào mừng bạn trở lại</h1>
-          <p>
-            Đăng nhập để quản lý lịch đặt tour, theo dõi ưu đãi và nhận thông
-            báo hành trình mới nhất.
-          </p>
+          <h1>Chatbox</h1>
+          <p>Đăng nhập tài khoản chatbox để trực chat với khách hàng.</p>
         </div>
 
         <div className="auth-card__right">
-          <h2>Đăng nhập tài khoản</h2>
+          <h2>Đăng nhập chatbox</h2>
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
-            <label htmlFor="login-email">Email</label>
+            <label htmlFor="chatbox-login-email">Email</label>
             <input
-              id="login-email"
+              id="chatbox-login-email"
               type="email"
               placeholder="email@example.com"
               value={email}
@@ -179,10 +149,10 @@ function Login() {
             />
             {emailError && <p className="auth-form__error">{emailError}</p>}
 
-            <label htmlFor="login-password">Mật khẩu</label>
+            <label htmlFor="chatbox-login-password">Mật khẩu</label>
             <div className="auth-form__password-field">
               <input
-                id="login-password"
+                id="chatbox-login-password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Nhập mật khẩu"
                 value={password}
@@ -200,21 +170,18 @@ function Login() {
                 {showPassword ? <FaEye /> : <FaEyeSlash />}
               </button>
             </div>
-            {passwordError && (
-              <p className="auth-form__error">{passwordError}</p>
-            )}
+            {passwordError && <p className="auth-form__error">{passwordError}</p>}
 
             <div className="auth-form__row">
-              <label className="auth-checkbox" htmlFor="remember-me">
+              <label className="auth-checkbox" htmlFor="chatbox-remember-me">
                 <input
-                  id="remember-me"
+                  id="chatbox-remember-me"
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(event) => setRememberMe(event.target.checked)}
                 />
                 Ghi nhớ đăng nhập
               </label>
-              <a href="#">Quên mật khẩu?</a>
             </div>
 
             {submitError && <p className="auth-form__error">{submitError}</p>}
@@ -223,14 +190,10 @@ function Login() {
               {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </form>
-
-          <p className="auth-switch">
-            Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
-          </p>
         </div>
       </section>
     </main>
   );
 }
 
-export default Login;
+export default ChatboxLogin;

@@ -5,7 +5,10 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "check:chat": "node src/scripts/checkChatTables.js",
+    "migrate:chat": "node src/scripts/migrateChatTables.js",
+    "seed:admin": "node src/scripts/createAdmin.js"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +23,8 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
     "mysql2": "^3.18.2",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

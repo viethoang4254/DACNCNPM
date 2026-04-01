@@ -1,6 +1,11 @@
 const AUTH_TOKEN_KEY = "auth_token";
 const AUTH_USER_KEY = "auth_user";
 
+const emitAuthChanged = () => {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("auth:changed"));
+};
+
 const readFromAnyStorage = (key) => {
   const localValue = localStorage.getItem(key);
   if (localValue) return localValue;
@@ -16,6 +21,8 @@ export const saveAuthSession = ({ token, user, rememberMe = true }) => {
 
   targetStorage.setItem(AUTH_TOKEN_KEY, token || "");
   targetStorage.setItem(AUTH_USER_KEY, JSON.stringify(user || {}));
+
+  emitAuthChanged();
 };
 
 export const getAuthToken = () => readFromAnyStorage(AUTH_TOKEN_KEY);
@@ -36,4 +43,6 @@ export const clearAuthSession = () => {
   localStorage.removeItem(AUTH_USER_KEY);
   sessionStorage.removeItem(AUTH_TOKEN_KEY);
   sessionStorage.removeItem(AUTH_USER_KEY);
+
+  emitAuthChanged();
 };

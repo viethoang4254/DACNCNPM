@@ -1,0 +1,34 @@
+@use "../../../pages/user/Login/Login.scss";
+
+.auth-page--chatbox {
+	.auth-card {
+		box-shadow: var(--shadow-soft);
+		border: 1px solid rgba(14, 30, 62, 0.1);
+	}
+
+	.auth-card__left {
+		background: linear-gradient(
+				135deg,
+				rgba(13, 33, 64, 0.96),
+				rgba(243, 120, 33, 0.75)
+			)
+			center / cover no-repeat;
+	}
+
+	.auth-card__left h1 {
+		letter-spacing: 0.01em;
+	}
+
+	.auth-card__right h2 {
+		font-size: 4rem;
+	}
+
+	.auth-form button[type="submit"] {
+		background: linear-gradient(120deg, var(--color-primary), var(--color-orange));
+		box-shadow: 0 10px 20px rgba(243, 120, 33, 0.26);
+	}
+
+	.auth-form button[type="submit"]:hover {
+		box-shadow: 0 14px 22px rgba(243, 120, 33, 0.32);
+	}
+}

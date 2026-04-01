@@ -1,8 +1,10 @@
 import "dotenv/config";
+import http from "node:http";
 import app from "./app.js";
 import pool from "./config/db.js";
 import { expirePendingBookings } from "./models/bookingModel.js";
 import { getPendingExpireMinutes } from "./utils/bookingExpiration.js";
+import { createChatServer } from "./realtime/chatServer.js";
 
 const PORT = Number(process.env.PORT || 5000);
 const PENDING_EXPIRE_MINUTES = getPendingExpireMinutes();
@@ -32,8 +34,12 @@ const startServer = async () => {
 		}, CLEANUP_INTERVAL_MS);
 		cleanupTimer.unref();
 
-		app.listen(PORT, () => {
+		const httpServer = http.createServer(app);
+		createChatServer(httpServer);
+
+		httpServer.listen(PORT, () => {
 			console.log(`Backend dang chay tai cong ${PORT}`);
+			console.log(`Health check: http://localhost:${PORT}/api/health`);
 		});
 	} catch (error) {
 		console.error("Khong the ket noi MySQL:", error.message);
