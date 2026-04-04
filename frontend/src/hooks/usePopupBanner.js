@@ -62,6 +62,8 @@ function usePopupBanner({ showDelayMs = 1200 } = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [dontShowToday, setDontShowToday] = useState(false);
   const delayTimerRef = useRef(null);
+  const fetchTimerRef = useRef(null);
+  const idleCallbackRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -100,10 +102,26 @@ function usePopupBanner({ showDelayMs = 1200 } = {}) {
       }
     };
 
-    loadPopupBanner();
+    // Non-critical UI: fetch popup only when main thread is idle.
+    if (typeof window.requestIdleCallback === "function") {
+      idleCallbackRef.current = window.requestIdleCallback(loadPopupBanner, {
+        timeout: 1500,
+      });
+    } else {
+      fetchTimerRef.current = setTimeout(loadPopupBanner, 350);
+    }
 
     return () => {
       isMounted = false;
+
+      if (idleCallbackRef.current && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleCallbackRef.current);
+      }
+
+      if (fetchTimerRef.current) {
+        clearTimeout(fetchTimerRef.current);
+      }
+
       if (delayTimerRef.current) {
         clearTimeout(delayTimerRef.current);
       }

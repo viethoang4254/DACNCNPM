@@ -10,6 +10,7 @@ import {
 import HeroSection from "../../../components/user/HeroSection";
 import PopupBanner from "../../../components/user/PopupBanner";
 import TrendingDestinations from "../../../components/user/TrendingDestinations";
+import DeferredSection from "../../../components/common/DeferredSection";
 import { featuredDestinations, reasons, reviews } from "../../../data/homeData";
 import usePopupBanner from "../../../hooks/usePopupBanner";
 
@@ -53,7 +54,16 @@ function Home() {
 
   const fetchTours = useCallback(
     async (signal) => {
-      const response = await fetch(`${apiBaseUrl}/api/tours`, { signal });
+      // Home only needs a small list for above-fold trending + featured blocks.
+      const params = new URLSearchParams({
+        page: "1",
+        limit: "8",
+        sort: "newest",
+      });
+
+      const response = await fetch(`${apiBaseUrl}/api/tours?${params.toString()}`, {
+        signal,
+      });
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
@@ -108,26 +118,34 @@ function Home() {
         error={toursError}
       />
 
-      <Suspense fallback={SUSPENSE_FALLBACK}>
-        <FeaturedDestinations destinations={featuredDestinations} />
-      </Suspense>
+      <DeferredSection placeholder={SUSPENSE_FALLBACK}>
+        <Suspense fallback={SUSPENSE_FALLBACK}>
+          <FeaturedDestinations destinations={featuredDestinations} />
+        </Suspense>
+      </DeferredSection>
 
       {/* Below-fold: FeaturedTours shows up to 8 latest tours, lazily loaded */}
-      <Suspense fallback={SUSPENSE_FALLBACK}>
-        <FeaturedTours
-          tours={tours}
-          isLoading={toursLoading}
-          error={toursError}
-        />
-      </Suspense>
+      <DeferredSection placeholder={SUSPENSE_FALLBACK}>
+        <Suspense fallback={SUSPENSE_FALLBACK}>
+          <FeaturedTours
+            tours={tours}
+            isLoading={toursLoading}
+            error={toursError}
+          />
+        </Suspense>
+      </DeferredSection>
 
-      <Suspense fallback={SUSPENSE_FALLBACK}>
-        <WhyChooseUs reasons={reasons} />
-      </Suspense>
+      <DeferredSection placeholder={SUSPENSE_FALLBACK}>
+        <Suspense fallback={SUSPENSE_FALLBACK}>
+          <WhyChooseUs reasons={reasons} />
+        </Suspense>
+      </DeferredSection>
 
-      <Suspense fallback={SUSPENSE_FALLBACK}>
-        <Reviews reviews={reviews} />
-      </Suspense>
+      <DeferredSection placeholder={SUSPENSE_FALLBACK}>
+        <Suspense fallback={SUSPENSE_FALLBACK}>
+          <Reviews reviews={reviews} />
+        </Suspense>
+      </DeferredSection>
 
       <PopupBanner
         open={isPopupOpen}

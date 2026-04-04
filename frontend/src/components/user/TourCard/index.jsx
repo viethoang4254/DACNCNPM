@@ -11,6 +11,7 @@ import {
 import { Link } from "react-router-dom";
 import { formatDuration } from "../../../utils/tourUtils";
 import { getPriceInfo } from "../../../utils/price";
+import OptimizedTourImage from "../../common/OptimizedTourImage";
 
 const normalizeTransport = (value) => {
   if (!value || typeof value !== "string") return "";
@@ -82,7 +83,8 @@ function TourCard({ tour, buttonLabel = "View", viewedText = "" }) {
   return (
     <article className="tour-card">
       <div className="tour-card__image-wrap">
-        <img src={tour.image} alt={tour.name} loading="lazy" decoding="async" />
+        {/* Tour card images are non-critical for first paint, so lazy-load them. */}
+        <OptimizedTourImage src={tour.image} alt={tour.name} />
         <span className="tour-card__badge">{duration}</span>
         {discount > 0 ? (
           <span className="tour-card__sale-badge">

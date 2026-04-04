@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import heroBannerAvif from "../../../assets/images/banner-banahill-1600.avif";
+import heroBannerWebp from "../../../assets/images/banner-banahill-1600.webp";
+import heroBannerJpg from "../../../assets/images/banner-banahill.jpg";
 
 function HeroSection() {
   const navigate = useNavigate();
@@ -20,6 +23,22 @@ function HeroSection() {
 
   return (
     <section className="home__hero">
+      {/*
+        Render hero as real image element so browser can prioritize LCP resource
+        with fetchPriority=high. This is typically faster than CSS background LCP.
+      */}
+      <picture className="home__hero-media" aria-hidden="true">
+        <source srcSet={heroBannerAvif} type="image/avif" />
+        <source srcSet={heroBannerWebp} type="image/webp" />
+        <img
+          className="home__hero-image"
+          src={heroBannerJpg}
+          alt=""
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+        />
+      </picture>
       <div className="home__hero-overlay" />
       <div className="home__hero-content">
         <p className="home__hero-eyebrow">Khám phá vẻ đẹp Việt Nam</p>

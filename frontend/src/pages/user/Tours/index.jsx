@@ -99,7 +99,6 @@ function ToursPage() {
     page: 1,
     limit: PAGE_LIMIT,
   });
-  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isRevealingMore, setIsRevealingMore] = useState(false);
   const [error, setError] = useState(null);
@@ -146,7 +145,6 @@ function ToursPage() {
 
     setAllTours([]);
     setVisibleCount(INITIAL_VISIBLE);
-    setTotal(0);
     setError(null);
     setSearchMessage("");
   }, [queryKey]);
@@ -175,7 +173,6 @@ function ToursPage() {
 
         if (ignore) return;
 
-        setTotal(result.total);
         setPagination({
           total: result.total,
           totalPages: result.totalPages,
@@ -306,7 +303,6 @@ function ToursPage() {
   }
 
   const visibleTours = allTours.slice(0, visibleCount);
-  const shownTours = visibleTours.length;
   const hasMoreToReveal = visibleCount < allTours.length;
 
   return (

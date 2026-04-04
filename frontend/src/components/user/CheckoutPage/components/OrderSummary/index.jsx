@@ -1,4 +1,5 @@
 import "./OrderSummary.scss";
+import OptimizedTourImage from "../../../../common/OptimizedTourImage";
 
 function formatCurrency(value) {
   return Number(value || 0).toLocaleString("vi-VN");
@@ -19,7 +20,11 @@ function OrderSummary({ booking, pricing }) {
       <h3>Tóm tắt đơn hàng</h3>
 
       {imageUrl ? (
-        <img src={imageUrl} alt={booking?.tour?.ten_tour || "Tour"} className="order-summary__image" />
+        <OptimizedTourImage
+          src={imageUrl}
+          alt={booking?.tour?.ten_tour || "Tour"}
+          className="order-summary__image"
+        />
       ) : (
         <div className="order-summary__image-placeholder">Chưa có ảnh tour</div>
       )}

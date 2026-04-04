@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getApiMessage, getMyBookings } from "../../../services/userService";
 import CancelBookingModal from "../../../components/user/CancelBookingModal";
 import BookingCancelInfoModal from "../../../components/user/BookingCancelInfoModal";
+import OptimizedTourImage from "../../../components/common/OptimizedTourImage";
 import "./BookingHistory.scss";
 
 const STATUS_MAP = {
@@ -398,11 +399,9 @@ function BookingHistory() {
                 key={booking.id}
                 className={`booking-history__card ${highlightedBookingIds.includes(Number(booking.id)) ? "booking-history__card--highlight" : ""}`}
               >
-                <img
-                  src={
-                    booking.image ||
-                    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
-                  }
+                <OptimizedTourImage
+                  src={booking.image}
+                  fallbackSrc="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
                   alt={booking.ten_tour || "Tour"}
                 />
 

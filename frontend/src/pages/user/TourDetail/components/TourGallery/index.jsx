@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { FaFire } from "react-icons/fa";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import OptimizedTourImage from "../../../../../components/common/OptimizedTourImage";
 import "./TourGallery.scss";
 
 function TourGallery({ images = [], saleDiscount = 0 }) {
@@ -25,7 +26,12 @@ function TourGallery({ images = [], saleDiscount = 0 }) {
       <div className="tour-detail__main-image-wrap">
         {activeImage ? (
           <>
-            <img src={activeImage} alt="Tour" className="tour-detail__main-image" />
+            {/* Detail gallery still lazy-loads images to keep initial route payload lighter. */}
+            <OptimizedTourImage
+              src={activeImage}
+              alt="Tour"
+              className="tour-detail__main-image"
+            />
             {Number(saleDiscount || 0) > 0 ? (
               <span className="tour-detail__image-sale-badge">
                 <FaFire aria-hidden="true" /> -{saleDiscount}%
@@ -57,7 +63,7 @@ function TourGallery({ images = [], saleDiscount = 0 }) {
                 className={`tour-detail__thumb${activeImage === img ? " is-active" : ""}`}
                 onClick={() => setMainImage(img)}
               >
-                <img src={img} alt="Thumbnail" />
+                <OptimizedTourImage src={img} alt="Thumbnail" />
               </button>
             ))}
           </div>
