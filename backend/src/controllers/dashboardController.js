@@ -1,56 +1,32 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import { sendResponse } from "../utils/response.js";
 import {
-  getDashboardAlerts,
-  getDashboardBookingStatus,
-  getDashboardRevenueChart,
-  getDashboardSummary,
-} from "../models/dashboardModel.js";
+  getDashboardAlertsService,
+  getDashboardBookingStatusService,
+  getDashboardRevenueChartService,
+  getDashboardSummaryService,
+} from "../services/dashboardService.js";
 
 export const getDashboardSummaryController = asyncHandler(async (req, res) => {
-  const summary = await getDashboardSummary();
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Dashboard summary fetched successfully",
-    data: summary,
-  });
+  const result = await getDashboardSummaryService();
+  return sendResponse(res, result);
 });
 
 export const getDashboardBookingStatusController = asyncHandler(
   async (req, res) => {
-    const bookingStatus = await getDashboardBookingStatus();
-
-    return sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Dashboard booking status fetched successfully",
-      data: bookingStatus,
-    });
+    const result = await getDashboardBookingStatusService();
+    return sendResponse(res, result);
   },
 );
 
 export const getDashboardRevenueChartController = asyncHandler(
   async (req, res) => {
-    const chart = await getDashboardRevenueChart();
-
-    return sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Dashboard revenue chart fetched successfully",
-      data: chart,
-    });
+    const result = await getDashboardRevenueChartService();
+    return sendResponse(res, result);
   },
 );
 
 export const getDashboardAlertsController = asyncHandler(async (req, res) => {
-  const alerts = await getDashboardAlerts();
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Dashboard alerts fetched successfully",
-    data: alerts,
-  });
+  const result = await getDashboardAlertsService();
+  return sendResponse(res, result);
 });
