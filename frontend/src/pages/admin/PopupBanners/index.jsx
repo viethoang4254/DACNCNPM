@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaEye, FaImage, FaPlus, FaSearch, FaToggleOff, FaToggleOn } from "react-icons/fa";
+import {
+  FaEye,
+  FaImage,
+  FaPlus,
+  FaSearch,
+  FaToggleOff,
+  FaToggleOn,
+} from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { PiPencilLineFill } from "react-icons/pi";
 import { toast } from "react-toastify";
@@ -124,7 +131,8 @@ function PopupBannerFormModal({
     if (!finalImageUrl && selectedImageFile) {
       try {
         setUploadingImage(true);
-        const uploadedImageUrl = await uploadPopupBannerImage(selectedImageFile);
+        const uploadedImageUrl =
+          await uploadPopupBannerImage(selectedImageFile);
 
         if (!uploadedImageUrl) {
           toast.error("Không nhận được URL ảnh sau khi upload");
@@ -218,7 +226,10 @@ function PopupBannerFormModal({
             </div>
 
             <div className="full">
-              <label className="tour-form-modal__label" htmlFor="popup-image-file">
+              <label
+                className="tour-form-modal__label"
+                htmlFor="popup-image-file"
+              >
                 Chọn tệp ảnh
               </label>
               <div className="popup-banner-upload-row">
@@ -244,12 +255,17 @@ function PopupBannerFormModal({
                 </button>
               </div>
               {selectedImageFile ? (
-                <p className="popup-banner-upload-file">Đã chọn: {selectedImageFile.name}</p>
+                <p className="popup-banner-upload-file">
+                  Đã chọn: {selectedImageFile.name}
+                </p>
               ) : null}
             </div>
 
             <div className="full">
-              <label className="tour-form-modal__label" htmlFor="popup-image-url">
+              <label
+                className="tour-form-modal__label"
+                htmlFor="popup-image-url"
+              >
                 URL ảnh banner
               </label>
               <input
@@ -257,7 +273,10 @@ function PopupBannerFormModal({
                 className="admin-input"
                 value={form.image_url}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, image_url: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    image_url: event.target.value,
+                  }))
                 }
                 placeholder="https://..."
               />
@@ -279,7 +298,10 @@ function PopupBannerFormModal({
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="popup-start-date">
+              <label
+                className="tour-form-modal__label"
+                htmlFor="popup-start-date"
+              >
                 Bắt đầu hiển thị
               </label>
               <input
@@ -288,14 +310,20 @@ function PopupBannerFormModal({
                 type="datetime-local"
                 value={form.start_date}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, start_date: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    start_date: event.target.value,
+                  }))
                 }
                 required
               />
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="popup-end-date">
+              <label
+                className="tour-form-modal__label"
+                htmlFor="popup-end-date"
+              >
                 Kết thúc hiển thị
               </label>
               <input
@@ -311,7 +339,10 @@ function PopupBannerFormModal({
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="popup-priority">
+              <label
+                className="tour-form-modal__label"
+                htmlFor="popup-priority"
+              >
                 Priority
               </label>
               <input
@@ -326,7 +357,10 @@ function PopupBannerFormModal({
             </div>
 
             <div>
-              <label className="tour-form-modal__label" htmlFor="popup-target-type">
+              <label
+                className="tour-form-modal__label"
+                htmlFor="popup-target-type"
+              >
                 Đối tượng hiển thị
               </label>
               <select
@@ -334,7 +368,10 @@ function PopupBannerFormModal({
                 className="admin-select"
                 value={form.target_type}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, target_type: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    target_type: event.target.value,
+                  }))
                 }
               >
                 <option value="all">Tất cả</option>
@@ -349,10 +386,15 @@ function PopupBannerFormModal({
                 type="checkbox"
                 checked={form.is_active}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, is_active: event.target.checked }))
+                  setForm((prev) => ({
+                    ...prev,
+                    is_active: event.target.checked,
+                  }))
                 }
               />
-              <label htmlFor="popup-is-active">Bật popup ngay sau khi lưu</label>
+              <label htmlFor="popup-is-active">
+                Bật popup ngay sau khi lưu
+              </label>
             </div>
           </div>
 
@@ -374,7 +416,11 @@ function PopupBannerFormModal({
             >
               Hủy
             </button>
-            <button type="submit" className="admin-btn admin-btn--primary" disabled={loading || uploadingImage}>
+            <button
+              type="submit"
+              className="admin-btn admin-btn--primary"
+              disabled={loading || uploadingImage}
+            >
               {loading ? "Đang lưu..." : "Lưu"}
             </button>
           </div>
@@ -404,7 +450,8 @@ function PopupBannerPreviewModal({ open, banner, onClose }) {
         <div className="popup-banner-preview-modal__content">
           <h4>{banner.title || "Popup Banner"}</h4>
           <p>
-            Áp dụng cho: {targetTypeLabel[banner.target_type] || "Tất cả"} | Độ ưu tiên: {Number(banner.priority || 0)}
+            Áp dụng cho: {targetTypeLabel[banner.target_type] || "Tất cả"} | Độ
+            ưu tiên: {Number(banner.priority || 0)}
           </p>
 
           <div className="popup-banner-preview-modal__actions">
@@ -478,7 +525,10 @@ function PopupBanners() {
     }
   }, [page, totalPages]);
 
-  const paginatedBanners = filteredBanners.slice((page - 1) * LIMIT, page * LIMIT);
+  const paginatedBanners = filteredBanners.slice(
+    (page - 1) * LIMIT,
+    page * LIMIT,
+  );
 
   const handleCreate = async (payload) => {
     try {
@@ -576,7 +626,9 @@ function PopupBanners() {
       header: "Trạng thái",
       className: "admin-col-status",
       render: (row) => (
-        <span className={`status-pill status-pill--${row.is_active ? "confirmed" : "cancelled"}`}>
+        <span
+          className={`status-pill status-pill--${row.is_active ? "confirmed" : "cancelled"}`}
+        >
           {row.is_active ? "Đang bật" : "Đang tắt"}
         </span>
       ),
@@ -652,7 +704,9 @@ function PopupBanners() {
       <div className="admin-toolbar">
         <div>
           <h3>Quản lý Popup Banner</h3>
-          <span className="admin-toolbar__meta">{filteredBanners.length} popup banner</span>
+          <span className="admin-toolbar__meta">
+            {filteredBanners.length} popup banner
+          </span>
         </div>
 
         <div className="admin-page-popups__toolbar-actions">
@@ -689,7 +743,11 @@ function PopupBanners() {
       {loading ? (
         <p className="admin-state">Đang tải danh sách popup...</p>
       ) : (
-        <DataTable columns={columns} data={paginatedBanners} emptyText="Chưa có popup nào" />
+        <DataTable
+          columns={columns}
+          data={paginatedBanners}
+          emptyText="Chưa có popup nào"
+        />
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
