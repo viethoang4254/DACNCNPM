@@ -81,7 +81,7 @@ function About() {
           <p className="about-page__eyebrow">VietXanh Travel Vietnam</p>
           <h1>Về Chúng Tôi</h1>
           <p>
-            Chúng tôi xây dựng những chuyến đi trong nước chỉn chu, linh hoạt và
+            chúng tôi xây dựng những chuyến đi trong nước chỉn chu, linh hoạt và
             giàu bản sắc để mỗi hành trình là một kỷ niệm đẹp.
           </p>
         </div>
