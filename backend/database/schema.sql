@@ -194,19 +194,19 @@ CREATE TABLE tour_history (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE popup_banners (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  image_url TEXT NOT NULL,
-  link VARCHAR(500),
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  start_date DATETIME NOT NULL,
-  end_date DATETIME NOT NULL,
-  priority INT NOT NULL DEFAULT 0,
-  target_type ENUM('all', 'guest', 'logged_in') NOT NULL DEFAULT 'all',
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_popup_banners_active (is_active),
-  INDEX idx_popup_banners_date_range (start_date, end_date),
-  INDEX idx_popup_banners_priority (priority),
-  CONSTRAINT chk_popup_banners_valid_range CHECK (start_date < end_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CREATE TABLE popup_banners (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    image_url TEXT NOT NULL,
+    link VARCHAR(500),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    priority INT NOT NULL DEFAULT 0,
+    target_type ENUM('all', 'guest', 'logged_in') NOT NULL DEFAULT 'all',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_popup_banners_active (is_active),
+    INDEX idx_popup_banners_date_range (start_date, end_date),
+    INDEX idx_popup_banners_priority (priority),
+    CONSTRAINT chk_popup_banners_valid_range CHECK (start_date < end_date)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
