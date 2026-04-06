@@ -61,9 +61,12 @@ function Home() {
         sort: "newest",
       });
 
-      const response = await fetch(`${apiBaseUrl}/api/tours?${params.toString()}`, {
-        signal,
-      });
+      const response = await fetch(
+        `${apiBaseUrl}/api/tours?${params.toString()}`,
+        {
+          signal,
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);

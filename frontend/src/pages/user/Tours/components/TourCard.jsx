@@ -142,7 +142,9 @@ function TourCard({ tour }) {
             ) : null}
             <span
               className={
-                originalPrice ? "tour-card-h__price-current" : "tour-card-h__price"
+                originalPrice
+                  ? "tour-card-h__price-current"
+                  : "tour-card-h__price"
               }
             >
               {formatCurrency(finalPrice)} ₫
