@@ -4,6 +4,7 @@ import Footer from "./components/user/Footer";
 import "./assets/styles/main.scss";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import ScrollToTop from "./components/common/ScrollToTop";
+import ChatWidget from "./components/common/ChatWidget";
 
 import { getAuthUser } from "./utils/authStorage";
 
@@ -78,6 +79,7 @@ function CustomerAuthRoute({ children }) {
 function App() {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
+  const isAuthPath = location.pathname === "/login" || location.pathname === "/register";
 
   return (
     <>
@@ -216,6 +218,8 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
+
+      {!isAdminPath && !isAuthPath && <ChatWidget />}
       {!isAdminPath && <Footer />}
     </>
   );
