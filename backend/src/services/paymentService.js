@@ -96,10 +96,10 @@ export const getPaymentByBookingIdService = async ({ bookingId, actorRole, actor
 
   if (!payment) {
     return {
-      statusCode: 404,
-      success: false,
-      message: "Payment not found",
-      data: {},
+      statusCode: 200,
+      success: true,
+      message: "Payment chưa được tạo cho booking này",
+      data: null,
     };
   }
 

@@ -232,6 +232,8 @@ function PaymentPage() {
   };
 
   const handleConfirmPayment = async () => {
+    console.log("selectedMethod:", selectedMethod);
+
     if (!booking?.id) {
       setSubmitError("Không tìm thấy thông tin booking để xử lý thanh toán.");
       return;
@@ -253,6 +255,35 @@ function PaymentPage() {
       setSubmitError("");
       setIsSubmitting(true);
 
+      // 🔥 FIX CHẮC ĂN PAYPAL
+      if (selectedMethod?.toLowerCase().trim() === "paypal") {
+        console.log("👉 ĐÃ VÀO PAYPAL");
+
+        try {
+          const res = await apiClient.post("/api/paypal/create", {
+            bookingId: booking.id,
+            amount: pricing.total,
+          });
+
+          console.log("PayPal response:", res.data);
+
+          if (!res.data?.approvalUrl) {
+            throw new Error("Không nhận được approvalUrl từ PayPal");
+          }
+
+          // 🚀 REDIRECT
+          window.location.href = res.data.approvalUrl;
+          return;
+        } catch (err) {
+          console.error("PAYPAL ERROR:", err);
+          setSubmitError("Không thể kết nối PayPal");
+          toast.error("Lỗi PayPal");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 🔵 FLOW CŨ (COD / BANK)
       let nextPaymentId = paymentId;
 
       if (!nextPaymentId) {
