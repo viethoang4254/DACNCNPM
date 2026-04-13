@@ -17,6 +17,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import popupBannerRoutes from "./routes/popupBannerRoutes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import notFoundHandler from "./middlewares/notFoundHandler.js";
+import paypalRoutes from "./routes/paypal.js";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -92,7 +93,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api", popupBannerRoutes);
-
+app.use("/api/paypal", paypalRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 

@@ -15,6 +15,7 @@
   "description": "",
   "dependencies": {
     "@faker-js/faker": "^10.3.0",
+    "@paypal/paypal-server-sdk": "^2.3.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
