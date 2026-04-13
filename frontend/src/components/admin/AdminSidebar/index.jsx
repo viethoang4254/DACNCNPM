@@ -94,7 +94,11 @@ function AdminSidebar() {
       const bookingStatus = normalizeStatus(booking?.trang_thai);
       const paymentStatus = normalizeStatus(booking?.payment_status);
 
-      return bookingStatus === "pending" && paymentStatus === "pending";
+      if (paymentStatus !== "pending") {
+        return false;
+      }
+
+      return bookingStatus === "pending" || bookingStatus === "confirmed";
     };
 
     async function fetchSidebarCounts() {

@@ -165,9 +165,10 @@ function TourSchedulesViewModal({
   const renderSale = (schedule, isLocked) => {
     const isOnSale = Boolean(schedule?.is_on_sale);
     const isAutoSale = Boolean(schedule?.auto_sale_applied);
+    const isAutoSaleOptOut = Boolean(schedule?.auto_sale_opt_out);
     const discount = Number(schedule?.discount_percent || 0);
     const suggestedSale =
-      Boolean(schedule?.suggested_sale) && !isOnSale && !isLocked;
+      Boolean(schedule?.suggested_sale) && !isOnSale && !isLocked && !isAutoSaleOptOut;
     const suggestedDiscount = Number(
       schedule?.suggested_discount_percent || 20,
     );
@@ -246,7 +247,26 @@ function TourSchedulesViewModal({
         <span className="tour-schedules-view-modal__sale-label">SALE</span>
         <span className="tour-schedules-view-modal__sale-badge tour-schedules-view-modal__sale-badge--none">
           <BiSolidDiscount aria-hidden="true" />
+          {isAutoSaleOptOut ? "Auto sale đã tắt" : "Chưa áp dụng"}
         </span>
+        {!readOnly && !isLocked && (
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary tour-schedules-view-modal__sale-btn"
+            onClick={() => onApplySale?.(schedule)}
+            disabled={loading || isSaleUpdating}
+            ref={(node) => {
+              if (node) {
+                saleActionRefs.current.set(Number(schedule.id), node);
+                return;
+              }
+              saleActionRefs.current.delete(Number(schedule.id));
+            }}
+          >
+            <FaFireAlt aria-hidden="true" />
+            Áp dụng
+          </button>
+        )}
       </div>
     );
   };
