@@ -1,10 +1,12 @@
 import "dotenv/config";
+import http from "node:http";
 import cron from "node-cron";
 import app from "./app.js";
 import pool from "./config/db.js";
 import { getPendingExpireMinutes } from "./utils/bookingExpiration.js";
 import { expirePendingBookingsAndSyncSchedules } from "./services/bookingMaintenanceService.js";
 import { refreshAllSchedulesOccupancyAndStatus } from "./services/scheduleStatusService.js";
+import { initSocket } from "./socket/index.js";
 
 const PORT = Number(process.env.PORT || 5000);
 const PENDING_EXPIRE_MINUTES = getPendingExpireMinutes();
@@ -49,7 +51,10 @@ const startServer = async () => {
 		}, CLEANUP_INTERVAL_MS);
 		cleanupTimer.unref();
 
-		app.listen(PORT, () => {
+		const httpServer = http.createServer(app);
+		initSocket(httpServer);
+
+		httpServer.listen(PORT, () => {
 			console.log(`Backend dang chay tai cong ${PORT}`);
 		});
 	} catch (error) {

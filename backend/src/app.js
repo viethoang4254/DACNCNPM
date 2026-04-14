@@ -15,6 +15,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import historyRoutes from "./routes/historyRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import popupBannerRoutes from "./routes/popupBannerRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import notFoundHandler from "./middlewares/notFoundHandler.js";
 import paypalRoutes from "./routes/paypal.js";
@@ -94,6 +95,7 @@ app.use("/api/history", historyRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api", popupBannerRoutes);
 app.use("/api/paypal", paypalRoutes);
+app.use("/api/chat", chatRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
