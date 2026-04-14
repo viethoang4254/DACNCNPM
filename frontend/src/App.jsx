@@ -33,6 +33,7 @@ const Itineraries = lazy(() => import("./pages/admin/Itineraries"));
 const AdminWarnings = lazy(() => import("./pages/admin/AdminWarnings"));
 const Refunds = lazy(() => import("./pages/admin/Refunds"));
 const PopupBanners = lazy(() => import("./pages/admin/PopupBanners"));
+const AdminChat = lazy(() => import("./pages/admin/AdminChat"));
 const UserLayout = lazy(() => import("./components/user/UserLayout"));
 const InfoUser = lazy(() => import("./pages/user/InfoUser"));
 const UserBookingHistory = lazy(() => import("./pages/user/BookingHistory"));
@@ -215,6 +216,7 @@ function App() {
             <Route path="reviews" element={<Reviews />} />
             <Route path="warnings" element={<AdminWarnings />} />
             <Route path="popup-banners" element={<PopupBanners />} />
+            <Route path="chat" element={<AdminChat />} />
           </Route>
         </Routes>
       </Suspense>
