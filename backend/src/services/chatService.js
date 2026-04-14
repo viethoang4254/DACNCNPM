@@ -8,6 +8,7 @@ import {
   getMessagesByConversationId,
   markConversationMessagesAsRead,
 } from "../models/chatModel.js";
+import { getUserById } from "../models/userModel.js";
 import { emitToConversation, emitToUser } from "../socket/index.js";
 
 const buildMessagePayload = (message) => ({
@@ -132,6 +133,111 @@ export const sendUserMessageService = async ({
     success: true,
     message: "Message sent successfully",
     data: payload,
+  };
+};
+
+export const sendMessageService = async ({
+  actorUserId,
+  actorRole,
+  conversationId,
+  senderId,
+  message,
+}) => {
+  const trimmedMessage = typeof message === "string" ? message.trim() : "";
+
+  if (!trimmedMessage) {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "message cannot be empty",
+      data: {},
+    };
+  }
+
+  if (actorRole !== "admin" && actorUserId !== senderId) {
+    return {
+      statusCode: 403,
+      success: false,
+      message: "Forbidden",
+      data: {},
+    };
+  }
+
+  const sender = await getUserById(senderId);
+  if (!sender) {
+    return {
+      statusCode: 404,
+      success: false,
+      message: "senderId not found",
+      data: {},
+    };
+  }
+
+  const conversation = await getConversationById(conversationId);
+  if (!conversation) {
+    return {
+      statusCode: 404,
+      success: false,
+      message: "conversationId not found",
+      data: {},
+    };
+  }
+
+  if (actorRole !== "admin" && conversation.user_id !== senderId) {
+    return {
+      statusCode: 403,
+      success: false,
+      message: "Forbidden",
+      data: {},
+    };
+  }
+
+  if (conversation.status !== "open") {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "Conversation is closed",
+      data: {},
+    };
+  }
+
+  const senderType = actorRole === "admin" ? "system" : "user";
+
+  const createdMessage = await createMessage({
+    conversationId,
+    senderType,
+    senderId,
+    content: trimmedMessage,
+    messageType: "text",
+    fileUrl: null,
+  });
+
+  if (!createdMessage) {
+    return {
+      statusCode: 500,
+      success: false,
+      message: "Failed to send message",
+      data: {},
+    };
+  }
+
+  const socketPayload = buildMessagePayload(createdMessage);
+  const socketEvent = senderType === "system" ? "system_message" : "user_message";
+
+  emitToConversation(socketEvent, conversationId, socketPayload);
+  emitToUser(socketEvent, conversation.user_id, socketPayload);
+
+  return {
+    statusCode: 201,
+    success: true,
+    message: "Message sent successfully",
+    data: {
+      id: createdMessage.id,
+      conversationId: createdMessage.conversation_id,
+      senderId: createdMessage.sender_id,
+      message: createdMessage.content || "",
+      createdAt: createdMessage.created_at,
+    },
   };
 };
 
