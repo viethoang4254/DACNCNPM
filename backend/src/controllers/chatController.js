@@ -5,7 +5,7 @@ import {
   getUserConversationsService,
   markConversationReadService,
   replySystemMessageService,
-  sendUserMessageService,
+  sendMessageService,
   startConversationService,
 } from "../services/chatService.js";
 
@@ -28,13 +28,12 @@ export const getUserConversationsController = asyncHandler(async (req, res) => {
 });
 
 export const sendMessageController = asyncHandler(async (req, res) => {
-  const result = await sendUserMessageService({
+  const result = await sendMessageService({
     actorUserId: Number(req.user.id),
     actorRole: req.user.role,
     conversationId: Number(req.body.conversationId),
-    content: req.body.content ? String(req.body.content).trim() : null,
-    messageType: req.body.message_type || "text",
-    fileUrl: req.body.file_url || null,
+    senderId: Number(req.body.senderId),
+    message: String(req.body.message || "").trim(),
   });
 
   return sendResponse(res, result);

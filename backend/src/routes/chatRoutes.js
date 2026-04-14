@@ -50,6 +50,26 @@ const commonMessageValidation = [
   }),
 ];
 
+const sendMessageValidation = [
+  body("conversationId")
+    .isInt({ gt: 0 })
+    .withMessage("conversationId must be a positive integer"),
+  body("senderId")
+    .isInt({ gt: 0 })
+    .withMessage("senderId must be a positive integer"),
+  body("message")
+    .isString()
+    .withMessage("message must be a string")
+    .custom((value) => {
+      if (!String(value).trim()) {
+        throw new Error("message cannot be empty");
+      }
+      return true;
+    })
+    .isLength({ max: 5000 })
+    .withMessage("message must be at most 5000 characters"),
+];
+
 router.use(authMiddleware);
 
 router.post("/start", startConversationController);
@@ -61,7 +81,7 @@ router.get(
   getUserConversationsController
 );
 
-router.post("/send", commonMessageValidation, validationMiddleware, sendMessageController);
+router.post("/send", sendMessageValidation, validationMiddleware, sendMessageController);
 
 router.post("/reply", commonMessageValidation, validationMiddleware, replyMessageController);
 
