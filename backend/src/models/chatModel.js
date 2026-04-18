@@ -1,5 +1,13 @@
 import pool from "../config/db.js";
 
+const CHAT_DEBUG_ENABLED = process.env.CHAT_DEBUG === "1";
+
+const logChatDebug = (...args) => {
+  if (CHAT_DEBUG_ENABLED) {
+    console.log("[chat-debug]", ...args);
+  }
+};
+
 export const findOpenConversationByUserId = async (userId) => {
   const [rows] = await pool.execute(
     `SELECT id, user_id, status, created_at
@@ -55,6 +63,40 @@ export const getConversationsByUserId = async (userId) => {
   return rows;
 };
 
+export const getAllConversations = async () => {
+  const [rows] = await pool.execute(
+    `SELECT
+      c.id,
+      c.user_id,
+      c.status,
+      c.created_at,
+      u.ho_ten AS user_name,
+      lm.last_message,
+      lm.last_message_at,
+      COALESCE(unread.unread_count, 0) AS unread_count
+     FROM conversations c
+     INNER JOIN users u ON u.id = c.user_id
+     LEFT JOIN (
+       SELECT m.conversation_id, m.content AS last_message, m.created_at AS last_message_at
+       FROM messages m
+       INNER JOIN (
+         SELECT conversation_id, MAX(id) AS last_message_id
+         FROM messages
+         GROUP BY conversation_id
+       ) latest ON latest.last_message_id = m.id
+     ) lm ON lm.conversation_id = c.id
+     LEFT JOIN (
+       SELECT conversation_id, COUNT(*) AS unread_count
+       FROM messages
+       WHERE is_read = FALSE AND sender_type = 'user'
+       GROUP BY conversation_id
+     ) unread ON unread.conversation_id = c.id
+     ORDER BY COALESCE(lm.last_message_at, c.created_at) DESC, c.id DESC`
+  );
+
+  return rows;
+};
+
 export const createMessage = async ({
   conversationId,
   senderType,
@@ -100,6 +142,29 @@ export const createMessage = async ({
 };
 
 export const getMessagesByConversationId = async ({ conversationId, limit, offset }) => {
+  const conversationIdNumber = Number(conversationId);
+  const limitNumber = Number(limit);
+  const offsetNumber = Number(offset);
+
+  const safeConversationId = Number.isFinite(conversationIdNumber) && conversationIdNumber > 0
+    ? Math.trunc(conversationIdNumber)
+    : 0;
+  const safeLimit = Number.isFinite(limitNumber)
+    ? Math.max(1, Math.min(100, Math.trunc(limitNumber)))
+    : 20;
+  const safeOffset = Number.isFinite(offsetNumber)
+    ? Math.max(0, Math.trunc(offsetNumber))
+    : 0;
+
+  logChatDebug("getMessagesByConversationId.params", {
+    raw: { conversationId, limit, offset },
+    safe: {
+      conversationId: safeConversationId,
+      limit: safeLimit,
+      offset: safeOffset,
+    },
+  });
+
   const [rows] = await pool.execute(
     `SELECT
       m.id,
@@ -117,8 +182,8 @@ export const getMessagesByConversationId = async ({ conversationId, limit, offse
      LEFT JOIN users u ON u.id = m.sender_id
      WHERE m.conversation_id = ?
      ORDER BY m.created_at ASC, m.id ASC
-     LIMIT ? OFFSET ?`,
-    [conversationId, limit, offset]
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+    [safeConversationId]
   );
 
   return rows;

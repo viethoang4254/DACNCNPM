@@ -2,6 +2,7 @@ import {
   countMessagesByConversationId,
   createConversation,
   createMessage,
+  getAllConversations,
   findOpenConversationByUserId,
   getConversationById,
   getConversationsByUserId,
@@ -61,6 +62,26 @@ export const getUserConversationsService = async ({ actorUserId, actorRole, user
   }
 
   const conversations = await getConversationsByUserId(userId);
+
+  return {
+    statusCode: 200,
+    success: true,
+    message: "Conversations fetched successfully",
+    data: conversations,
+  };
+};
+
+export const getAllConversationsService = async ({ actorRole }) => {
+  if (actorRole !== "admin") {
+    return {
+      statusCode: 403,
+      success: false,
+      message: "Forbidden",
+      data: {},
+    };
+  }
+
+  const conversations = await getAllConversations();
 
   return {
     statusCode: 200,
@@ -143,6 +164,27 @@ export const sendMessageService = async ({
   senderId,
   message,
 }) => {
+  const actorId = Number(actorUserId);
+  const conversationIdNumber = Number(conversationId);
+
+  if (!Number.isFinite(actorId) || actorId <= 0) {
+    return {
+      statusCode: 401,
+      success: false,
+      message: "Invalid authentication payload",
+      data: {},
+    };
+  }
+
+  if (!Number.isFinite(conversationIdNumber) || conversationIdNumber <= 0) {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "conversationId must be a positive integer",
+      data: {},
+    };
+  }
+
   const trimmedMessage = typeof message === "string" ? message.trim() : "";
 
   if (!trimmedMessage) {
@@ -154,16 +196,10 @@ export const sendMessageService = async ({
     };
   }
 
-  if (actorRole !== "admin" && actorUserId !== senderId) {
-    return {
-      statusCode: 403,
-      success: false,
-      message: "Forbidden",
-      data: {},
-    };
-  }
+  // Sender identity is always derived from authenticated token.
+  const normalizedSenderId = actorId;
 
-  const sender = await getUserById(senderId);
+  const sender = await getUserById(normalizedSenderId);
   if (!sender) {
     return {
       statusCode: 404,
@@ -183,7 +219,7 @@ export const sendMessageService = async ({
     };
   }
 
-  if (actorRole !== "admin" && conversation.user_id !== senderId) {
+  if (actorRole !== "admin" && conversation.user_id !== normalizedSenderId) {
     return {
       statusCode: 403,
       success: false,
@@ -204,9 +240,9 @@ export const sendMessageService = async ({
   const senderType = actorRole === "admin" ? "system" : "user";
 
   const createdMessage = await createMessage({
-    conversationId,
+    conversationId: conversationIdNumber,
     senderType,
-    senderId,
+    senderId: normalizedSenderId,
     content: trimmedMessage,
     messageType: "text",
     fileUrl: null,
@@ -224,7 +260,7 @@ export const sendMessageService = async ({
   const socketPayload = buildMessagePayload(createdMessage);
   const socketEvent = senderType === "system" ? "system_message" : "user_message";
 
-  emitToConversation(socketEvent, conversationId, socketPayload);
+  emitToConversation(socketEvent, conversationIdNumber, socketPayload);
   emitToUser(socketEvent, conversation.user_id, socketPayload);
 
   return {
@@ -232,7 +268,7 @@ export const sendMessageService = async ({
     success: true,
     message: "Message sent successfully",
     data: {
-      id: createdMessage.id,
+      ...socketPayload,
       conversationId: createdMessage.conversation_id,
       senderId: createdMessage.sender_id,
       message: createdMessage.content || "",
@@ -296,7 +332,24 @@ export const getMessagesService = async ({
   limit,
   offset,
 }) => {
-  const conversation = await getConversationById(conversationId);
+  const conversationIdNumber = Number(conversationId);
+  const safeLimit = Number.isFinite(Number(limit))
+    ? Math.max(1, Math.min(100, Math.trunc(Number(limit))))
+    : 20;
+  const safeOffset = Number.isFinite(Number(offset))
+    ? Math.max(0, Math.trunc(Number(offset)))
+    : 0;
+
+  if (!Number.isFinite(conversationIdNumber) || conversationIdNumber <= 0) {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "conversationId must be a positive integer",
+      data: {},
+    };
+  }
+
+  const conversation = await getConversationById(conversationIdNumber);
   if (!conversation) {
     return {
       statusCode: 404,
@@ -316,11 +369,11 @@ export const getMessagesService = async ({
   }
 
   const messages = await getMessagesByConversationId({
-    conversationId,
-    limit,
-    offset,
+    conversationId: conversationIdNumber,
+    limit: safeLimit,
+    offset: safeOffset,
   });
-  const total = await countMessagesByConversationId(conversationId);
+  const total = await countMessagesByConversationId(conversationIdNumber);
 
   return {
     statusCode: 200,
@@ -328,10 +381,10 @@ export const getMessagesService = async ({
     message: "Messages fetched successfully",
     data: messages,
     pagination: {
-      limit,
-      offset,
+      limit: safeLimit,
+      offset: safeOffset,
       total,
-      has_more: offset + messages.length < total,
+      has_more: safeOffset + messages.length < total,
     },
   };
 };

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { FiMessageCircle, FiX } from "react-icons/fi";
 import {
+  getUserConversations,
+  getConversationMessages,
   sendChatMessage,
   startConversation,
 } from "../../../services/chatService";
@@ -12,6 +14,33 @@ function createMessageId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+const WELCOME_MESSAGE = {
+  id: "welcome",
+  sender: "bot",
+  text: "Chào bạn! Mình có thể hỗ trợ tư vấn tour, lịch khởi hành và giá.",
+  createdAt: new Date(),
+};
+
+function mapApiMessageToChatbox(message) {
+  const senderType = String(message?.senderType || "user").toLowerCase();
+  const isUser = senderType === "user";
+
+  return {
+    id: message?.id ?? createMessageId(),
+    sender: isUser ? "user" : "bot",
+    text: message?.content || message?.fileUrl || "[No content]",
+    createdAt: message?.createdAt || new Date(),
+  };
+}
+
+function getErrorMessage(error) {
+  return (
+    error?.response?.data?.message ||
+    error?.message ||
+    "Không thể gửi tin nhắn. Vui lòng thử lại."
+  );
+}
+
 function ChatWidget({
   title = "Tư vấn đặt tour",
   status = "online",
@@ -20,36 +49,91 @@ function ChatWidget({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [conversationId, setConversationId] = useState(null);
   const [isConversationLoading, setIsConversationLoading] = useState(false);
-  const [messages, setMessages] = useState(() => [
-    {
-      id: "welcome",
-      sender: "bot",
-      text: "Chào bạn! Mình có thể hỗ trợ tư vấn tour, lịch khởi hành và giá.",
-      createdAt: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState(() => [WELCOME_MESSAGE]);
   const [isSending, setIsSending] = useState(false);
 
-  const authUser = useMemo(() => getAuthUser(), []);
+  const authUser = getAuthUser();
 
   const toggleLabel = useMemo(
     () => (isOpen ? "Đóng chat" : "Mở chat"),
     [isOpen],
   );
 
+  const applyHistory = (history) => {
+    if (!Array.isArray(history) || history.length === 0) {
+      setMessages((prev) => {
+        if (prev.length === 0) {
+          return [WELCOME_MESSAGE];
+        }
+
+        const hasPersistedMessages = prev.some((item) => item.id !== WELCOME_MESSAGE.id);
+        return hasPersistedMessages ? prev : [WELCOME_MESSAGE];
+      });
+      return;
+    }
+
+    setMessages(history.map(mapApiMessageToChatbox));
+  };
+
+  const loadConversationHistory = async (targetConversationId) => {
+    if (!targetConversationId || !authUser?.id) return;
+
+    const history = await getConversationMessages(targetConversationId, {
+      limit: 100,
+      offset: 0,
+    });
+
+    applyHistory(history);
+  };
+
   useEffect(() => {
     let active = true;
 
     async function ensureConversation() {
-      if (!isOpen || conversationId || isConversationLoading) return;
+      if (!isOpen || isConversationLoading) return;
       if (!authUser?.id) return;
+
+      try {
+        const userConversations = await getUserConversations(Number(authUser.id));
+        if (!active) return;
+
+        if (Array.isArray(userConversations) && userConversations.length > 0) {
+          const openConversation = userConversations.find((item) => item.status === "open") || null;
+          const latestConversation = openConversation || userConversations[0];
+          const resolvedConversationId = Number(latestConversation?.id || 0) || null;
+
+          if (resolvedConversationId) {
+            setConversationId(resolvedConversationId);
+            await loadConversationHistory(resolvedConversationId);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user conversations on open:", error);
+      }
+
+      if (conversationId) {
+        try {
+          await loadConversationHistory(conversationId);
+        } catch (error) {
+          console.error("Failed to load chat history on open:", error);
+        }
+        return;
+      }
 
       try {
         setIsConversationLoading(true);
         const conversation = await startConversation();
+        const resolvedConversationId = Number(conversation?.id || 0) || null;
 
-        if (active && conversation?.id) {
-          setConversationId(Number(conversation.id));
+        if (active && resolvedConversationId) {
+          setConversationId(resolvedConversationId);
+
+          try {
+            await loadConversationHistory(resolvedConversationId);
+          } catch (error) {
+            console.error("Failed to load chat history right after startConversation:", error);
+          }
         }
       } catch (error) {
         console.error("Failed to start conversation:", error);
@@ -66,6 +150,45 @@ function ChatWidget({
       active = false;
     };
   }, [authUser?.id, conversationId, isConversationLoading, isOpen]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadHistory() {
+      if (!isOpen || !conversationId || !authUser?.id) return;
+
+      try {
+        const history = await getConversationMessages(conversationId, { limit: 100, offset: 0 });
+        if (!active) return;
+
+        applyHistory(history);
+      } catch (error) {
+        console.error("Failed to load chat history:", error);
+      }
+    }
+
+    loadHistory();
+
+    return () => {
+      active = false;
+    };
+  }, [authUser?.id, conversationId, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !conversationId || !authUser?.id) return undefined;
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        await loadConversationHistory(conversationId);
+      } catch (error) {
+        console.error("Failed to refresh chat history:", error);
+      }
+    }, 4000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [authUser?.id, conversationId, isOpen]);
 
   const handleSendMessage = async (text) => {
     const trimmedText = String(text || "").trim();
@@ -123,11 +246,13 @@ function ChatWidget({
           };
         }),
       );
+
+      await loadConversationHistory(resolvedConversationId);
     } catch (error) {
       console.error("Send message failed:", error);
 
       setMessages((prev) => prev.filter((item) => item.id !== optimisticId));
-      alert("Không thể gửi tin nhắn. Vui lòng thử lại.");
+      alert(getErrorMessage(error));
     } finally {
       setIsSending(false);
     }
