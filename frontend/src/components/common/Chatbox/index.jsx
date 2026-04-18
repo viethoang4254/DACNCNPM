@@ -30,10 +30,19 @@ function isUserSideMessage(message) {
   if (message.isUser === true) return true;
   if (message.isUser === false) return false;
 
+  const senderType = typeof message.senderType === "string" ? message.senderType.toLowerCase() : "";
+  const senderRole = typeof message.senderRole === "string" ? message.senderRole.toLowerCase() : "";
   const sender = typeof message.sender === "string" ? message.sender.toLowerCase() : "";
   const role = typeof message.role === "string" ? message.role.toLowerCase() : "";
 
-  return sender === "user" || sender === "me" || sender === "customer" || role === "user";
+  return (
+    senderType === "user" ||
+    senderRole === "user" ||
+    sender === "user" ||
+    sender === "me" ||
+    sender === "customer" ||
+    role === "user"
+  );
 }
 
 function Chatbox({
@@ -59,11 +68,16 @@ function Chatbox({
 
   const renderedMessages = useMemo(
     () =>
-      messages.map((message) => ({
-        ...message,
-        _side: isUserSideMessage(message) ? "right" : "left",
-        _timestamp: formatTimestamp(message.createdAt),
-      })),
+      messages.map((message) => {
+        const text = message.text ?? message.content ?? message.message ?? "";
+
+        return {
+          ...message,
+          _text: text,
+          _side: isUserSideMessage(message) ? "right" : "left",
+          _timestamp: formatTimestamp(message.createdAt ?? message.created_at),
+        };
+      }),
     [messages],
   );
 
@@ -143,7 +157,7 @@ function Chatbox({
               className="chatbox__bubble"
               aria-label={message._side === "right" ? "Tin nhắn của bạn" : "Tin nhắn hệ thống"}
             >
-              {message.text}
+              {message._text}
             </div>
             {message._timestamp && (
               <div className="chatbox__timestamp" aria-hidden="true">

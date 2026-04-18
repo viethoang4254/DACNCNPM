@@ -127,6 +127,8 @@ export const sendUserMessageService = async ({
   const payload = buildMessagePayload(message);
   emitToConversation("user_message", conversationId, payload);
   emitToUser("user_message", conversation.user_id, payload);
+  emitToConversation("newMessage", conversationId, payload);
+  emitToUser("newMessage", conversation.user_id, payload);
 
   return {
     statusCode: 201,
@@ -226,6 +228,8 @@ export const sendMessageService = async ({
 
   emitToConversation(socketEvent, conversationId, socketPayload);
   emitToUser(socketEvent, conversation.user_id, socketPayload);
+  emitToConversation("newMessage", conversationId, socketPayload);
+  emitToUser("newMessage", conversation.user_id, socketPayload);
 
   return {
     statusCode: 201,
@@ -280,6 +284,8 @@ export const replySystemMessageService = async ({
   const payload = buildMessagePayload(message);
   emitToConversation("system_message", conversationId, payload);
   emitToUser("system_message", conversation.user_id, payload);
+  emitToConversation("newMessage", conversationId, payload);
+  emitToUser("newMessage", conversation.user_id, payload);
 
   return {
     statusCode: 201,

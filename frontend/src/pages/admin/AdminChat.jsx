@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FaPaperPlane, FaSpinner, FaComments, FaUser, FaRobot } from "react-icons/fa";
 import { getAuthUser } from "../../utils/authStorage";
+import useChatMessages from "../../hooks/useChatMessages";
 import {
   formatChatDateTime,
   getAdminConversations,
-  getConversationMessages,
   sendAdminChatMessage,
 } from "../../services/chatService";
 import "./AdminChat.scss";
@@ -93,14 +93,19 @@ function MessageList({ messages, loading, selectedConversation }) {
 function AdminChat() {
   const authUser = getAuthUser();
   const [conversations, setConversations] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [draft, setDraft] = useState("");
   const [loadingConversations, setLoadingConversations] = useState(true);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
+
+  const {
+    messages,
+    loading: loadingMessages,
+    error: messagesError,
+    setMessages,
+  } = useChatMessages(selectedConversationId, { enableSocket: true, pollingInterval: 2500 });
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedConversationId) || null,
@@ -139,31 +144,9 @@ function AdminChat() {
     }
   };
 
-  const loadMessages = async (conversationId) => {
-    if (!conversationId) return;
-
-    try {
-      setLoadingMessages(true);
-      setError("");
-      const data = await getConversationMessages(conversationId);
-      setMessages(data);
-    } catch (err) {
-      console.error("[AdminChat] Failed to load messages:", err);
-      setMessages([]);
-      setError("Không thể tải lịch sử chat.");
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
-
   useEffect(() => {
     loadConversations();
   }, []);
-
-  useEffect(() => {
-    if (!selectedConversationId) return;
-    loadMessages(selectedConversationId);
-  }, [selectedConversationId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -241,7 +224,9 @@ function AdminChat() {
         </button>
       </header>
 
-      {error ? <p className="admin-state admin-state--error">{error}</p> : null}
+      {error || messagesError ? (
+        <p className="admin-state admin-state--error">{error || messagesError}</p>
+      ) : null}
 
       <div className="admin-chat__layout">
         <aside className="admin-chat__sidebar">
