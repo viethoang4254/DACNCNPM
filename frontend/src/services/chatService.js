@@ -43,7 +43,13 @@ const normalizeConversation = (conversation) => ({
     conversation?.message ??
     conversation?.content ??
     "",
-  createdAt: conversation?.createdAt ?? conversation?.created_at ?? conversation?.updatedAt ?? null,
+  createdAt:
+    conversation?.lastMessageAt ??
+    conversation?.last_message_at ??
+    conversation?.createdAt ??
+    conversation?.created_at ??
+    conversation?.updatedAt ??
+    null,
   status: conversation?.status ?? "open",
   unreadCount: Number(conversation?.unreadCount ?? conversation?.unread_count ?? 0),
 });
@@ -79,9 +85,31 @@ export const getAdminConversations = async () => {
   return extractList(response.data).map(normalizeConversation);
 };
 
-export const getConversationMessages = async (conversationId) => {
-  const response = await apiClient.get(`/api/chat/messages/${conversationId}`);
+export const getUserConversations = async (userId) => {
+  const response = await apiClient.get(`/api/chat/conversations/${userId}`);
+  return extractList(response.data).map(normalizeConversation);
+};
+
+export const getConversationMessages = async (conversationId, options = {}) => {
+  const params = {};
+
+  if (Number.isFinite(options.limit)) {
+    params.limit = Math.max(1, Math.min(100, Number(options.limit)));
+  }
+
+  if (Number.isFinite(options.offset)) {
+    params.offset = Math.max(0, Number(options.offset));
+  }
+
+  const response = await apiClient.get(`/api/chat/messages/${conversationId}`, { params });
   return extractList(response.data).map(normalizeMessage);
+};
+
+export const markConversationRead = async (conversationId) => {
+  if (!conversationId) return null;
+
+  const response = await apiClient.put(`/api/chat/read/${conversationId}`);
+  return response?.data?.data || null;
 };
 
 export const sendAdminChatMessage = async ({ conversationId, senderId, message }) => {

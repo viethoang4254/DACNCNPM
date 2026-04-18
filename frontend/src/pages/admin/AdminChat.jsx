@@ -5,6 +5,7 @@ import {
   formatChatDateTime,
   getAdminConversations,
   getConversationMessages,
+  markConversationRead,
   sendAdminChatMessage,
 } from "../../services/chatService";
 import "./AdminChat.scss";
@@ -147,6 +148,15 @@ function AdminChat() {
       setError("");
       const data = await getConversationMessages(conversationId);
       setMessages(data);
+
+      await markConversationRead(conversationId);
+      setConversations((currentConversations) =>
+        currentConversations.map((conversation) =>
+          conversation.id === conversationId
+            ? { ...conversation, unreadCount: 0 }
+            : conversation,
+        ),
+      );
     } catch (err) {
       console.error("[AdminChat] Failed to load messages:", err);
       setMessages([]);
@@ -164,6 +174,34 @@ function AdminChat() {
     if (!selectedConversationId) return;
     loadMessages(selectedConversationId);
   }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (!selectedConversationId) return undefined;
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        const data = await getConversationMessages(selectedConversationId);
+        setMessages(data);
+      } catch {
+        // Ignore transient polling errors; manual actions still surface errors.
+      }
+    }, 4000);
+
+    return () => window.clearInterval(intervalId);
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(async () => {
+      try {
+        const data = await getAdminConversations();
+        setConversations(data);
+      } catch {
+        // Ignore transient polling errors; explicit refresh still reports errors.
+      }
+    }, 6000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
