@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { FiMessageCircle, FiX } from "react-icons/fi";
-import { sendChatMessage, startConversation } from "../../../services/chatService";
+import {
+  sendChatMessage,
+  startConversation,
+} from "../../../services/chatService";
 import { getAuthUser } from "../../../utils/authStorage";
 import Chatbox from "../Chatbox";
 import "./ChatWidget.scss";
@@ -118,7 +121,7 @@ function ChatWidget({
             text: savedMessage?.message || trimmedText,
             createdAt: savedMessage?.createdAt || new Date(),
           };
-        })
+        }),
       );
     } catch (error) {
       console.error("Send message failed:", error);
@@ -144,7 +147,10 @@ function ChatWidget({
 
   return (
     <div className="chat-widget" data-open={isOpen ? "true" : "false"}>
-      <div className="chat-widget__panel" aria-hidden={isOpen ? "false" : "true"}>
+      <div
+        className="chat-widget__panel"
+        aria-hidden={isOpen ? "false" : "true"}
+      >
         {isOpen && (
           <Chatbox
             title={title}
