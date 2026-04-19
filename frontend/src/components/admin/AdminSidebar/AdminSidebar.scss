@@ -153,6 +153,20 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
 
+.admin-sidebar__warning-badge--chat {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.22);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.admin-sidebar__warning-badge--chat.is-alert {
+  color: #ffffff;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  border-color: rgba(134, 239, 172, 0.65);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.26);
+  animation: chatPulse 1.8s ease-in-out infinite;
+}
+
 @keyframes warningPulse {
   0% {
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18);
@@ -174,6 +188,18 @@
   }
   100% {
     box-shadow: 0 0 0 2px rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes chatPulse {
+  0% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0);
   }
 }
 

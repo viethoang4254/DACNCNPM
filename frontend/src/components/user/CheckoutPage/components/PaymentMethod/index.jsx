@@ -1,4 +1,5 @@
 import PaymentCode from "../PaymentCode";
+import qrCodeImage from "../../../../../assets/images/qr_code.jpg";
 import "./PaymentMethod.scss";
 
 const METHOD_OPTIONS = [
@@ -45,6 +46,14 @@ function PaymentMethod({ selectedMethod, onChangeMethod, bookingId }) {
           </p>
 
           <PaymentCode bookingId={bookingId} />
+
+          <div className="payment-method__qr-code">
+            <img 
+              src={qrCodeImage} 
+              alt="QR Code chuyển khoản" 
+              width="180"
+            />
+          </div>
         </div>
       )}
     </div>

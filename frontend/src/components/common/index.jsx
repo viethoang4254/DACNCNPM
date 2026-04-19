@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { getAuthUser } from "../../utils/authStorage";
-import { sendChatMessage, startConversation } from "../../services/chatService";
-import useChatMessages from "../../hooks/useChatMessages";
-import Chatbox from "./Chatbox";
+import { getAuthUser } from "../../../utils/authStorage";
+import { sendChatMessage, startConversation } from "../../../services/chatService";
+import useChatMessages from "../../../hooks/useChatMessages";
+import Chatbox from "../Chatbox";
 
 function createMessageId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;

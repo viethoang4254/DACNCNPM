@@ -30,3 +30,16 @@
     font-size: 1.4rem;
   }
 }
+
+.payment-method__qr-code {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #d9e6f7;
+
+  img {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}

@@ -1,6 +1,7 @@
 import express from "express";
 import { body, param, query } from "express-validator";
 import {
+  getAllConversationsController,
   getMessagesController,
   getUserConversationsController,
   markReadController,
@@ -55,6 +56,7 @@ const sendMessageValidation = [
     .isInt({ gt: 0 })
     .withMessage("conversationId must be a positive integer"),
   body("senderId")
+    .optional({ values: "falsy" })
     .isInt({ gt: 0 })
     .withMessage("senderId must be a positive integer"),
   body("message")
@@ -73,6 +75,8 @@ const sendMessageValidation = [
 router.use(authMiddleware);
 
 router.post("/start", startConversationController);
+
+router.get("/conversations", getAllConversationsController);
 
 router.get(
   "/conversations/:userId",
