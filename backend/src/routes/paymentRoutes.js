@@ -1,6 +1,7 @@
 import express from "express";
 import { body, param } from "express-validator";
 import {
+  capturePaymentController,
   confirmPaymentController,
   createPaymentController,
   getPaymentByBookingIdController,
@@ -13,6 +14,18 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 import validationMiddleware from "../middlewares/validateMiddleware.js";
 
 const router = express.Router();
+
+// PayPal callback hits this endpoint from a browser redirect, so it must stay public.
+router.post(
+  "/capture",
+  [
+    body("bookingId").isInt({ gt: 0 }).withMessage("bookingId must be a positive integer"),
+    body("token").trim().notEmpty().withMessage("token is required"),
+    body("payerId").trim().notEmpty().withMessage("payerId is required"),
+  ],
+  validationMiddleware,
+  capturePaymentController
+);
 
 router.use(authMiddleware);
 

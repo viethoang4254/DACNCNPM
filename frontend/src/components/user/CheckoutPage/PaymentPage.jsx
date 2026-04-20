@@ -11,6 +11,23 @@ import "./CheckoutPage.scss";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const PAYPAL_VND_TO_USD_RATE = Number(
+  import.meta.env.VITE_PAYPAL_VND_TO_USD_RATE || 25000,
+);
+
+function convertVndToUsd(vndAmount) {
+  const normalizedVnd = Number(vndAmount || 0);
+  const rate =
+    Number.isFinite(PAYPAL_VND_TO_USD_RATE) && PAYPAL_VND_TO_USD_RATE > 0
+      ? PAYPAL_VND_TO_USD_RATE
+      : 25000;
+
+  if (!Number.isFinite(normalizedVnd) || normalizedVnd <= 0) {
+    return 0;
+  }
+
+  return Math.round((normalizedVnd / rate) * 100) / 100;
+}
 
 function resolveImageUrl(path) {
   if (!path) return "";
@@ -115,6 +132,16 @@ function PaymentPage() {
     email: "",
     so_dien_thoai: "",
   });
+  const [paypalQuote, setPaypalQuote] = useState({
+    amountUsd: 0,
+    amountVnd: 0,
+    rate:
+      Number.isFinite(PAYPAL_VND_TO_USD_RATE) && PAYPAL_VND_TO_USD_RATE > 0
+        ? PAYPAL_VND_TO_USD_RATE
+        : 25000,
+    isLoading: false,
+    source: "local",
+  });
 
   const authUser = useMemo(() => getAuthUser(), []);
 
@@ -140,6 +167,83 @@ function PaymentPage() {
       total: finalTotal,
     };
   }, [booking]);
+
+  const paypalEstimate = useMemo(() => {
+    const amountUsd = convertVndToUsd(pricing.total);
+    return {
+      rate:
+        Number.isFinite(PAYPAL_VND_TO_USD_RATE) && PAYPAL_VND_TO_USD_RATE > 0
+          ? PAYPAL_VND_TO_USD_RATE
+          : 25000,
+      amountUsd,
+    };
+  }, [pricing.total]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchPaypalQuote() {
+      if (selectedMethod !== "paypal" || !booking?.id) {
+        if (isMounted) {
+          setPaypalQuote((prev) => ({
+            ...prev,
+            isLoading: false,
+          }));
+        }
+        return;
+      }
+
+      setPaypalQuote((prev) => ({
+        ...prev,
+        isLoading: true,
+      }));
+
+      try {
+        const response = await apiClient.get(`/api/paypal/quote/${booking.id}`);
+        const payload = response?.data || {};
+
+        if (!isMounted) return;
+
+        const amountUsd = Number(payload.amountUsd || 0);
+        const amountVnd = Number(payload.amountVnd || 0);
+        const rate = Number(payload.rate || 0);
+
+        setPaypalQuote({
+          amountUsd: Number.isFinite(amountUsd)
+            ? amountUsd
+            : paypalEstimate.amountUsd,
+          amountVnd: Number.isFinite(amountVnd)
+            ? amountVnd
+            : Number(pricing.total || 0),
+          rate: Number.isFinite(rate) && rate > 0 ? rate : paypalEstimate.rate,
+          isLoading: false,
+          source: "server",
+        });
+      } catch {
+        if (!isMounted) return;
+
+        setPaypalQuote({
+          amountUsd: paypalEstimate.amountUsd,
+          amountVnd: Number(pricing.total || 0),
+          rate: paypalEstimate.rate,
+          isLoading: false,
+          source: "local",
+        });
+      }
+    }
+
+    fetchPaypalQuote();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    selectedMethod,
+    booking?.id,
+    pricing.total,
+    paypalEstimate.amountUsd,
+    paypalEstimate.rate,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -232,6 +336,8 @@ function PaymentPage() {
   };
 
   const handleConfirmPayment = async () => {
+    console.log("selectedMethod:", selectedMethod);
+
     if (!booking?.id) {
       setSubmitError("Không tìm thấy thông tin booking để xử lý thanh toán.");
       return;
@@ -253,6 +359,34 @@ function PaymentPage() {
       setSubmitError("");
       setIsSubmitting(true);
 
+      // 🔥 FIX CHẮC ĂN PAYPAL
+      if (selectedMethod?.toLowerCase().trim() === "paypal") {
+        console.log("👉 ĐÃ VÀO PAYPAL");
+
+        try {
+          const res = await apiClient.post("/api/paypal/create", {
+            bookingId: booking.id,
+          });
+
+          console.log("PayPal response:", res.data);
+
+          if (!res.data?.approvalUrl) {
+            throw new Error("Không nhận được approvalUrl từ PayPal");
+          }
+
+          // 🚀 REDIRECT
+          window.location.href = res.data.approvalUrl;
+          return;
+        } catch (err) {
+          console.error("PAYPAL ERROR:", err);
+          setSubmitError("Không thể kết nối PayPal");
+          toast.error("Lỗi PayPal");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 🔵 FLOW CŨ (COD / BANK)
       let nextPaymentId = paymentId;
 
       if (!nextPaymentId) {
@@ -373,6 +507,33 @@ function PaymentPage() {
                   {Number(pricing.total || 0).toLocaleString("vi-VN")}đ
                 </strong>
               </div>
+
+              {selectedMethod === "paypal" ? (
+                <div className="checkout-page__paypal-estimate" role="note">
+                  <p className="checkout-page__paypal-estimate-title">
+                    Ước tính thanh toán PayPal
+                  </p>
+                  <p className="checkout-page__paypal-estimate-value">
+                    {paypalQuote.amountUsd.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    USD
+                  </p>
+                  <p className="checkout-page__paypal-estimate-note">
+                    Tỷ giá tạm tính: 1 USD ={" "}
+                    {paypalQuote.rate.toLocaleString("vi-VN")} VND.
+                    {paypalQuote.source === "server"
+                      ? " (đồng bộ từ hệ thống)"
+                      : " (fallback local)"}
+                  </p>
+                  {paypalQuote.isLoading ? (
+                    <p className="checkout-page__paypal-estimate-note">
+                      Đang đồng bộ số tiền PayPal từ hệ thống...
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
             <button

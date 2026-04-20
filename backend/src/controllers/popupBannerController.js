@@ -1,162 +1,45 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import jwt from "jsonwebtoken";
 import { sendResponse } from "../utils/response.js";
 import {
-  createPopupBanner,
-  deletePopupBannerById,
-  getActivePopupBanner,
-  getAdminPopupBanners,
-  getPopupBannerById,
-  togglePopupBannerActiveById,
-  updatePopupBannerById,
-} from "../models/popupBannerModel.js";
-
-const pad2 = (value) => String(value).padStart(2, "0");
-
-const toMySqlDateTime = (value) => {
-  if (!value) return value;
-
-  if (
-    typeof value === "string" &&
-    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
-  ) {
-    return value;
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(
-    date.getDate(),
-  )} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(
-    date.getSeconds(),
-  )}`;
-};
-
-const normalizePopupPayload = (payload = {}) => ({
-  title: String(payload.title || "").trim(),
-  image_url: String(payload.image_url || "").trim(),
-  link: payload.link ? String(payload.link).trim() : null,
-  is_active: payload.is_active === undefined ? true : Boolean(payload.is_active),
-  start_date: toMySqlDateTime(payload.start_date),
-  end_date: toMySqlDateTime(payload.end_date),
-  priority: Number(payload.priority || 0),
-  target_type: payload.target_type || "all",
-});
-
-const resolveIsLoggedIn = (req) => {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-
-  if (!token) return false;
-
-  try {
-    jwt.verify(token, process.env.JWT_SECRET);
-    return true;
-  } catch {
-    return false;
-  }
-};
+  createPopupBannerService,
+  deletePopupBannerService,
+  getActivePopupBannerService,
+  getAdminPopupBannersService,
+  togglePopupBannerService,
+  updatePopupBannerService,
+} from "../services/popupBannerService.js";
 
 export const getAdminPopupBannersController = asyncHandler(async (req, res) => {
-  const banners = await getAdminPopupBanners();
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Lấy danh sách popup thành công",
-    data: banners,
-  });
+  const result = await getAdminPopupBannersService();
+  return sendResponse(res, result);
 });
 
 export const getActivePopupBannerController = asyncHandler(async (req, res) => {
-  const banner = await getActivePopupBanner({ isLoggedIn: resolveIsLoggedIn(req) });
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Lấy popup đang hoạt động thành công",
-    data: banner || {},
+  const result = await getActivePopupBannerService({
+    authorizationHeader: req.headers.authorization || "",
   });
+  return sendResponse(res, result);
 });
 
 export const createPopupBannerController = asyncHandler(async (req, res) => {
-  const insertId = await createPopupBanner(normalizePopupPayload(req.body));
-  const createdBanner = await getPopupBannerById(insertId);
-
-  return sendResponse(res, {
-    statusCode: 201,
-    success: true,
-    message: "Tạo popup thành công",
-    data: createdBanner,
-  });
+  const result = await createPopupBannerService({ payload: req.body });
+  return sendResponse(res, result);
 });
 
 export const updatePopupBannerController = asyncHandler(async (req, res) => {
-  const id = Number(req.params.id);
-  const updated = await updatePopupBannerById(id, normalizePopupPayload(req.body));
-
-  if (!updated) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Không tìm thấy popup",
-      data: {},
-    });
-  }
-
-  const updatedBanner = await getPopupBannerById(id);
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Cập nhật popup thành công",
-    data: updatedBanner,
+  const result = await updatePopupBannerService({
+    id: Number(req.params.id),
+    payload: req.body,
   });
+  return sendResponse(res, result);
 });
 
 export const deletePopupBannerController = asyncHandler(async (req, res) => {
-  const id = Number(req.params.id);
-  const deleted = await deletePopupBannerById(id);
-
-  if (!deleted) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Không tìm thấy popup",
-      data: {},
-    });
-  }
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Xóa popup thành công",
-    data: { id },
-  });
+  const result = await deletePopupBannerService({ id: Number(req.params.id) });
+  return sendResponse(res, result);
 });
 
 export const togglePopupBannerController = asyncHandler(async (req, res) => {
-  const id = Number(req.params.id);
-  const toggled = await togglePopupBannerActiveById(id);
-
-  if (!toggled) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Không tìm thấy popup",
-      data: {},
-    });
-  }
-
-  const banner = await getPopupBannerById(id);
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Đổi trạng thái popup thành công",
-    data: banner,
-  });
+  const result = await togglePopupBannerService({ id: Number(req.params.id) });
+  return sendResponse(res, result);
 });

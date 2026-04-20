@@ -75,6 +75,7 @@ export const applyAutoSale = (schedule, { enabled = AUTO_SALE_ENABLED } = {}) =>
     is_on_sale: Boolean(schedule?.is_on_sale),
     discount_percent: Number(schedule?.discount_percent || 0),
     auto_sale_applied: Boolean(schedule?.auto_sale_applied),
+    auto_sale_opt_out: Boolean(schedule?.auto_sale_opt_out),
   };
 
   if (!enabled) return normalized;
@@ -90,6 +91,7 @@ export const applyAutoSale = (schedule, { enabled = AUTO_SALE_ENABLED } = {}) =>
     daysLeft >= 0 &&
     daysLeft <= SUGGESTED_SALE_DAYS_THRESHOLD &&
     fillRate < SUGGESTED_SALE_FILL_RATE_THRESHOLD &&
+    !normalized.auto_sale_opt_out &&
     !normalized.is_on_sale;
 
   if (!shouldAutoApply) return normalized;
@@ -152,6 +154,7 @@ export const withScheduleComputedFields = (schedule) => {
   const bookedSlots = Number(schedule?.booked_slots || 0);
   const discountPercent = Number(schedule?.discount_percent || 0);
   const autoSaleApplied = Boolean(schedule?.auto_sale_applied);
+  const autoSaleOptOut = Boolean(schedule?.auto_sale_opt_out);
   const daysLeft = getScheduleDaysLeft(schedule?.start_date);
   const percent = getSchedulePercent(bookedSlots, maxSlots);
   const status = updateScheduleStatus({
@@ -167,6 +170,7 @@ export const withScheduleComputedFields = (schedule) => {
     is_on_sale: Boolean(schedule?.is_on_sale),
     discount_percent: discountPercent,
     auto_sale_applied: autoSaleApplied,
+    auto_sale_opt_out: autoSaleOptOut,
     available_slots: Math.max(maxSlots - bookedSlots, 0),
     days_left: daysLeft,
     percent,
@@ -199,12 +203,13 @@ const selectScheduleSnapshots = async (connection, scheduleIds = null) => {
            ts.is_on_sale,
            ts.discount_percent,
            ts.auto_sale_applied,
+              ts.auto_sale_opt_out,
             COALESCE(SUM(CASE WHEN b.trang_thai IN ('pending', 'confirmed') THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots_actual
      FROM tour_schedules ts
      INNER JOIN tours t ON t.id = ts.tour_id
      LEFT JOIN bookings b ON b.schedule_id = ts.id
      ${hasFilter ? `WHERE ts.id IN (${placeholders})` : ""}
-         GROUP BY ts.id, ts.start_date, ts.max_slots, t.so_nguoi_toi_da, ts.booked_slots, ts.available_slots, ts.status, ts.min_required_ratio, ts.is_on_sale, ts.discount_percent, ts.auto_sale_applied`,
+         GROUP BY ts.id, ts.start_date, ts.max_slots, t.so_nguoi_toi_da, ts.booked_slots, ts.available_slots, ts.status, ts.min_required_ratio, ts.is_on_sale, ts.discount_percent, ts.auto_sale_applied, ts.auto_sale_opt_out`,
     hasFilter ? scheduleIds : [],
   );
 
@@ -232,7 +237,7 @@ const persistScheduleSnapshot = async (connection, snapshot) => {
   const nextAvailable = Math.max(maxSlots - bookedSlots, 0);
 
   await connection.execute(
-    "UPDATE tour_schedules SET max_slots = ?, booked_slots = ?, available_slots = ?, status = ?, is_on_sale = ?, discount_percent = ?, auto_sale_applied = ? WHERE id = ?",
+    "UPDATE tour_schedules SET max_slots = ?, booked_slots = ?, available_slots = ?, status = ?, is_on_sale = ?, discount_percent = ?, auto_sale_applied = ?, auto_sale_opt_out = ? WHERE id = ?",
     [
       maxSlots,
       bookedSlots,
@@ -241,6 +246,7 @@ const persistScheduleSnapshot = async (connection, snapshot) => {
       Boolean(saleState.is_on_sale),
       Number(saleState.discount_percent || 0),
       Boolean(saleState.auto_sale_applied),
+      Boolean(saleState.auto_sale_opt_out),
       snapshot.id,
     ],
   );
@@ -303,12 +309,13 @@ const loadScheduleSnapshotsByFilter = async (connection, { tourId, scheduleId } 
             ts.is_on_sale,
             ts.discount_percent,
             ts.auto_sale_applied,
+                 ts.auto_sale_opt_out,
             COALESCE(SUM(CASE WHEN b.trang_thai IN ('pending', 'confirmed') THEN b.so_nguoi ELSE 0 END), 0) AS booked_slots_actual
      FROM tour_schedules ts
      INNER JOIN tours t ON t.id = ts.tour_id
      LEFT JOIN bookings b ON b.schedule_id = ts.id
      ${where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""}
-     GROUP BY ts.id, ts.tour_id, ts.start_date, ts.max_slots, t.so_nguoi_toi_da, ts.booked_slots, ts.min_required_ratio, ts.is_on_sale, ts.discount_percent, ts.auto_sale_applied
+     GROUP BY ts.id, ts.tour_id, ts.start_date, ts.max_slots, t.so_nguoi_toi_da, ts.booked_slots, ts.min_required_ratio, ts.is_on_sale, ts.discount_percent, ts.auto_sale_applied, ts.auto_sale_opt_out
      ORDER BY ts.start_date ASC`,
     params,
   );
@@ -352,7 +359,8 @@ export const checkCapacityAndApplyPolicy = async (
            status = ?,
            is_on_sale = ?,
            discount_percent = ?,
-           auto_sale_applied = ?
+           auto_sale_applied = ?,
+           auto_sale_opt_out = ?
        WHERE id = ?`,
       [
         maxSlots,
@@ -362,6 +370,7 @@ export const checkCapacityAndApplyPolicy = async (
         Boolean(saleState.is_on_sale),
         Number(saleState.discount_percent || 0),
         Boolean(saleState.auto_sale_applied),
+        Boolean(saleState.auto_sale_opt_out),
         snapshot.id,
       ],
     );
@@ -377,6 +386,7 @@ export const checkCapacityAndApplyPolicy = async (
       is_on_sale: Boolean(saleState.is_on_sale),
       discount_percent: Number(saleState.discount_percent || 0),
       auto_sale_applied: Boolean(saleState.auto_sale_applied),
+      auto_sale_opt_out: Boolean(saleState.auto_sale_opt_out),
       booked_slots: bookedSlots,
       max_slots: maxSlots,
       ratio: maxSlots > 0 ? Number((bookedSlots / maxSlots).toFixed(4)) : 0,
@@ -414,7 +424,7 @@ export const refreshScheduleOccupancyAndStatusById = async (
 
   await persistScheduleSnapshot(connection, target);
   const [rows] = await connection.execute(
-    "SELECT id, start_date, max_slots, booked_slots, available_slots, status, min_required_ratio, is_on_sale, discount_percent, auto_sale_applied FROM tour_schedules WHERE id = ? LIMIT 1",
+    "SELECT id, start_date, max_slots, booked_slots, available_slots, status, min_required_ratio, is_on_sale, discount_percent, auto_sale_applied, auto_sale_opt_out FROM tour_schedules WHERE id = ? LIMIT 1",
     [id],
   );
 

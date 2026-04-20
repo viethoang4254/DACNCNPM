@@ -4,6 +4,7 @@ import Footer from "./components/user/Footer";
 import "./assets/styles/main.scss";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import ScrollToTop from "./components/common/ScrollToTop";
+import ChatWidget from "./components/common/ChatWidget";
 
 import { getAuthUser } from "./utils/authStorage";
 
@@ -20,6 +21,8 @@ const CheckoutPage = lazy(() => import("./components/user/CheckoutPage"));
 const PaymentSuccess = lazy(
   () => import("./components/user/CheckoutPage/PaymentSuccess"),
 );
+const PaypalSuccess = lazy(() => import("./pages/user/PaypalSuccess"));
+const PaypalCancel = lazy(() => import("./pages/user/PaypalCancel"));
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Users = lazy(() => import("./pages/admin/Users"));
@@ -32,6 +35,7 @@ const Itineraries = lazy(() => import("./pages/admin/Itineraries"));
 const AdminWarnings = lazy(() => import("./pages/admin/AdminWarnings"));
 const Refunds = lazy(() => import("./pages/admin/Refunds"));
 const PopupBanners = lazy(() => import("./pages/admin/PopupBanners"));
+const AdminChat = lazy(() => import("./pages/admin/AdminChat"));
 const UserLayout = lazy(() => import("./components/user/UserLayout"));
 const InfoUser = lazy(() => import("./pages/user/InfoUser"));
 const UserBookingHistory = lazy(() => import("./pages/user/BookingHistory"));
@@ -78,6 +82,8 @@ function CustomerAuthRoute({ children }) {
 function App() {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
+  const isAuthPath =
+    location.pathname === "/login" || location.pathname === "/register";
 
   return (
     <>
@@ -194,6 +200,22 @@ function App() {
             }
           />
           <Route
+            path="/paypal-success"
+            element={
+              <UserRoute>
+                <PaypalSuccess />
+              </UserRoute>
+            }
+          />
+          <Route
+            path="/paypal-cancel"
+            element={
+              <UserRoute>
+                <PaypalCancel />
+              </UserRoute>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <AdminRoute>
@@ -213,9 +235,12 @@ function App() {
             <Route path="reviews" element={<Reviews />} />
             <Route path="warnings" element={<AdminWarnings />} />
             <Route path="popup-banners" element={<PopupBanners />} />
+            <Route path="chat" element={<AdminChat />} />
           </Route>
         </Routes>
       </Suspense>
+
+      {!isAdminPath && !isAuthPath && <ChatWidget />}
       {!isAdminPath && <Footer />}
     </>
   );

@@ -11,6 +11,7 @@ import {
   FaExclamationTriangle,
   FaUndo,
   FaBullhorn,
+  FaComments,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -57,6 +58,7 @@ const menuItems = [
   { to: "/admin/payments", label: "Payments", icon: FaMoneyCheckAlt },
   { to: "/admin/refunds", label: "Refunds", icon: FaUndo },
   { to: "/admin/popup-banners", label: "Popups", icon: FaBullhorn },
+  { to: "/admin/chat", label: "Chat", icon: FaComments },
   { to: "/admin/warnings", label: "Alerts", icon: FaExclamationTriangle },
   { to: "/admin/reviews", label: "Reviews", icon: FaStar },
 ];
@@ -65,6 +67,7 @@ function AdminSidebar() {
   const [alertCount, setAlertCount] = useState(0);
   const [paymentCount, setPaymentCount] = useState(0);
   const [bookingCount, setBookingCount] = useState(0);
+  const [chatCount, setChatCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -94,15 +97,20 @@ function AdminSidebar() {
       const bookingStatus = normalizeStatus(booking?.trang_thai);
       const paymentStatus = normalizeStatus(booking?.payment_status);
 
-      return bookingStatus === "pending" && paymentStatus === "pending";
+      if (paymentStatus !== "pending") {
+        return false;
+      }
+
+      return bookingStatus === "pending" || bookingStatus === "confirmed";
     };
 
     async function fetchSidebarCounts() {
       try {
-        const [warningRes, paymentRes, bookingRes] = await Promise.all([
+        const [warningRes, paymentRes, bookingRes, chatRes] = await Promise.all([
           apiClient.get("/api/schedules/warning"),
           apiClient.get("/api/payments"),
           apiClient.get("/api/bookings"),
+          apiClient.get("/api/chat/conversations"),
         ]);
         if (!mounted) return;
 
@@ -125,14 +133,24 @@ function AdminSidebar() {
           : [];
         const pendingBookings = bookings.filter(isPendingBookingForAdmin);
 
+        const conversations = Array.isArray(chatRes?.data?.data)
+          ? chatRes.data.data
+          : [];
+        const unreadMessages = conversations.reduce((total, conversation) => {
+          const unreadCount = Number(conversation?.unread_count ?? conversation?.unreadCount ?? 0);
+          return total + (Number.isFinite(unreadCount) && unreadCount > 0 ? unreadCount : 0);
+        }, 0);
+
         setAlertCount(matchedAlerts.length);
         setPaymentCount(pendingPayments.length);
         setBookingCount(pendingBookings.length);
+        setChatCount(unreadMessages);
       } catch {
         if (!mounted) return;
         setAlertCount(0);
         setPaymentCount(0);
         setBookingCount(0);
+        setChatCount(0);
       }
     }
 
@@ -206,6 +224,14 @@ function AdminSidebar() {
                 aria-label={`Yêu cầu thanh toán mới ${paymentCount}`}
               >
                 {paymentCount}
+              </span>
+            )}
+            {to === "/admin/chat" && (
+              <span
+                className={`admin-sidebar__warning-badge admin-sidebar__warning-badge--chat ${chatCount > 0 ? "is-alert" : ""}`}
+                aria-label={`Tin nhắn mới chờ phản hồi ${chatCount}`}
+              >
+                {chatCount}
               </span>
             )}
           </NavLink>

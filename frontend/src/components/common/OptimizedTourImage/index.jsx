@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 
-const DEFAULT_PLACEHOLDER =
-  "https://placehold.co/800x500?text=Tour+Image";
+const DEFAULT_PLACEHOLDER = "https://placehold.co/800x500?text=Tour+Image";
 
 /**
  * Centralized image renderer for tour-related UIs.

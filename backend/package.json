@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "seed:demo": "node scripts/seed-demo.js",
     "test:booking-rules": "node scripts/test-booking-rules.js"
   },
   "keywords": [],
@@ -14,6 +15,7 @@
   "description": "",
   "dependencies": {
     "@faker-js/faker": "^10.3.0",
+    "@paypal/paypal-server-sdk": "^2.3.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
@@ -25,6 +27,8 @@
     "multer": "^2.0.2",
     "mysql2": "^3.20.0",
     "node-cron": "^4.2.1",
+    "pg": "^8.20.0",
+    "socket.io": "^4.8.1",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

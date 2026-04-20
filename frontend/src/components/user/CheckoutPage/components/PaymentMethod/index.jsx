@@ -1,5 +1,6 @@
 import PaymentCode from "../PaymentCode";
 import "./PaymentMethod.scss";
+import qrCodeImage from "../../../../../assets/images/qr-code.jpg";
 
 const METHOD_OPTIONS = [
   {
@@ -34,17 +35,29 @@ function PaymentMethod({ selectedMethod, onChangeMethod, bookingId }) {
 
       {selectedMethod === "bank_transfer" && (
         <div className="payment-method__bank-info">
-          <p>
-            <strong>Ngân hàng:</strong> Vietcombank
-          </p>
-          <p>
-            <strong>Số tài khoản:</strong> 123456789
-          </p>
-          <p>
-            <strong>Chủ tài khoản:</strong> Booking Tours
-          </p>
+          <div className="payment-method__bank-details">
+            <div className="payment-method__bank-text">
+              <p>
+                <strong>Ngân hàng:</strong> MBBank
+              </p>
+              <p>
+                <strong>Số tài khoản:</strong> 0335661795
+              </p>
+              <p>
+                <strong>Chủ tài khoản:</strong> PhAN MINH HAU
+              </p>
 
-          <PaymentCode bookingId={bookingId} />
+              <PaymentCode bookingId={bookingId} />
+            </div>
+
+            <div className="payment-method__qr-wrap">
+              <img
+                src={qrCodeImage}
+                alt="QR chuyển khoản ngân hàng"
+                className="payment-method__qr-image"
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

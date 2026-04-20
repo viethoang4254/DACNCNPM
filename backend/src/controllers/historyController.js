@@ -1,52 +1,19 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import { sendResponse } from "../utils/response.js";
-import { getTourById } from "../models/tourModel.js";
-import { getTourHistoryByUserId, upsertTourHistory } from "../models/historyModel.js";
+import { getTourHistoryByUserService, saveTourHistoryService } from "../services/historyService.js";
 
 export const saveTourHistoryController = asyncHandler(async (req, res) => {
-  const userId = Number(req.user?.id);
-  const tourId = Number(req.body.tour_id);
-
-  const tour = await getTourById(tourId);
-  if (!tour) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Tour not found",
-      data: {},
-    });
-  }
-
-  const history = await upsertTourHistory({
-    user_id: userId,
-    tour_id: tourId,
+  const result = await saveTourHistoryService({
+    userId: Number(req.user?.id),
+    tourId: Number(req.body.tour_id),
   });
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Tour history saved successfully",
-    data: history,
-  });
+  return sendResponse(res, result);
 });
 
 export const getTourHistoryByUserController = asyncHandler(async (req, res) => {
-  const userId = Number(req.params.userId);
-  if (Number(req.user?.id) !== userId) {
-    return sendResponse(res, {
-      statusCode: 403,
-      success: false,
-      message: "Forbidden",
-      data: {},
-    });
-  }
-
-  const history = await getTourHistoryByUserId(userId, 10);
-
-  return sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Tour history fetched successfully",
-    data: history,
+  const result = await getTourHistoryByUserService({
+    actorUserId: Number(req.user?.id),
+    userId: Number(req.params.userId),
   });
+  return sendResponse(res, result);
 });
