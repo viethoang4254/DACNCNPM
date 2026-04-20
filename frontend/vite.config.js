@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const devPort = Number(process.env.VITE_DEV_PORT || 5073)
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: Number.isFinite(devPort) ? devPort : 5073,
+    strictPort: true,
+  },
   build: {
     // Keep production bundle aggressively optimized for Performance/SEO audits.
     minify: "esbuild",

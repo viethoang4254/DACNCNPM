@@ -21,6 +21,7 @@ const CheckoutPage = lazy(() => import("./components/user/CheckoutPage"));
 const PaymentSuccess = lazy(
   () => import("./components/user/CheckoutPage/PaymentSuccess"),
 );
+const PaypalCancel = lazy(() => import("./pages/user/PaypalCancel"));
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Users = lazy(() => import("./pages/admin/Users"));
@@ -193,6 +194,15 @@ function App() {
             element={
               <UserRoute>
                 <PaymentSuccess />
+              </UserRoute>
+            }
+          />
+          {/* Đã bỏ PaypalSuccess vì dùng JS SDK */}
+          <Route
+            path="/paypal-cancel"
+            element={
+              <UserRoute>
+                <PaypalCancel />
               </UserRoute>
             }
           />

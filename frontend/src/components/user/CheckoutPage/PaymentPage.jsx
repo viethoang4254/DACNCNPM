@@ -7,6 +7,7 @@ import { getPriceInfo } from "../../../utils/price";
 import CustomerForm from "./components/CustomerForm";
 import PaymentMethod from "./components/PaymentMethod";
 import OrderSummary from "./components/OrderSummary";
+import PaypalSdkButtons from "./components/PaypalSdkButtons";
 import "./CheckoutPage.scss";
 
 const API_BASE_URL =
@@ -108,6 +109,7 @@ function PaymentPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaypalProcessing, setIsPaypalProcessing] = useState(false);
   const [error, setError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [customerErrors, setCustomerErrors] = useState({
@@ -234,6 +236,8 @@ function PaymentPage() {
   const handleConfirmPayment = async () => {
     console.log("selectedMethod:", selectedMethod);
 
+    const normalizedMethod = String(selectedMethod || "").toLowerCase().trim();
+
     if (!booking?.id) {
       setSubmitError("Không tìm thấy thông tin booking để xử lý thanh toán.");
       return;
@@ -251,37 +255,15 @@ function PaymentPage() {
       return;
     }
 
+    // PayPal JS SDK flow: user should use the PayPal Buttons below.
+    if (normalizedMethod === "paypal") {
+      setSubmitError("Vui lòng bấm nút PayPal bên dưới để thanh toán.");
+      return;
+    }
+
     try {
       setSubmitError("");
       setIsSubmitting(true);
-
-      // 🔥 FIX CHẮC ĂN PAYPAL
-      if (selectedMethod?.toLowerCase().trim() === "paypal") {
-        console.log("👉 ĐÃ VÀO PAYPAL");
-
-        try {
-          const res = await apiClient.post("/api/paypal/create", {
-            bookingId: booking.id,
-            amount: pricing.total,
-          });
-
-          console.log("PayPal response:", res.data);
-
-          if (!res.data?.approvalUrl) {
-            throw new Error("Không nhận được approvalUrl từ PayPal");
-          }
-
-          // 🚀 REDIRECT
-          window.location.href = res.data.approvalUrl;
-          return;
-        } catch (err) {
-          console.error("PAYPAL ERROR:", err);
-          setSubmitError("Không thể kết nối PayPal");
-          toast.error("Lỗi PayPal");
-          setIsSubmitting(false);
-          return;
-        }
-      }
 
       // 🔵 FLOW CŨ (COD / BANK)
       let nextPaymentId = paymentId;
@@ -406,23 +388,52 @@ function PaymentPage() {
               </div>
             </div>
 
+            {String(selectedMethod || "").toLowerCase().trim() === "paypal" && (
+              <PaypalSdkButtons
+                bookingId={booking?.id}
+                amount={pricing.total}
+                onValidate={() => {
+                  const validation = validateCustomerForm(customerForm);
+                  if (!validation.isValid) {
+                    setCustomerErrors(validation.errors);
+                    setSubmitError("Vui lòng kiểm tra lại thông tin khách hàng.");
+                    return false;
+                  }
+                  setSubmitError("");
+                  return true;
+                }}
+                onProcessingChange={setIsPaypalProcessing}
+                onSuccess={() => {
+                  navigate(`/payment-success/${booking.id}`, {
+                    replace: true,
+                    state: {
+                      paymentMethod: "paypal",
+                      booking,
+                    },
+                  });
+                }}
+              />
+            )}
+
             <button
               type="button"
               className="checkout-page__back-btn"
               onClick={handleGoBack}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isPaypalProcessing}
             >
               Quay lại
             </button>
 
-            <button
-              type="button"
-              className="checkout-page__confirm-btn"
-              onClick={handleConfirmPayment}
-              disabled={isSubmitting || !selectedMethod}
-            >
-              {isSubmitting ? "Đang gửi yêu cầu..." : "Xác nhận thanh toán"}
-            </button>
+            {String(selectedMethod || "").toLowerCase().trim() !== "paypal" && (
+              <button
+                type="button"
+                className="checkout-page__confirm-btn"
+                onClick={handleConfirmPayment}
+                disabled={isSubmitting || isPaypalProcessing || !selectedMethod}
+              >
+                {isSubmitting ? "Đang gửi yêu cầu..." : "Xác nhận thanh toán"}
+              </button>
+            )}
           </article>
 
           {submitError && <p className="checkout-page__error">{submitError}</p>}

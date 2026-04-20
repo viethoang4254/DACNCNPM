@@ -1,6 +1,7 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import { sendResponse } from "../utils/response.js";
 import {
+  capturePaypalPaymentService,
   confirmPaymentService,
   createPaymentService,
   getPaymentByBookingIdService,
@@ -8,6 +9,17 @@ import {
   rejectPaymentService,
   userConfirmPaymentService,
 } from "../services/paymentService.js";
+
+export const capturePaypalPaymentController = asyncHandler(async (req, res) => {
+  const result = await capturePaypalPaymentService({
+    bookingId: Number(req.body.bookingId),
+    token: req.body.token,
+    payerId: req.body.payerId,
+    actorRole: req.user.role,
+    actorUserId: req.user.id,
+  });
+  return sendResponse(res, result);
+});
 
 export const createPaymentController = asyncHandler(async (req, res) => {
   const result = await createPaymentService({

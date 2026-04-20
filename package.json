@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "multer": "^2.1.1",
+    "react-paypal-button-v2": "^2.6.3",
     "sharp": "^0.34.5"
   }
 }

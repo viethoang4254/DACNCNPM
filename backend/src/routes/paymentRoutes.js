@@ -1,6 +1,7 @@
 import express from "express";
 import { body, param } from "express-validator";
 import {
+  capturePaypalPaymentController,
   confirmPaymentController,
   createPaymentController,
   getPaymentByBookingIdController,
@@ -15,6 +16,17 @@ import validationMiddleware from "../middlewares/validateMiddleware.js";
 const router = express.Router();
 
 router.use(authMiddleware);
+
+router.post(
+  "/capture",
+  [
+    body("bookingId").isInt({ gt: 0 }).withMessage("bookingId must be a positive integer"),
+    body("token").trim().notEmpty().withMessage("token is required"),
+    body("payerId").trim().notEmpty().withMessage("payerId is required"),
+  ],
+  validationMiddleware,
+  capturePaypalPaymentController,
+);
 
 router.post(
   "/",
