@@ -7,6 +7,23 @@ import {
   refreshScheduleOccupancyAndStatusById,
 } from "./scheduleStatusService.js";
 
+function calculateBookingTotal({ unitPrice, quantity, isOnSale, discountPercent }) {
+  const price = Number(unitPrice || 0);
+  const people = Number(quantity || 0);
+  const baseTotal = price * people;
+
+  if (baseTotal <= 0) {
+    return 0;
+  }
+
+  const discount = Boolean(isOnSale)
+    ? Math.max(0, Math.min(100, Number(discountPercent || 0)))
+    : 0;
+
+  const finalTotal = baseTotal * (1 - discount / 100);
+  return Math.round(finalTotal);
+}
+
 export const createBooking = async ({ userId, scheduleId, quantity }) => {
   const connection = await pool.getConnection();
 
@@ -19,6 +36,8 @@ export const createBooking = async ({ userId, scheduleId, quantity }) => {
               ts.start_date,
               ts.status,
               ts.min_required_ratio,
+              ts.is_on_sale,
+              ts.discount_percent,
               COALESCE(NULLIF(ts.max_slots, 0), t.so_nguoi_toi_da) AS max_slots,
               ts.booked_slots,
               ts.available_slots
@@ -172,7 +191,12 @@ export const createBooking = async ({ userId, scheduleId, quantity }) => {
       };
     }
 
-    const tongTien = Number(tour.gia || 0) * Number(quantity || 0);
+    const tongTien = calculateBookingTotal({
+      unitPrice: tour.gia,
+      quantity,
+      isOnSale: schedule.is_on_sale,
+      discountPercent: schedule.discount_percent,
+    });
 
     const bookingId = await createBookingRecord(
       {

@@ -21,6 +21,8 @@ const CheckoutPage = lazy(() => import("./components/user/CheckoutPage"));
 const PaymentSuccess = lazy(
   () => import("./components/user/CheckoutPage/PaymentSuccess"),
 );
+const PaypalSuccess = lazy(() => import("./pages/user/PaypalSuccess"));
+const PaypalCancel = lazy(() => import("./pages/user/PaypalCancel"));
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Users = lazy(() => import("./pages/admin/Users"));
@@ -80,7 +82,8 @@ function CustomerAuthRoute({ children }) {
 function App() {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
-  const isAuthPath = location.pathname === "/login" || location.pathname === "/register";
+  const isAuthPath =
+    location.pathname === "/login" || location.pathname === "/register";
 
   return (
     <>
@@ -193,6 +196,22 @@ function App() {
             element={
               <UserRoute>
                 <PaymentSuccess />
+              </UserRoute>
+            }
+          />
+          <Route
+            path="/paypal-success"
+            element={
+              <UserRoute>
+                <PaypalSuccess />
+              </UserRoute>
+            }
+          />
+          <Route
+            path="/paypal-cancel"
+            element={
+              <UserRoute>
+                <PaypalCancel />
               </UserRoute>
             }
           />

@@ -133,6 +133,34 @@
   }
 }
 
+.checkout-page__paypal-estimate {
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #cfe0fb;
+  background: #f6f9ff;
+  padding: 10px 12px;
+}
+
+.checkout-page__paypal-estimate-title {
+  margin: 0;
+  color: #1d4f91;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.checkout-page__paypal-estimate-value {
+  margin: 4px 0 0;
+  color: #0f2f58;
+  font-size: 1.85rem;
+  font-weight: 800;
+}
+
+.checkout-page__paypal-estimate-note {
+  margin: 6px 0 0;
+  color: #557192;
+  font-size: 1.25rem;
+}
+
 .checkout-page__state {
   background: var(--color-white);
   border-radius: 12px;

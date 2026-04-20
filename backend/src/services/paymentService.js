@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { OrdersController } from "@paypal/paypal-server-sdk";
 import { getBookingById } from "../models/bookingModel.js";
 import {
   createPayment,
@@ -7,10 +8,68 @@ import {
   getPaymentById,
 } from "../models/paymentModel.js";
 import { getPendingExpireMinutes } from "../utils/bookingExpiration.js";
+import client from "../utils/paypalClient.js";
 import { expirePendingBookingsAndSyncSchedules } from "./bookingMaintenanceService.js";
 import { refreshScheduleOccupancyAndStatusById } from "./scheduleStatusService.js";
 
 const PENDING_EXPIRE_MINUTES = getPendingExpireMinutes();
+const ordersController = new OrdersController(client);
+
+function getPaypalErrorMessage(error, fallbackMessage) {
+  const detail =
+    error?.result?.details?.[0]?.description ||
+    error?.result?.message ||
+    error?.message;
+  return detail || fallbackMessage;
+}
+
+function getPaypalErrorIssue(error) {
+  return (
+    error?.result?.details?.[0]?.issue ||
+    error?.result?.name ||
+    "PAYPAL_CAPTURE_FAILED"
+  );
+}
+
+function getPaypalFailureResponse(error) {
+  const issue = String(getPaypalErrorIssue(error) || "PAYPAL_CAPTURE_FAILED").toUpperCase();
+  const message = getPaypalErrorMessage(error, "PayPal capture error");
+  const debugId = error?.result?.debug_id || null;
+
+  if (issue === "INSTRUMENT_DECLINED") {
+    return {
+      statusCode: 402,
+      success: false,
+      message,
+      data: {
+        code: issue,
+        debugId,
+      },
+    };
+  }
+
+  if (issue === "PAYER_ACTION_REQUIRED") {
+    return {
+      statusCode: 409,
+      success: false,
+      message,
+      data: {
+        code: issue,
+        debugId,
+      },
+    };
+  }
+
+  return {
+    statusCode: 400,
+    success: false,
+    message,
+    data: {
+      code: issue,
+      debugId,
+    },
+  };
+}
 
 export const createPaymentService = async ({ booking_id, method, amount, status, actorRole, actorUserId }) => {
   await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
@@ -311,4 +370,212 @@ export const rejectPaymentService = async ({ paymentId }) => {
   } finally {
     connection.release();
   }
+};
+
+export const capturePaypalPaymentService = async ({ bookingId, token, payerId }) => {
+  await expirePendingBookingsAndSyncSchedules(PENDING_EXPIRE_MINUTES);
+
+  const normalizedBookingId = Number(bookingId);
+  if (!Number.isInteger(normalizedBookingId) || normalizedBookingId <= 0) {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "bookingId không hợp lệ",
+      data: {},
+    };
+  }
+
+  if (!token || typeof token !== "string") {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "token không hợp lệ",
+      data: {},
+    };
+  }
+
+  if (!payerId || typeof payerId !== "string") {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "payerId không hợp lệ",
+      data: {},
+    };
+  }
+
+  const booking = await getBookingById(normalizedBookingId);
+  if (!booking) {
+    return {
+      statusCode: 404,
+      success: false,
+      message: "Booking not found",
+      data: {},
+    };
+  }
+
+  if (booking.trang_thai === "cancelled") {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "Booking đã hết hạn hoặc bị hủy",
+      data: {},
+    };
+  }
+
+  const existingPayment = await getPaymentByBookingId(normalizedBookingId);
+  // Idempotent callback handling: if this booking is already paid, return success.
+  if (existingPayment?.status === "paid") {
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Thanh toán đã được xác nhận trước đó",
+      data: {
+        payment: existingPayment,
+        paypal: {},
+      },
+    };
+  }
+
+  let captureResult;
+  try {
+    const response = await ordersController.captureOrder({
+      id: token,
+    });
+    captureResult = response?.result || response;
+  } catch (error) {
+    return getPaypalFailureResponse(error);
+  }
+
+  const captureStatus = String(captureResult?.status || "").toUpperCase();
+  if (captureStatus !== "COMPLETED") {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "Giao dịch PayPal chưa hoàn tất",
+      data: {
+        paypalStatus: captureResult?.status || null,
+      },
+    };
+  }
+
+  const referenceId = Number(captureResult?.purchaseUnits?.[0]?.referenceId || 0);
+  if (referenceId && referenceId !== normalizedBookingId) {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "bookingId không khớp với đơn PayPal",
+      data: {},
+    };
+  }
+
+  const paypalPayerId =
+    captureResult?.payer?.payerId ||
+    captureResult?.payer?.payer_id ||
+    "";
+  if (paypalPayerId && String(paypalPayerId).toUpperCase() !== String(payerId).toUpperCase()) {
+    return {
+      statusCode: 400,
+      success: false,
+      message: "PayerID không khớp với giao dịch PayPal",
+      data: {},
+    };
+  }
+
+  const capturedAmountRaw =
+    captureResult?.purchaseUnits?.[0]?.payments?.captures?.[0]?.amount?.value;
+  const capturedAmount = Number(capturedAmountRaw);
+  // Store internal payment amount in VND to keep consistency with booking totals.
+  const paymentAmount = Number(booking.tong_tien || 0);
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [[lockedBooking]] = await connection.execute(
+      `SELECT id, schedule_id, trang_thai
+       FROM bookings
+       WHERE id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [normalizedBookingId]
+    );
+
+    if (!lockedBooking) {
+      await connection.rollback();
+      return {
+        statusCode: 404,
+        success: false,
+        message: "Booking not found",
+        data: {},
+      };
+    }
+
+    if (lockedBooking.trang_thai === "cancelled") {
+      await connection.rollback();
+      return {
+        statusCode: 400,
+        success: false,
+        message: "Booking đã hết hạn hoặc bị hủy",
+        data: {},
+      };
+    }
+
+    const [paymentRows] = await connection.execute(
+      `SELECT id, status
+       FROM payments
+       WHERE booking_id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [normalizedBookingId]
+    );
+
+    if (!paymentRows.length) {
+      await connection.execute(
+        `INSERT INTO payments (booking_id, amount, method, status)
+         VALUES (?, ?, 'paypal', 'paid')`,
+        [normalizedBookingId, paymentAmount]
+      );
+    } else {
+      await connection.execute(
+        `UPDATE payments
+         SET status = 'paid',
+             method = 'paypal',
+             amount = ?
+         WHERE booking_id = ?`,
+        [paymentAmount, normalizedBookingId]
+      );
+    }
+
+    await connection.execute(
+      `UPDATE bookings
+       SET trang_thai = 'confirmed'
+       WHERE id = ?`,
+      [normalizedBookingId]
+    );
+
+    await connection.commit();
+
+    await refreshScheduleOccupancyAndStatusById(lockedBooking.schedule_id);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  const updatedPayment = await getPaymentByBookingId(normalizedBookingId);
+
+  return {
+    statusCode: 200,
+    success: true,
+    message: "Capture thanh toán PayPal thành công",
+    data: {
+      payment: updatedPayment,
+      paypal: {
+        orderId: captureResult?.id || token,
+        status: captureResult?.status || "COMPLETED",
+        capturedAmountUsd: Number.isFinite(capturedAmount) ? capturedAmount : null,
+      },
+    },
+  };
 };
