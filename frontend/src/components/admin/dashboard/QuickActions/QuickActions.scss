@@ -1,0 +1,33 @@
+.dashboard-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-quick-actions__btn {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid #dce4f2;
+  background: #f8fbff;
+  color: #1e293b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dashboard-quick-actions__btn:hover {
+  border-color: #94a3b8;
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .dashboard-quick-actions {
+    grid-template-columns: 1fr;
+  }
+}

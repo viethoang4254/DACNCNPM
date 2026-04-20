@@ -1,0 +1,145 @@
+.booking-cancel-info-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 24, 40, 0.45);
+  }
+
+  &__content {
+    position: relative;
+    width: min(680px, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 22px 50px rgba(14, 35, 70, 0.25);
+  }
+
+  &__close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    font-size: 2.4rem;
+    color: #6d7f9a;
+    cursor: pointer;
+  }
+
+  &__title {
+    margin: 0 0 14px;
+    font-size: 2.1rem;
+    color: #122949;
+  }
+
+  &__tour-block {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+
+    img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    h3 {
+      margin: 0 0 6px;
+      font-size: 1.7rem;
+      color: #132f54;
+    }
+
+    p {
+      margin: 0 0 4px;
+      font-size: 1.35rem;
+      color: #4d6382;
+    }
+  }
+
+  &__info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 14px;
+    margin-bottom: 14px;
+    padding: 12px;
+    border-radius: 10px;
+    background: #f6f9ff;
+
+    p {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #405a7e;
+    }
+
+    strong {
+      color: #132f54;
+    }
+  }
+
+  &__reason {
+    border: 1px solid #f2ccd1;
+    background: #fff6f7;
+    border-radius: 10px;
+    padding: 12px;
+
+    h4 {
+      margin: 0 0 6px;
+      font-size: 1.45rem;
+      color: #ad3040;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #7b2f39;
+      line-height: 1.55;
+    }
+  }
+
+  &__actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #fff;
+      background: #2259a8;
+      cursor: pointer;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .booking-cancel-info-modal {
+    &__content {
+      padding: 16px;
+    }
+
+    &__tour-block {
+      grid-template-columns: 1fr;
+
+      img {
+        height: 150px;
+      }
+    }
+
+    &__info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

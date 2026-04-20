@@ -1,17 +1,37 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed:demo": "node scripts/seed-demo.js",
+    "test:booking-rules": "node scripts/test-booking-rules.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@faker-js/faker": "^10.3.0",
+    "@paypal/paypal-server-sdk": "^2.3.0",
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "express": "^4.22.1",
+    "express-validator": "^7.3.1",
+    "faker": "^6.6.6",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "mysql2": "^3.20.0",
+    "node-cron": "^4.2.1",
+    "pg": "^8.20.0",
+    "socket.io": "^4.8.1",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
