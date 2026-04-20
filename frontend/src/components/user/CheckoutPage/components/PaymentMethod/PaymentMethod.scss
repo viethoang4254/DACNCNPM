@@ -23,10 +23,46 @@
   border: 1px solid #d9e6f7;
   border-radius: 12px;
   padding: 12px;
+}
 
+.payment-method__bank-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.payment-method__bank-text {
   p {
     margin: 0 0 6px;
     color: var(--color-body);
     font-size: 1.4rem;
+  }
+}
+
+.payment-method__qr-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.payment-method__qr-image {
+  width: 170px;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #cddbeb;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(15, 40, 73, 0.08);
+}
+
+@media (max-width: 640px) {
+  .payment-method__bank-details {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-method__qr-wrap {
+    justify-content: flex-start;
   }
 }

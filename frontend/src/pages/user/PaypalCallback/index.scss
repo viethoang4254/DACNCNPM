@@ -1,0 +1,94 @@
+.paypal-callback-page {
+  min-height: 52vh;
+  padding: 36px 16px 60px;
+  display: grid;
+  place-items: center;
+}
+
+.paypal-callback-page__card {
+  width: min(680px, 100%);
+  background: var(--color-white);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid #e4ebf5;
+  padding: clamp(20px, 4vw, 30px);
+
+  h1 {
+    margin: 0;
+    color: var(--color-heading);
+    font-size: clamp(2.2rem, 2.5vw, 3rem);
+  }
+}
+
+.paypal-callback-page__card--cancel {
+  border-top: 5px solid #e79d20;
+}
+
+.paypal-callback-page__status {
+  margin-top: 12px;
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.paypal-callback-page__status--processing {
+  color: #1f4e9f;
+}
+
+.paypal-callback-page__status--success {
+  color: #0b8e6a;
+}
+
+.paypal-callback-page__status--error {
+  color: #c03232;
+}
+
+.paypal-callback-page__message {
+  margin-top: 10px;
+  color: #5f738f;
+  font-size: 1.45rem;
+  line-height: 1.6;
+}
+
+.paypal-callback-page__actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.paypal-callback-page__btn {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.paypal-callback-page__btn--solid {
+  background: var(--color-primary);
+  color: #fff;
+
+  &:hover {
+    box-shadow: 0 10px 20px rgba(243, 120, 33, 0.25);
+  }
+}
+
+.paypal-callback-page__btn--ghost {
+  border: 1px solid #d4deec;
+  color: var(--color-heading);
+  background: #f9fbff;
+}
+
+@media (max-width: 640px) {
+  .paypal-callback-page__actions {
+    flex-direction: column;
+  }
+
+  .paypal-callback-page__btn {
+    text-align: center;
+  }
+}
